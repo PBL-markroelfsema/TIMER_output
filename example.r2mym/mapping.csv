@@ -1,0 +1,225 @@
+VSF_nr,ISO,IMAGE,TIMER,GISMO,location_name,location_code,location
+1,4,18,25,20,Afghanistan,AFG,160
+2,8,12,12,14,Albania,ALB,43
+3,12,7,7,7,Algeria,DZA,139
+4,16,24,24,27,American Samoa,ASM,0
+5,20,11,11,13,Andorra,AND,74
+6,24,10,26,11,Angola,AGO,168
+7,31,16,16,17,Azerbaijan,AZE,34
+8,32,6,6,5,Argentina,ARG,97
+9,36,24,24,27,Australia,AUS,71
+10,40,11,11,13,Austria,AUT,75
+11,44,4,4,4,The Bahamas,BHS,106
+12,48,17,17,19,Bahrain,BHR,140
+13,50,18,25,20,Bangladesh,BGD,161
+14,51,16,16,17,Armenia,ARM,33
+15,52,4,4,4,Barbados,BRB,107
+16,56,11,11,13,Belgium,BEL,76
+17,60,4,4,4,Bermuda,BMU,0
+18,64,18,25,20,Bhutan,BTN,162
+19,68,6,6,5,Bolivia,BOL,121
+20,70,12,12,14,Bosnia and Herzegovina,BIH,44
+21,72,10,26,11,Botswana,BWA,193
+22,76,5,5,6,Brazil,BRA,135
+23,84,4,4,4,Belize,BLZ,108
+24,90,24,24,27,Solomon Islands,SLB,28
+25,92,4,4,4,Virgin Isl. (Br.),VGB,0
+26,96,21,21,24,Brunei,BRN,66
+27,100,12,12,14,Bulgaria,BGR,45
+28,104,21,21,24,Myanmar,MMR,15
+29,108,9,9,10,Burundi,BDI,175
+30,112,14,14,15,Belarus,BLR,57
+31,116,21,21,24,Cambodia,KHM,10
+32,120,8,8,9,Cameroon,CMR,202
+33,124,1,1,1,Canada,CAN,101
+34,132,8,8,8,Cape Verde,CPV,203
+35,136,4,4,4,Cayman Islands,CYM,0
+36,140,8,8,9,Central African Republic,CAF,169
+37,144,18,25,20,Sri Lanka,LKA,17
+38,148,8,8,8,Chad,TCD,204
+39,152,6,6,5,Chile,CHL,98
+40,156,20,20,22,China,CHN,6
+41,158,20,20,22,Taiwan,TWN,8
+42,170,6,6,5,Colombia,COL,125
+43,174,9,9,10,Comoros,COM,176
+44,178,8,8,9,Congo,COG,170
+45,180,8,8,9,Democratic Republic of the Congo,COD,171
+46,184,24,24,27,Cook Isl.,COK,0
+47,188,4,4,4,Costa Rica,CRI,126
+48,191,12,12,14,Croatia,HRV,46
+49,192,4,4,4,Cuba,CUB,109
+50,196,12,12,14,Cyprus,CYP,77
+51,203,12,12,14,Czech Republic,CZE,47
+52,204,8,8,8,Benin,BEN,200
+53,208,11,11,13,Denmark,DNK,78
+54,212,4,4,4,Dominica,DMA,110
+55,214,4,4,4,Dominican Republic,DOM,111
+56,218,6,6,5,Ecuador,ECU,122
+57,222,4,4,4,El Salvador,SLV,127
+58,226,8,8,9,Equatorial Guinea,GNQ,172
+59,231,9,9,10,Ethiopia,ETH,179
+60,232,9,9,10,Eritrea,ERI,178
+61,233,12,12,14,Estonia,EST,58
+62,234,11,11,13,Faeroe Islands,FRO,0
+63,238,6,6,5,Falklands Isl.,FLK,0
+64,242,24,24,27,Fiji,FJI,22
+65,246,11,11,13,Finland,FIN,79
+66,250,11,11,13,France,FRA,80
+67,254,6,6,5,French Guyana,GUF,0
+68,258,24,24,27,French Polynesia,PYF,0
+69,262,9,9,10,Djibouti,DJI,177
+70,266,8,8,9,Gabon,GAB,173
+71,268,16,16,17,Georgia,GEO,35
+72,270,8,8,8,The Gambia,GMB,206
+73,276,11,11,13,Germany,DEU,81
+74,288,8,8,8,Ghana,GHA,207
+75,292,11,11,13,Gibraltar,GIB,0
+76,296,24,24,27,Kiribati,KIR,23
+77,300,11,11,13,Greece,GRC,82
+78,304,25,27,28,Greenland,GRL,0
+79,308,4,4,4,Grenada,GRD,112
+80,312,4,4,4,Guadeloupe,GLP,0
+81,320,4,4,4,Guatemala,GTM,128
+82,324,8,8,8,Guinea,GIN,208
+83,328,6,6,5,Guyana,GUY,113
+84,332,4,4,4,Haiti,HTI,114
+85,336,11,11,13,Vatican City State,VAT,0
+86,340,4,4,4,Honduras,HND,129
+87,344,20,20,22,Hong Kong Special Administrative Region of China,HKG,354
+88,348,12,12,14,Hungary,HUN,48
+89,352,11,11,13,Iceland,ISL,83
+90,356,18,18,21,India,IND,163
+91,360,22,22,25,Indonesia,IDN,11
+92,364,17,17,19,Iran,IRN,142
+93,368,17,17,19,Iraq,IRQ,143
+94,372,11,11,13,Ireland,IRL,84
+95,376,17,17,19,Israel,ISR,85
+96,380,11,11,13,Italy,ITA,86
+97,384,8,8,8,Cote d'Ivoire,CIV,205
+98,388,4,4,4,Jamaica,JAM,115
+99,392,23,23,26,Japan,JPN,67
+100,398,15,15,18,Kazakhstan,KAZ,36
+101,400,17,17,19,Jordan,JOR,144
+102,404,9,9,10,Kenya,KEN,180
+103,408,19,19,23,North Korea,PRK,7
+104,410,19,19,23,South Korea,KOR,68
+105,414,17,17,19,Kuwait,KWT,145
+106,417,15,15,18,Kyrgyz Republic,KGZ,37
+107,418,21,21,24,Lao PDR,LAO,12
+108,422,17,17,19,Lebanon,LBN,146
+109,426,10,26,11,Lesotho,LSO,194
+110,428,12,12,14,Latvia,LVA,59
+111,430,8,8,8,Liberia,LBR,210
+112,434,7,7,7,Libya,LBY,147
+113,438,11,11,13,Liechtenstein,LIE,0
+114,440,12,12,14,Lithuania,LTU,60
+115,442,11,11,13,Luxembourg,LUX,87
+116,446,20,20,22,Macao Special Administrative Region of China,MAC,361
+117,450,9,9,10,Madagascar,MDG,181
+118,454,10,26,11,Malawi,MWI,182
+119,458,21,21,24,Malaysia,MYS,13
+120,462,18,25,20,Maldives,MDV,14
+121,466,8,8,8,Mali,MLI,211
+122,470,11,11,13,Malta,MLT,88
+123,474,4,4,4,Martinique,MTQ,0
+124,478,8,8,8,Mauritania,MRT,212
+125,480,9,9,10,Mauritius,MUS,183
+126,484,3,3,3,Mexico,MEX,130
+127,492,11,11,13,Monaco,MCO,0
+128,496,20,20,22,Mongolia,MNG,38
+129,498,14,14,15,Moldova,MDA,61
+130,500,4,4,4,Montserrat,MSR,0
+131,504,7,7,7,Morocco,MAR,148
+132,508,10,26,11,Mozambique,MOZ,184
+133,512,17,17,19,Oman,OMN,150
+134,516,10,26,11,Namibia,NAM,195
+135,520,24,24,27,Nauru,NRU,0
+136,524,18,25,20,Nepal,NPL,164
+137,528,11,11,13,Netherlands,NLD,89
+138,530,4,4,4,Netherlands Antilles,ANT,0
+139,533,4,4,4,Aruba,ABW,0
+140,540,24,24,27,New Caledonia,NCL,0
+141,548,24,24,27,Vanuatu,VUT,30
+142,554,24,24,27,New Zealand,NZL,72
+143,558,4,4,4,Nicaragua,NIC,131
+144,562,8,8,8,Niger,NER,213
+145,566,8,8,8,Nigeria,NGA,214
+146,570,24,24,27,Niue,NIU,0
+147,578,11,11,13,Norway,NOR,90
+148,580,24,24,27,Northern Mariana Islands,MNP,0
+149,583,24,24,27,Federated States of Micronesia,FSM,25
+150,584,24,24,27,Marshall Islands,MHL,24
+151,585,24,24,27,Palau,PLW,0
+152,586,18,25,20,Pakistan,PAK,165
+153,591,4,4,4,Panama,PAN,132
+154,598,22,22,25,Papua New Guinea,PNG,26
+155,600,6,6,5,Paraguay,PRY,136
+156,604,6,6,5,Peru,PER,123
+157,608,21,21,24,Philippines,PHL,16
+158,612,24,24,27,Pitcairn,PCN,0
+159,616,12,12,14,Poland,POL,51
+160,620,11,11,13,Portugal,PRT,91
+161,624,8,8,8,Guinea-Bissau,GNB,209
+162,626,22,22,25,Timor-Leste,TLS,19
+163,630,4,4,4,Puerto Rico,PRI,0
+164,634,17,17,19,Qatar,QAT,151
+165,638,9,9,10,Reunion,REU,0
+166,642,12,12,14,Romania,ROU,52
+167,643,16,16,17,Russian Federation,RUS,62
+168,646,9,9,10,Rwanda,RWA,185
+169,654,8,8,8,St. Helena,SHN,0
+170,659,4,4,4,St. Kitts and Nevis,KNA,0
+171,660,4,4,4,Anguilla,AIA,0
+172,662,4,4,4,St. Lucia,LCA,116
+173,666,2,2,2,St. Pierre and Miquelon,SPM,0
+174,670,4,4,4,St. Vincent and the Grenadines,VCT,117
+175,674,11,11,13,San Marino,SMR,0
+176,678,8,8,8,Sao Tome and Principe,STP,215
+177,682,17,17,19,Saudi Arabia,SAU,152
+178,686,8,8,8,Senegal,SEN,216
+179,690,9,9,10,Seychelles,SYC,186
+180,694,8,8,8,Sierra Leone,SLE,217
+181,702,21,21,24,Singapore,SGP,69
+182,703,12,12,14,Slovak Republic,SVK,54
+183,704,21,21,24,Vietnam,VNM,20
+184,705,12,12,14,Slovenia,SVN,55
+185,706,9,9,10,Somalia,SOM,187
+186,710,10,10,12,South Africa,ZAF,196
+187,716,10,26,11,Zimbabwe,ZWE,198
+188,724,11,11,13,Spain,ESP,92
+189,732,7,7,7,Western Sahara,ESH,0
+190,736,9,9,10,Sudan,SDN,522
+191,740,6,6,5,Suriname,SUR,118
+192,748,10,26,11,Swaziland,SWZ,197
+193,752,11,11,13,Sweden,SWE,93
+194,756,11,11,13,Switzerland,CHE,94
+195,760,17,17,19,Syrian Arab Republic,SYR,153
+196,762,15,15,18,Tajikistan,TJK,39
+197,764,21,21,24,Thailand,THA,18
+198,768,8,8,8,Togo,TGO,218
+199,772,24,24,27,Tokelau,TKL,0
+200,776,24,24,27,Tonga,TON,29
+201,780,4,4,4,Trinidad and Tobago,TTO,119
+202,784,17,17,19,United Arab Emirates,ARE,156
+203,788,7,7,7,Tunisia,TUN,154
+204,792,13,13,16,Turkey,TUR,155
+205,795,15,15,18,Turkmenistan,TKM,40
+206,796,4,4,4,Turks and Caicos Isl.,TCA,0
+207,798,24,24,27,Tuvalu,TUV,0
+208,800,9,9,10,Uganda,UGA,190
+209,804,14,14,15,Ukraine,UKR,63
+210,807,12,12,14,Macedonia,MKD,49
+211,818,7,7,7,Egypt,EGY,141
+212,826,11,11,13,United Kingdom,GBR,95
+213,834,10,26,11,Tanzania,TZA,189
+214,840,2,2,2,United States,USA,102
+215,850,4,4,4,Virgin Islands (U.S.),VIR,0
+216,854,8,8,8,Burkina Faso,BFA,201
+217,858,6,6,5,Uruguay,URY,99
+218,860,15,15,18,Uzbekistan,UZB,41
+219,862,6,6,5,Venezuela,VEN,133
+220,876,24,24,27,Wallis ans Futuna Island,WLF,0
+221,882,24,24,27,Samoa,WSM,27
+222,887,17,17,19,Yemen,YEM,157
+223,891,12,12,14,Serbia,YUG,53
+224,894,10,26,11,Zambia,ZMB,191
