@@ -1,7 +1,7 @@
 # purpose: general purpose functions to communicate between MyM and R
 # author: David L. Bijl: d.l.bijl@uu.nl or dlbijl@gmail.com
 
-library(plyr)
+#library(plyr)
 library(stringr)
 library(reshape2)
 
@@ -161,22 +161,6 @@ lookup.mym.dimlabels = function(varname){
   
   source('dimension_convention.R')
   
-  regions28 = c("CAN","USA","MEX","RCAM","BRA","RSAM","NAF","WAF","EAF","SAF","WEU","CEU","TUR","UKR","STAN","RUS","ME","INDIA","KOR","CHN","SEAS","INDO","JAP","OCE","RSAS","RSAF","dummy","TOTAL")
-  regions27 = c("CAN","USA","MEX","RCAM","BRA","RSAM","NAF","WAF","EAF","SAF","WEU","CEU","TUR","UKR","STAN","RUS","ME","INDIA","KOR","CHN","SEAS","INDO","JAP","OCE","RSAS","RSAF","TOTAL")
-  sector1   = c('Elec','Ind','Muni','Total non-agri')
-  sector2   = c('Industry','Transport','Residential','Services', 'Other1', 'Bunker oil', 'Non-energy', 'Hydrogen', 'Electricity', 'Other2')
-  sector3 = c('End-use industry', 'End-use transport', 'End-use residential', 'End-use services', 'End-use other', 'Energy transformation', 'Power generation', 'losses/leakages', 'Bunkers', 'Total')
-  energy_carrier = c('Coal', 'Heavy oil', 'Light oil', 'Natural gas', 'Modern biofuels', 'Total')
-  industrial_process_CO2 = c('cement', 'feedstock', 'total')
-  industrial_process_CH4 = c('iron & steel', 'chemicals', 'bulk chemicals', 'total')
-  industrial_process_N2O = c('adipic acid', 'nitric acid', 'chemicals', 'total')
-  HFC = c('HFC23', 'HFC32',	'HFC4310', 'HFC125', 'HFC134a',	'HFC143a', 'HFC152', 'HFC227', 'HFC236', 'HFC245')
-  PFC = c('CF4','C2F6',	'SF6', 'C6F14')
-  land_use_source_CO2 = c('biomass burning', 'burning of traditional biomass', 'timber pool (short lifetime)', 'timber pool (long lifetime)', 'carbon release by regrowing vegetation', 'Total')
-  land_use_source_CH4 = c('biomass burning', 'fuelwood burning', 'agricultural waste burning', 'savanna burning', 'landfills', 'sewage', 'wetland rice', 'animals', 'animal waste', 'Total')
-  land_use_source_N2O = c('deforestation/biomass burning', 'traditional biomass/fuelwood burning', 'agricultural waste burning', 'savanna burning', 'land clearing', 'fertilizers', 'stables', 'grazing', 'manure application', 'fertilizers indirect', 'domestic sewage', 'from residues', 'biological N-fixation', 'Total')
-  
-  
     # please keep this list in alphabetical order!
   # do include the submodel e.g. main.em.h2o.etc.
  
@@ -184,14 +168,15 @@ lookup.mym.dimlabels = function(varname){
     'main.AllWCS'        = list(collist=list(regions28,sector1), namecols=c('region','sector')),
     'main.em.h2o.AllWCS' = list(collist=list(regions28,sector1), namecols=c('region','sector')),
     'main.em.CO2Spec'    = list(collist=list(regions28,sector2), namecols=c('region','sector')),
-    'main.em.mis.ENEMISCO2' = list(collist=list(regions28,sector3,energy_carrier), namecols=c('region','sector', 'energy_carrier')),
-    'main.em.mis.ENEMISCH4' = list(collist=list(regions28,sector3,energy_carrier), namecols=c('region','sector', 'energy_carrier')),
-    'main.em.mis.ENEMISN2O' = list(collist=list(regions28,sector3,energy_carrier), namecols=c('region','sector', 'energy_carrier')),
+    'main.em.mis.ENEMISCO2' = list(collist=list(regions28,sector3,energy_carrier_emis), namecols=c('region','sector', 'energy_carrier')),
+    'main.em.mis.ENEMISCH4' = list(collist=list(regions28,sector3,energy_carrier_emis), namecols=c('region','sector', 'energy_carrier')),
+    'main.em.mis.ENEMISN2O' = list(collist=list(regions28,sector3,energy_carrier_emis), namecols=c('region','sector', 'energy_carrier')),
     'main.em.mis.INDEMISCO2' = list(collist=list(regions28,industrial_process_CO2), namecols=c('region','industrial_process')),
     'main.em.mis.INDEMISCH4' = list(collist=list(regions28,industrial_process_CH4), namecols=c('region','industrial_process')),
     'main.em.mis.INDEMISN2O' = list(collist=list(regions28,industrial_process_N2O), namecols=c('region','industrial_process')),
     'main.em.mis.hm.HC.EMISHFC_reg' = list(collist=list(regions27,HFC), namecols=c('region','HFC_gas')),
     'main.em.mis.hm.HC.EMISPFC_reg' = list(collist=list(regions27,PFC), namecols=c('region','PFC_gas')),
+    'main.em.ElecProd' = list(collist=list(regions28,energy_carrier_energy), namecols=c('region','energy_carrier')),
     'real LUEMCO2 ' = list(collist=list(land_use_source_CO2, regions27), namecols=c('source','region')),
     'real LUEMCH4 ' = list(collist=list(land_use_source_CH4, regions27), namecols=c('source','region')),
     'real LUEMN2O ' = list(collist=list(land_use_source_N2O, regions27), namecols=c('source','region')),
