@@ -10,10 +10,13 @@
 #    - Dummy region is removed and replaced by "EU", which is the sum of "WEU" and "CEU"
 # 4. Create list
 
-#TIMER_2015/<scenario>/tuss
-# CO2Spec
 
-#TIMER_2015/<scenario>/indicatoren
+# IMAGE/<scenario>/output
+# TIMER_2015/<scenario>/indicatoren
+# TIMER_2015/<scenario>/tuss
+
+# GHG EMISSIONS
+# CO2Spec
 # ENEMISCO2
 # ENEMISCH4
 # ENEMISN2O
@@ -21,15 +24,32 @@
 # INDEMISCH4
 # INDEMISN2O
 
-# IMAGE/<scenario>/output
 # LUEMCO2
 # LUEMCH4
 # LUEMN2O
 
+# ENERGY SUPPLY
+# ElecProd
+# EnergyProd
+# FinalEnergy
+# Residential_FinalEnergy
+
+# ENERGY DEMAND
+
+# DRIVERS
+# POP
+# GDP_MER
+# GDP_PP
+# IVA
+
 #library(base)
 ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2')
-{ source('mym2r.R')
+{ 
+  source('mym2r.R')
   source('Settings.R')
+
+  #TIMER_scenario = 'NPi_update'
+  #IMAGE_scenario = 'NPi'
   
   if(!dir.exists(paste(TIMER_folder, TIMER_scenario, sep="/")))
   { print("The TIMER scenario is not recognised, is it located in the TIMER_folder (see Settings.r)?")
@@ -41,6 +61,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2'
   }
 #1.
 
+# GHG EMISSIONS
 #2, 3.
 # prepare correct labels for mym file dimensions
 CO2Spec = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), TIMER_scenario, filename='CO2Spec.out', novarname = T)
@@ -161,6 +182,7 @@ EU$region = factor(EU$region, levels=regions28_EU)
 LUEMN2O <- rbind(LUEMN2O, EU)
 LUEMN2O$region = factor(LUEMN2O$region,levels=regions28_EU)
 
+# ENERGY SUPPLY
 ElecProd = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario,"/indicatoren", sep=""), filename='ElecProd.out', novarname = T)
 ElecProd <- subset(ElecProd, region != "dummy")
 ElecProd$region = factor(ElecProd$region, levels=regions28_EU)
@@ -183,18 +205,149 @@ ElecProd_tmp <- select(ElecProd_tmp, year, region, energy_carrier, value)
 ElecProd <- bind_rows(ElecProd, ElecProd_tmp)
 
 ElecProd <- mutate(ElecProd, region_nr=match(region, regions28_EU))
-ElecProd <- mutate(ElecProd, energy_carrier_nr=match(energy_carrier, energy_carrier_energy2))
+ElecProd <- mutate(ElecProd, energy_carrier_nr=match(energy_carrier, energy_carrier))
 ElecProd <- select(ElecProd, year, region_nr, energy_carrier_nr, everything())
 ElecProd <- arrange(ElecProd, year, region_nr, energy_carrier_nr)
 ElecProd$energy_carrier <- as.factor(ElecProd$energy_carrier)
 ElecProd$region_nr <- NULL
 ElecProd$energy_carrier_nr <- NULL
 
+#Eprod
+EnergyProd = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario,"/indicatoren", sep=""), filename='eprod.out', novarname = T)
+EnergyProd <- subset(EnergyProd, region != "dummy")
+EnergyProd$region = factor(EnergyProd$region, levels=regions28_EU)
+EU <- inner_join(filter(EnergyProd, region=='WEU'), filter(EnergyProd, region=='CEU'), by=c("year", "energy_carrier"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, energy_carrier, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+EnergyProd <- rbind(EnergyProd, EU)
+EnergyProd$region = factor(EnergyProd$region,levels=regions28_EU)
+
+#RSE
+FinalEnergy = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario,"/indicatoren", sep=""), filename='rse.out', novarname = T)
+FinalEnergy <- subset(FinalEnergy, region != "dummy")
+FinalEnergy$region = factor(FinalEnergy$region, levels=regions28_EU)
+EU <- inner_join(filter(FinalEnergy, region=='WEU'), filter(FinalEnergy, region=='CEU'), by=c("year", "sector", "energy_carrier"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, sector, energy_carrier, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+FinalEnergy <- rbind(FinalEnergy, EU)
+FinalEnergy$region = factor(FinalEnergy$region,levels=regions28_EU)
+
+#Residential Final Energy
+FinalEnergy_Residential = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario,"/tuss", sep=""), filename='res_EU.out', novarname = T)
+FinalEnergy_Residential <- subset(FinalEnergy_Residential, region != "dummy")
+FinalEnergy_Residential$region = factor(FinalEnergy_Residential$region, levels=regions28_EU)
+EU <- inner_join(filter(FinalEnergy_Residential, region=='WEU'), filter(FinalEnergy_Residential, region=='CEU'), by=c("year", "population_group", "enduse_function"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, population_group, enduse_function, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+FinalEnergy_Residential <- rbind(FinalEnergy_Residential, EU)
+FinalEnergy_Residential$region = factor(FinalEnergy_Residential$region,levels=regions28_EU)
+
+# add total
+FinalEnergy_Residential$population_group <- as.character(FinalEnergy_Residential$population_group)
+FinalEnergy_Residential$enduse_function <- as.character(FinalEnergy_Residential$enduse_function)
+FinalEnergy_Residential_tmp <- FinalEnergy_Residential %>% group_by(year, region, population_group) %>% summarise(value=sum(value))
+FinalEnergy_Residential_tmp <- ungroup(FinalEnergy_Residential_tmp)
+FinalEnergy_Residential_tmp <- mutate(FinalEnergy_Residential_tmp, enduse_function="Total")
+FinalEnergy_Residential_tmp <- select(FinalEnergy_Residential_tmp, year, region, population_group, enduse_function, value)
+FinalEnergy_Residential <- bind_rows(FinalEnergy_Residential, FinalEnergy_Residential_tmp)
+
+# Person Kilometers Travelled (Tera km)
+PersonKilometers = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario,"/tuss", sep=""), filename='trp_trvl_pkm.out', novarname = T)
+PersonKilometers <- subset(PersonKilometers, region != "dummy")
+PersonKilometers$region = factor(PersonKilometers$region, levels=regions28_EU)
+EU <- inner_join(filter(PersonKilometers, region=='WEU'), filter(PersonKilometers, region=='CEU'), by=c("year", "travel_mode"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, travel_mode, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+PersonKilometers <- rbind(PersonKilometers, EU)
+PersonKilometers$region = factor(PersonKilometers$region,levels=regions28_EU)
+
+# Energy use travel fuels
+FinalEnergy_Transport = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario,"/tuss", sep=""), filename='trp_trvl_Energy.out', novarname = T)
+FinalEnergy_Transport <- subset(FinalEnergy_Transport, region != "dummy")
+FinalEnergy_Transport$region = factor(FinalEnergy_Transport$region, levels=regions28_EU)
+EU <- inner_join(filter(FinalEnergy_Transport, region=='WEU'), filter(FinalEnergy_Transport, region=='CEU'), by=c("year", "travel_mode"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, travel_mode, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+FinalEnergy_Transport <- rbind(FinalEnergy_Transport, EU)
+FinalEnergy_Transport$region = factor(FinalEnergy_Transport$region,levels=regions28_EU)
+
+# Vehicle share cars
+VehicleShare_cars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario,"/tuss", sep=""), filename='trp_trvl_Vshare_car.out', novarname = T)
+VehicleShare_cars$region = factor(VehicleShare_cars$region, levels=regions28_EU)
+EU <- inner_join(filter(VehicleShare_cars, region=='WEU'), filter(VehicleShare_cars, region=='CEU'), by=c("year", "car_type"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, car_type, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+VehicleShare_cars <- rbind(VehicleShare_cars, EU)
+VehicleShare_cars$region = factor(VehicleShare_cars$region,levels=regions28_EU)
+
+#POP
+# Unit: million people
+POP = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), TIMER_scenario, filename='pop.scn', novarname = T)
+POP_keep = POP
+POP <- subset(POP, region != "dummy")
+POP$region = factor(POP$region, levels=regions28_EU)
+EU <- inner_join(filter(POP, region=='WEU'), filter(POP, region=='CEU'), by=c("year"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+POP <- rbind(POP, EU)
+POP$region = factor(POP$region,levels=regions28_EU)
+
+#GDP
+# Unit: milliln US(2005) dollar
+GDP_MER = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/indicatoren", sep=""), TIMER_scenario, filename='gdptot.out', novarname = T)
+GDP_MER <- subset(GDP_MER, region != "dummy")
+GDP_MER$region = factor(GDP_MER$region, levels=regions28_EU)
+EU <- inner_join(filter(GDP_MER, region=='WEU'), filter(GDP_MER, region=='CEU'), by=c("year"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+GDP_MER <- rbind(GDP_MER, EU)
+GDP_MER$region = factor(GDP_MER$region,levels=regions28_EU)
+
+GDP_PPPpc = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/indicatoren", sep=""), TIMER_scenario, filename='gpdppp.out', novarname = T)
+GDP_PPPpc <- subset(GDP_PPPpc, region != "dummy")
+GDP_PPPpc$region = factor(GDP_PPPpc$region, levels=regions28_EU)
+EU <- inner_join(filter(GDP_PPPpc, region=='WEU'), filter(GDP_PPPpc, region=='CEU'), by=c("year"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+GDP_PPPpc <- rbind(GDP_PPPpc, EU)
+GDP_PPPpc$region = factor(GDP_PPPpc$region,levels=regions28_EU)
+
+GDP_PPP <- inner_join(POP, GDP_PPPpc, by=c("year", "region"))
+GDP_PPP <- mutate(GDP_PPP, value=value.x*value.y)
+GDP_PPP <- select(GDP_PPP, year, region, value)
+
+#IVA
+# Unit: milliln US(2005) dollar
+IVA = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/indicatoren", sep=""), TIMER_scenario, filename='iva_pc.scn', novarname = T)
+IVA <- inner_join(POP_keep, IVA, by=c('year', 'region'))
+IVA <- mutate(IVA, value = value.x * value.y)
+IVA <- select(IVA, year, region, value)
+IVA <- subset(IVA, region != "dummy")
+IVA$region = factor(IVA$region, levels=regions28_EU)
+EU <- inner_join(filter(IVA, region=='WEU'), filter(IVA, region=='CEU'), by=c("year"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+IVA <- rbind(IVA, EU)
+IVA$region = factor(IVA$region,levels=regions28_EU)
+
 #4.
 l <- list(CO2Spec=CO2Spec,ENEMISCO2=ENEMISCO2,ENEMISCH4=ENEMISCH4,ENEMISN2O=ENEMISN2O,INDEMISCO2=INDEMISCO2,
           INDEMISCH4=INDEMISCH4,INDEMISN2O=INDEMISN2O,HFC_reg=HFC_reg,PFC_reg=PFC_reg,
           LUEMCO2=LUEMCO2,LUEMCH4=LUEMCH4,LUEMN2O=LUEMN2O,
-          ElecProd=ElecProd)
+          ElecProd=ElecProd, EnergyProd=EnergyProd, FinalEnergy=FinalEnergy, 
+          FinalEnergy_Residential=FinalEnergy_Residential, PersonKilometers=PersonKilometers, FinalEnergy_Transport=FinalEnergy_Transport,
+          VehicleShare_cars=VehicleShare_cars,
+          POP=POP, GDP_MER=GDP_MER, GDP_PPP=GDP_PPP, IVA=IVA)
 #assign(Scenario, get("l"))
 
 }
