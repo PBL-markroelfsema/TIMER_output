@@ -340,6 +340,27 @@ EU$region = factor(EU$region, levels=regions28_EU)
 IVA <- rbind(IVA, EU)
 IVA$region = factor(IVA$region,levels=regions28_EU)
 
+FloorSpace = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), TIMER_scenario, filename='res_FloorSpace.out', novarname = T)
+# improve by making it include all population groups
+FloorSpace = filter(FloorSpace, population_group=="Total")
+FloorSpace = select(FloorSpace, year, region, value)
+FloorSpace <- inner_join(POP_keep, FloorSpace, by=c('year', 'region'))
+FloorSpace <- mutate(FloorSpace, value = value.x * value.y)
+FloorSpace <- select(FloorSpace, year, region, value)
+# add world total
+FloorSpace <- subset(FloorSpace, region != "World")
+FloorSpace_world <- group_by(FloorSpace, year) %>% summarise(value=sum(value))
+FloorSpace_world <- mutate(FloorSpace_world, region="World")
+FloorSpace <- rbind(FloorSpace, FloorSpace_world)
+#FloorSpace <- subset(FloorSpace, region != "dummy")
+FloorSpace$region = factor(FloorSpace$region, levels=regions28_EU)
+EU <- inner_join(filter(FloorSpace, region=='WEU'), filter(FloorSpace, region=='CEU'), by=c("year"))
+EU$region <- "EU"
+EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, value)
+EU$region = factor(EU$region, levels=regions28_EU)
+FloorSpace <- rbind(FloorSpace, EU)
+FloorSpace$region = factor(FloorSpace$region,levels=regions28_EU)
+
 #4.
 l <- list(CO2Spec=CO2Spec,ENEMISCO2=ENEMISCO2,ENEMISCH4=ENEMISCH4,ENEMISN2O=ENEMISN2O,INDEMISCO2=INDEMISCO2,
           INDEMISCH4=INDEMISCH4,INDEMISN2O=INDEMISN2O,HFC_reg=HFC_reg,PFC_reg=PFC_reg,
@@ -347,7 +368,7 @@ l <- list(CO2Spec=CO2Spec,ENEMISCO2=ENEMISCO2,ENEMISCH4=ENEMISCH4,ENEMISN2O=ENEM
           ElecProd=ElecProd, EnergyProd=EnergyProd, FinalEnergy=FinalEnergy, 
           FinalEnergy_Residential=FinalEnergy_Residential, PersonKilometers=PersonKilometers, FinalEnergy_Transport=FinalEnergy_Transport,
           VehicleShare_cars=VehicleShare_cars,
-          POP=POP, GDP_MER=GDP_MER, GDP_PPP=GDP_PPP, IVA=IVA)
+          POP=POP, GDP_MER=GDP_MER, GDP_PPP=GDP_PPP, IVA=IVA, FloorSpace=FloorSpace)
 #assign(Scenario, get("l"))
 
 }

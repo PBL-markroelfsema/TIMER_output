@@ -186,6 +186,7 @@ lookup.mym.dimlabels = function(varname){
     'main.em.dem.trp.trvl.ProjT.pkm_global_tot' = list(collist=list(regions28,travel_mode), namecols=c('region','travel_mode')),
     'main.em.dem.trp.trvl.ProjT.Energy_global_tot' = list(collist=list(regions28,travel_mode), namecols=c('region','travel_mode')),
     'main.em.dem.trp.trvl.ModeT.CARS.V_share' = list(collist=list(regions27,car_type), namecols=c('region','car_type')),
+    'main.em.dem.res.Floorspace' = list(collist=list(regions27,population_groups), namecols=c('region','population_group')),
     'main.em.dem.POP' = list(collist=list(regions28), namecols=c('region')),
     'main.em.GDPTot' = list(collist=list(regions28), namecols=c('region')),
     'main.em.GDPpcppp' = list(collist=list(regions28), namecols=c('region')),
