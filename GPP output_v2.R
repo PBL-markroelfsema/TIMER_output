@@ -1,14 +1,15 @@
 library(ggplot2)
 library(gridExtra)
 library(grid)
+library(ggpubr)
 
-source('Import_TIMER_output.R')
-source('Settings.R')
+source('functions//Import_TIMER_output.R')
+source('functions//Settings.R')
 CurrentPolicies <- ImportTimerScenario('GPP_CurrentPolicies','SSP2')
 GPPPolicies <- ImportTimerScenario('GPP_Total_fromCPS','SSP2')
 
-source('Process_TIMER_output.R')
-source('Settings.R')
+source('functions//Process_TIMER_output.R')
+source('functions//Settings.R')
 CurrentPolicies_indicators <- ProcessTimerScenario(CurrentPolicies)
 GPPPolicies_indicators <- ProcessTimerScenario(GPPPolicies)
 
@@ -81,7 +82,7 @@ i <- gpp_graph(data_i1, data_i2, y_axix_i)
 #fig_tst <- grid_arrange_shared_legend(a,b,c,d,e,f,g,h,i, ncol = 3, nrow = 3)
 fig_tst <- grid_arrange_shared_legend(a,b,c,d,e,f,g,h,i, ncol = 3, nrow = 3)
 fig_tst <- grid_arrange_shared_legend(a,b, ncol = 3, nrow = 3)
-ggsave(file=paste("graphs/Fig_tst.png",sep=""),fig_tst,width=24,height=14,dpi=200)
+ggsave(file=paste("graphs/Fig_tst.png",sep=""),fig_tst,width=24,height=14,dpi=300)
 
 
 
@@ -226,8 +227,8 @@ i <- ggplot() +
 
 
 fig <- grid_arrange_shared_legend(a,b,c,d,e,f,g,h,i, ncol = 3, nrow = 3)
-ggsave(file=paste("graphs/Fig2.png",sep=""),fig,width=24,height=14,dpi=200)
+ggsave(file=paste("graphs/Fig2.png",sep=""),fig,width=24,height=14,dpi=300)
 
-library(ggpubr)
+
 fig2 <- ggarrange(a,b,c,d,e,f,g,h,i, ncol=3, nrow=3, common.legend = TRUE, legend="bottom")
-ggsave(file=paste("graphs/Fig2_v2.png",sep=""),fig2,width=24,height=14,dpi=150)
+ggsave(file=paste("graphs/Fig2_v2.png",sep=""),fig2,width=24,height=14,dpi=300)
