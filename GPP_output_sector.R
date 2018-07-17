@@ -5,11 +5,9 @@ library(stringr)
 library(rlang)
 library(ggpubr)
 # import functions to read in and manipulate TIMER functions
-source('functions//Settings.R')
+source('functions/Settings.R')
 source('functions//Import_TIMER_output.R')
 source('functions//Process_TIMER_output.R')
-
-setwd("~/R/TIMER_output")
 
 # This module makes graphs for the 'good practice policy' paper
 # The first graph first creates three different result sets
