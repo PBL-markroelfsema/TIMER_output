@@ -159,7 +159,7 @@ read.mym2r.many = function(filenames=c(), path.to.folder='', yearheader='year', 
 lookup.mym.dimlabels = function(varname){
   # retrieve default collist and namecols arguments, based on varname.
   
-  source('dimension_convention.R')
+  source('functions/dimension_convention.R')
   
     # please keep this list in alphabetical order!
   # do include the submodel e.g. main.em.h2o.etc.
