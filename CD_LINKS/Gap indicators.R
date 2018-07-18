@@ -1,5 +1,6 @@
 library(gridExtra)
 source('functions/Settings.R')
+source('functions/General Functions.R')
 source('functions/Import_TIMER_output.R')
 source('functions/Process_TIMER_output.R')
 
@@ -32,7 +33,7 @@ REN_electricity <- mutate(NPi2020_400_ind$RenElecShare, scenario="1.5C") %>% rbi
 
 figure_REN_electricity <- ggplot(data=filter(REN_electricity, region=="World", year>=2010, year<=2050)) +
                           geom_line(aes(x=year, y=value, color=scenario)) +
-                          ggtitle("Electricity sector, share of renewable electricity") +
+                          labs(title="Electricity sector", subtitle="share of renewable electricity") +
                           labs(x = "year", y = "%") +
                           theme(panel.background = element_rect(fill = 'white', colour = 'black'))
 
@@ -44,7 +45,7 @@ CO2_intensity_cars <- mutate(NPi2020_400_ind$CO2_km_cars, scenario="1.5C") %>% r
 
 figure_CO2_intensity_cars <- ggplot(data=filter(CO2_intensity_cars, region=="World", year>=2010, year<=2050)) +
   geom_line(aes(x=year, y=value, color=scenario)) +
-  ggtitle("Transport sector, CO2-intensity cars") +
+  labs(title="Transport sector", subtitle="CO2-intensity cars") +
   labs(x = "year", y = "gCO2/km") +
   theme(panel.background = element_rect(fill = 'white', colour = 'black'))
 
@@ -56,7 +57,7 @@ Energy_intensity_residential_buildings <- mutate(NPi2020_400_ind$Residential_Fin
 
 figure_Energy_intensity_residential_buildings <- ggplot(data=filter(Energy_intensity_residential_buildings, region=="World", year>=2010, year<=2050)) +
   geom_line(aes(x=year, y=value, color=scenario)) +
-  ggtitle("Buildings sector, residential energy use per m2") +
+  labs(title="Buildings sector", subtitle="residential energy use per m2") +
   labs(x = "year", y = "GJ/m2") +
   theme(panel.background = element_rect(fill = 'white', colour = 'black'))
 
@@ -68,8 +69,9 @@ Energy_intensity_industry <- mutate(NPi2020_400_ind$Industry_Energy_IVA, scenari
 
 figure_Energy_intensity_industry <- ggplot(data=filter(Energy_intensity_industry, region=="World", year>=2010, year<=2050)) +
   geom_line(aes(x=year, y=value, color=scenario)) +
-  ggtitle("Industry sector, energy use per industry value added") +
+  labs(title="Industry sector", subtitle="energy use per industry value added") +
   labs(x = "year", y = "PJ/million US$(2005)") +
   theme(panel.background = element_rect(fill = 'white', colour = 'black'))
 
-g <- grid.arrange(figure_REN_electricity, figure_CO2_intensity_cars, figure_Energy_intensity_residential_buildings, figure_Energy_intensity_industry, ncol=2, nrow=2)
+g1 <- grid.arrange(figure_REN_electricity, figure_CO2_intensity_cars, figure_Energy_intensity_residential_buildings, figure_Energy_intensity_industry, ncol=2, nrow=2)
+g2 <- grid_arrange_shared_legend(figure_REN_electricity, figure_CO2_intensity_cars, figure_Energy_intensity_residential_buildings, figure_Energy_intensity_industry)
