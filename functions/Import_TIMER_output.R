@@ -326,6 +326,17 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2'
   FinalEnergy_Residential <- mutate(FinalEnergy_Residential, unit="GJ")
   
   # TRANSPORT
+  TransportCO2Emissions = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
+                                           filename='trp_trvl_CO2.out', varname=NULL, 
+                                           collist=list(regions28,travel_mode), 
+                                           namecols=c('region','travel_mode'), novarname = TRUE)
+  TransportCO2Emissions <- subset(TransportCO2Emissions, region != "dummy")
+  EU <- filter(TransportCO2Emissions, region %in% c('WEU', 'CEU'))
+  EU <- spread(EU, key=region, value=value)
+  EU <- mutate(EU, region="EU")
+  EU <- mutate(EU, value=WEU+CEU)
+  EU <- select(EU, year, region, travel_mode, value)
+  TransportCO2Emissions <- rbind(TransportCO2Emissions, EU)
   
   # Person Kilometers Travelled (Tera km)
   PersonKilometers = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
@@ -417,7 +428,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2'
   GDP_PPP <- mutate(GDP_PPP, unit="million US$(2005)")
 
   #IVA
-  # Unit: milliln US(2005) dollar
+  # Unit: million US(2005) dollar
   IVA = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/indicatoren", sep=""), 
                         filename='iva_pc.scn', varname=NULL, 
                         collist=list(regions28), 
@@ -463,7 +474,8 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2'
             INDEMISCH4=INDEMISCH4,INDEMISN2O=INDEMISN2O,HFC_reg=HFC_reg,PFC_reg=PFC_reg,
             LUEMCO2=LUEMCO2,LUEMCH4=LUEMCH4,LUEMN2O=LUEMN2O,
             ElecProd=ElecProd, EnergyProd=EnergyProd, FinalEnergy=FinalEnergy, 
-            FinalEnergy_Residential=FinalEnergy_Residential, PersonKilometers=PersonKilometers, FinalEnergy_Transport=FinalEnergy_Transport,
+            FinalEnergy_Residential=FinalEnergy_Residential, 
+            TransportCO2Emissions=TransportCO2Emissions, PersonKilometers=PersonKilometers, FinalEnergy_Transport=FinalEnergy_Transport,
             VehicleShare_cars=VehicleShare_cars, TPES,
             POP=POP, GDP_MER=GDP_MER, GDP_PPP=GDP_PPP, IVA=IVA, FloorSpace=FloorSpace)
   

@@ -280,6 +280,7 @@ Residential_FinalEnergy_m2 <- inner_join(Residential_FinalEnergy_m2, FloorSpace_
 Residential_FinalEnergy_m2 <- mutate(Residential_FinalEnergy_m2, value=value.x / value.y)
 Residential_FinalEnergy_m2 <- select(Residential_FinalEnergy_m2, year, region, value)
 Residential_FinalEnergy_m2 <- data.frame(Residential_FinalEnergy_m2)
+Residential_FinalEnergy_m2 <- mutate(Residential_FinalEnergy_m2, unit="GJ/m2")
 
 # Energy appliances per capita residential sector (GJ/capita)
 Appliances_FinalEnergy_capita <- filter(Scenario$FinalEnergy_Residential, population_group=="Total", enduse_function=="HouseholdAppliances")
@@ -301,16 +302,36 @@ FuelUse_pkm_cars <- select(FuelUse_pkm_cars, year, region, value)
 FuelUse_pkm_cars$value <- (MJ_l_gasoline/FuelUse_pkm_cars$value)/Load_car
 FuelUse_pkm_cars <- data.frame(FuelUse_pkm_cars)
 
+# Car CO2 per km
+CO2_km_cars <- filter(Scenario$TransportCO2Emissions, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v="CO2")
+Pkm_cars <- filter(Scenario$PersonKilometers, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v='pkm')
+CO2_km_cars <- rbind(CO2_km_cars, Pkm_cars)
+CO2_km_cars <- spread(CO2_km_cars, key=v, value=value)
+# convert to gCO2/km (from Mt/Tkm) and in vehicle kilomters, instead of pkm
+CO2_km_cars <- mutate(CO2_km_cars, value=(Load_car/Tera)*10^12*CO2/pkm) %>% select(year, region, value)
+CO2_km_cars <- mutate(CO2_km_cars, unit= "gCO2/km")
+
 # Share of Electric cars
 ElectricCars_share <- filter(Scenario$VehicleShare_cars, car_type=="BEV" | car_type=="BEV 150")
 ElectricCars_share <- ElectricCars_share %>% group_by(year, region) %>% summarise(value=sum(value))
 ElectricCars_share <- select(ElectricCars_share, year, region, value)
 ElectricCars_share <- ungroup(ElectricCars_share)
 
+# INDUSTRY
+
+# final energy per IVA (PJ/million US$(2005)
+Industry_Energy <- filter(Scenario$FinalEnergy, sector=="Industry", energy_carrier=="Total") %>% select(year, region, value) %>% mutate(v="energy")
+Industry_IVA <- select(Scenario$IVA, year, region, value) %>% mutate(v="IVA")
+Industry_Energy_IVA <- rbind(Industry_Energy, Industry_IVA)
+Industry_Energy_IVA <- spread(Industry_Energy_IVA, key=v, value=value)
+Industry_Energy_IVA <- mutate(Industry_Energy_IVA, value=energy/IVA) %>% select(year, region, value)
+Industry_Energy_IVA <- mutate(Industry_Energy_IVA, unit="PJ/million US$(2005)")
+
 l <- list(EMISCO2EQ=EMISCO2EQ,EMISCO2EQpc=EMISCO2EQpc, EMIS_demand=EMIS_demand, EMIS_supply=EMIS_supply, FGases=FGases,
           RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, OilGas_Intensity = OilGas_Intensity, 
           IndustryEfficiency = Industry_Efficiency, FGas_Reduction_index = FGas_Reduction_index, 
           Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2, 
           Appliances_FinalEnergy_capita=Appliances_FinalEnergy_capita,
-          FuelUse_pkm_cars=FuelUse_pkm_cars, ElectricCars_share=ElectricCars_share)
+          CO2_km_cars=CO2_km_cars, FuelUse_pkm_cars=FuelUse_pkm_cars, ElectricCars_share=ElectricCars_share,
+          Industry_Energy_IVA=Industry_Energy_IVA)
 }
