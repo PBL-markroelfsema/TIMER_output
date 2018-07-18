@@ -14,6 +14,12 @@ TIMER_folder = paste("../../2_TIMER/outputlib/TIMER_2015/",Project, sep="")
 IMAGE_folder = '../../3_IMAGE/Scenario_lib/scen'
 StartYear = 1990
 
+Mega = 10^6
+Giga = 10^9
+Tera = 10^12
+Peta = 10^12
+Exa = 10^18
+
 NToN2O <- 44/28
 CToCO2 <- 44/12
 GWP_CH4 <- 25
