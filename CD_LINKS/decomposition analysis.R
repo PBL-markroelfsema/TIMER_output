@@ -2,7 +2,13 @@ source('Settings.R')
 source('Import_TIMER_output.R')
 library(tidyverse)
 
-NoPolicy <- ImportTimerScenario('NoPolicy','NoPolicy')
+ProjectDir = "~/disks/y/ontwapps/Timer/Users/Mark"
+Project = 'CD_LINKSupdate'
+R_dir = paste(ProjectDir, Project, "R-scripts/TIMER_output", sep="/")
+setwd(R_dir)
+getwd()
+
+NoPolicy <- ImportTimerScenario('NoPolicy_update','NoPolicy_update')
 NoPolicyi <- ProcessTimerScenario(NoPolicy)
 
 CAFETargets <- ImportTimerScenario('CAFE_Targets','NoPolicy')

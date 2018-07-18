@@ -10,10 +10,7 @@ library(tidyverse)
 
 # settings
 #TIMERGeneration = 'TIMER_2015'
-#TIMER_folder = 'ClimatePolicies\\2_TIMER\\outputlib\\TIMER_2015\\ClimatePolicies'
-#IMAGE_folder = 'ClimatePolicies\\3_IMAGE\\Scenario_lib\\scen'
-#TIMER_folder = '..\\..\\2_TIMER\\outputlib\\TIMER_2015\\ClimatePolicies'
-TIMER_folder = '../../2_TIMER/outputlib/TIMER_2015/ClimatePolicies'
+TIMER_folder = paste("../../2_TIMER/outputlib/TIMER_2015/",Project, sep="")
 IMAGE_folder = '../../3_IMAGE/Scenario_lib/scen'
 StartYear = 1990
 

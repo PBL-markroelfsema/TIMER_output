@@ -1,4 +1,6 @@
-#pre: Scenario is created with ImportTimerScenario and assigned to 'Scenario'
+#pre: Make sure you are in the 1-click environment R-scripts directory
+#     e.g. Y:\ontwapps\Timer\Users\Mark\CD_LINKSupdate\R-scripts/TIMER_output
+#     Scenario is created with ImportTimerScenario and assigned to 'Scenario'
 #post: this script processes TIMER output resulting in new output variables
 # 3. Aggregates GHG emissions files to total emissions in CO2eq (unit)
 #    All variables use 27 regions 

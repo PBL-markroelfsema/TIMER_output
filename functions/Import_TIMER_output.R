@@ -1,4 +1,6 @@
-#pre: Timer_scenario and IMAGE_scenario are the names of the scenarios.
+#pre: Make sure you are in the 1-click environment R-scripts directory
+#     e.g. Y:\ontwapps\Timer\Users\Mark\CD_LINKSupdate\R-scripts/TIMER_output
+#     Timer_scenario and IMAGE_scenario are the names of the scenarios.
 #     These scenarios should come from the TIMER outputlib and IMAGE Scenlib (do not change structure).
 #     and must be located in TIMER_folder and IMAGE_folder (set in 'Settings.R')
 #      

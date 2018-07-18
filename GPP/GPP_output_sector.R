@@ -9,6 +9,11 @@ source('functions/Settings.R')
 source('functions/Import_TIMER_output.R')
 source('functions/Process_TIMER_output.R')
 
+ProjectDir = "~/disks/y/ontwapps/Timer/Users/Mark"
+Project = 'ClimatePolicies'
+R_dir = paste(ProjectDir, Project, "R-scripts/TIMER_output", sep="/")
+setwd(R_dir)
+
 # This module makes graphs for the 'good practice policy' paper
 # The first graph first creates three different result sets
 # (1) Emission reductions per sector in the good practice policy scenario
@@ -337,7 +342,9 @@ red_elec_demand$value <- red_elec_demand$value*(44/12)*10^3
 red_elec_demand <- filter(red_elec_demand, measure=="reduction")
 red_elec_demand$measure <- name_Electricity_demand
 # Oil and gas production: methane reductions energy/industry: CPS -/- OilGas
-rm(tmp1); rm(tmp2)
+if (file.exists('tmp1'))
+{ rm(tmp1); rm(tmp2)
+}
 tmp1 <- filter(CurrentPolicies$ENEMISCH4, region=="World", 
                (sector %in% c('Total')),
                energy_carrier=="Total",
