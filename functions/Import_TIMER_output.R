@@ -259,6 +259,19 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2'
   ElecProd$energy_carrier_nr <- NULL
   ElecProd <- mutate(ElecProd, unit="PJ")
   
+  # Electricity capacity
+  ElecCap = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss/EPG", sep=""), 
+                             filename='GCap.out', varname=NULL, 
+                             collist=list(regions28,energy_technology), 
+                             namecols=c('region','energy_technology'), novarname = TRUE)
+  ElecCap <- subset(ElecCap, region != "dummy")
+  EU <- inner_join(filter(ElecCap, region=='WEU'), filter(ElecCap, region=='CEU'), by=c("year", "energy_technology"))
+  EU$region <- "EU"
+  EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, energy_technology, value)
+  EU$region = factor(EU$region, levels=regions28_EU)
+  ElecCap <- rbind(ElecCap, EU)
+  ElecCap$region = factor(ElecCap$region,levels=regions28_EU)
+  
   # TPES (Primary energy)
   TPES = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/indicatoren", sep=""), 
                          filename='tpes.out', varname=NULL, 
