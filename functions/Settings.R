@@ -14,6 +14,10 @@ TIMER_folder = paste("../../2_TIMER/outputlib/TIMER_2015/",Project, sep="")
 IMAGE_folder = '../../3_IMAGE/Scenario_lib/scen'
 StartYear = 1990
 
+# PBL colors
+rhg_cols <- c(hemelblauw3010, mosgroen3020, violet3030, donkergeel3040, paars3050, lichtblauw3060, roze3070, groen3080, rood3090, 
+              donkergroen3100, oranje3110, donkerbruin3120, robijnrood3130, bruin3140, mintgroen3150, geel3160)
+
 Mega = 10^6
 Giga = 10^9
 Tera = 10^12
@@ -73,3 +77,6 @@ population_groups = c('Total', 'Urban', 'Rural', 'U_1', 'U_2', 'U_3', 'U_4', 'U_
 res_enduse_functions = c('HouseholdAppliances', 'Lighting', 'Cooking', 'WaterHeating', 'SpaceHeating', 'SpaceCooling')
 travel_mode = c('Walking', 'Biking', 'Bus', 'Train', 'Car', 'High speed train', 'Air', 'Total')
 car_type = c('ICE2000', 'x1', 'x2', 'ICE Adv H2', 'x3', 'ICE Diesel Oil', 'ICE Diesel Bio', 'ICE HEV Oil', 'ICE HEV Gas', 'x4', 'x5', 'ICE EFT50', 'x6', 'x7', 'FCV H2', 'Phev 10 oil', 'Phev 30 oil', 'x8', 'Phev 10 Bio', 'Phev 30 Bio', 'x9', 'BEV', 'x10', 'BEV 150', '-')
+bus_type =c('Oil', 'Bio', 'Gas', 'ElectricTrolley', 'HybridOil', 'HybridBio', 'ElectricBattery', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '')
+train_type =c('Oil', 'Bio', 'Electric')
+aircraft_type=c('Air conv', 'Air conv 1980', 'Air conv 2000', 'conv, bio', 'eff.oil', 'eff.bio', 'BWB oil', 'BWB bio', 'BWB eff. oil', 'BWB eff bio', 'Cryoplane')

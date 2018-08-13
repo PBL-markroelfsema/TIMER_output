@@ -203,6 +203,7 @@ tmp2 <- subset(Scenario$ElecProd, energy_carrier=="Total")
 tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
 RenElecShare <- tmp3 %>% group_by(year, region) %>% summarise(value=value.x/value.y)
 RenElecShare <- data.frame(RenElecShare)
+RenElecShare <- mutate(RenElecShare, unit="%")
 
 Renewable_excl_hydro <- ifelse(Scenario$ElecProd$energy_carrier %in% energy_carrier_ren_excl_hydro, TRUE, FALSE)
 tmp1 <- cbind(Scenario$ElecProd,Renewable_excl_hydro)
@@ -212,6 +213,17 @@ tmp2 <- subset(Scenario$ElecProd, energy_carrier=="Total")
 tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
 RenElecShare_excl_hydro <- tmp3 %>% group_by(year, region) %>% summarise(value=value.x/value.y)
 RenElecShare_excl_hydro <- data.frame(RenElecShare_excl_hydro)
+RenElecShare_excl_hydro <- mutate(RenElecShare_excl_hydro, unit="%")
+
+NonFossil <- ifelse(Scenario$ElecProd$energy_carrier %in% energy_carrier_nf, TRUE, FALSE)
+tmp1 <- cbind(Scenario$ElecProd,NonFossil)
+tmp1 <- subset(tmp1, NonFossil==TRUE)
+tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
+tmp2 <- subset(Scenario$ElecProd, energy_carrier=="Total")
+tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
+NonFossilElecShare <- tmp3 %>% group_by(year, region) %>% summarise(value=value.x/value.y)
+NonFossilElecShare <- data.frame(NonFossilElecShare)
+NonFossilElecShare <- mutate(NonFossilElecShare, unit="%")
 
 #6. Oil and gas intensity
 # GHG intensity of oil and gas production (in ktCO2e/Mtoe)
@@ -328,7 +340,8 @@ Industry_Energy_IVA <- mutate(Industry_Energy_IVA, value=energy/IVA) %>% select(
 Industry_Energy_IVA <- mutate(Industry_Energy_IVA, unit="PJ/million US$(2005)")
 
 l <- list(EMISCO2EQ=EMISCO2EQ,EMISCO2EQpc=EMISCO2EQpc, EMIS_demand=EMIS_demand, EMIS_supply=EMIS_supply, FGases=FGases,
-          RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, OilGas_Intensity = OilGas_Intensity, 
+          RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, NonFossilElecShare=NonFossilElecShare,
+          OilGas_Intensity = OilGas_Intensity, 
           IndustryEfficiency = Industry_Efficiency, FGas_Reduction_index = FGas_Reduction_index, 
           Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2, 
           Appliances_FinalEnergy_capita=Appliances_FinalEnergy_capita,

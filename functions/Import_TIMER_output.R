@@ -376,8 +376,34 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2'
   EU$region = factor(EU$region, levels=regions28_EU)
   VehicleShare_cars <- rbind(VehicleShare_cars, EU)
   VehicleShare_cars$region = factor(VehicleShare_cars$region,levels=regions28_EU)
-  VehicleShare_cars <- mutate(VehicleShare_cars, unit="")
+  VehicleShare_cars <- mutate(VehicleShare_cars, unit="%")
 
+  # Vehicle share busses
+  VehicleShare_busses = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
+                                      filename='trp_trvl_Vshare_bus.out', varname=NULL, 
+                                      collist=list(regions27,bus_type), 
+                                      namecols=c('region','bus_type'), novarname = TRUE)
+  EU <- inner_join(filter(VehicleShare_busses, region=='WEU'), filter(VehicleShare_busses, region=='CEU'), by=c("year", "bus_type"))
+  EU$region <- "EU"
+  EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, bus_type, value)
+  EU$region = factor(EU$region, levels=regions28_EU)
+  VehicleShare_busses <- rbind(VehicleShare_busses, EU)
+  VehicleShare_busses$region = factor(VehicleShare_busses$region,levels=regions28_EU)
+  VehicleShare_busses <- mutate(VehicleShare_busses, unit="%")
+  
+  # Vehicle share trains
+  VehicleShare_aircrafts = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
+                                      filename='trp_trvl_Vshare_air.out', varname=NULL, 
+                                      collist=list(regions27,aircraft_type), 
+                                      namecols=c('region','aircraft_type'), novarname = TRUE)
+  EU <- inner_join(filter(VehicleShare_aircrafts, region=='WEU'), filter(VehicleShare_aircrafts, region=='CEU'), by=c("year", "aircraft_type"))
+  EU$region <- "EU"
+  EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, aircraft_type, value)
+  EU$region = factor(EU$region, levels=regions28_EU)
+  VehicleShare_aircrafts <- rbind(VehicleShare_aircrafts, EU)
+  VehicleShare_aircrafts$region = factor(VehicleShare_aircraft$region,levels=regions28_EU)
+  VehicleShare_aircrafts <- mutate(VehicleShare_aircrafts, unit="%")
+                              
   #POP
   # Unit: million people
   POP = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
@@ -476,7 +502,8 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2'
             ElecProd=ElecProd, EnergyProd=EnergyProd, FinalEnergy=FinalEnergy, 
             FinalEnergy_Residential=FinalEnergy_Residential, 
             TransportCO2Emissions=TransportCO2Emissions, PersonKilometers=PersonKilometers, FinalEnergy_Transport=FinalEnergy_Transport,
-            VehicleShare_cars=VehicleShare_cars, TPES,
+            VehicleShare_cars=VehicleShare_cars, VehicleShare_busses=VehicleShare_busses, VehicleShare_trains=VehicleShare_trains, VehicleShare_aircrafts=VehicleShare_aircrafts,
+            TPES,
             POP=POP, GDP_MER=GDP_MER, GDP_PPP=GDP_PPP, IVA=IVA, FloorSpace=FloorSpace)
   
   
