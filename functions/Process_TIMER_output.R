@@ -27,6 +27,10 @@ ProcessTimerScenario <- function(Scenario)
 source(paste('functions', 'Settings.R', sep='/'))
 source(paste('functions', 'General Functions.R', sep='/'))
 
+
+# Emissions ---------------------------------------------------------------
+
+
 #3. 
 # Aggregate emissions to CO2eq per TIMER file
 ENEMISCO2_TOT = subset(Scenario$ENEMISCO2, energy_carrier == "Total" & year >= StartYear)
@@ -193,6 +197,21 @@ EMISCO2EQpc <- select(EMISCO2EQpc, year, region, main_sector, GHG_Category, valu
 # 2. Can we do this with piping?
 # temp2 <- EMISCO2EQ %>% group_by('year', 'region') %>% (function(x) sum(x$value))
 
+#F-Gas index with reduction relative to 2010
+HFC_TOT_tmp = select(HFC_TOT, year, region, value)
+PFC_TOT_tmp = select(PFC_TOT, year, region, value)
+FGases = inner_join(HFC_TOT_tmp, PFC_TOT_tmp, by = c('year', 'region'))
+FGases = mutate(FGases, value=value.x+value.y)
+FGases = select(FGases, year, region, value)
+FGases_2010 = filter(FGases, year==2010)
+FGases_2010 = select(FGases_2010, region, value)
+FGas_Reduction_index = inner_join(FGases_2010, FGases, by=c('region'))
+FGas_Reduction_index = mutate(FGas_Reduction_index, value=value.y/value.x)
+FGas_Reduction_index = select(FGas_Reduction_index, year, region, value)
+
+
+# Electricity -------------------------------------------------------------
+
 #5.
 # Calcualte share of renewable electricity production
 Renewable <- ifelse(Scenario$ElecProd$energy_carrier %in% energy_carrier_ren, TRUE, FALSE)
@@ -225,6 +244,38 @@ NonFossilElecShare <- tmp3 %>% group_by(year, region) %>% summarise(value=value.
 NonFossilElecShare <- data.frame(NonFossilElecShare)
 NonFossilElecShare <- mutate(NonFossilElecShare, unit="%")
 
+#7. Electricity capacity
+# List electricity capacity per technology
+ElecCap$unit <- "MW"
+ElecCap=data.table(ElecCap)
+ElecCapGeo <- ElecCap[energy_technology=="Other Renewable"]
+ElecCapWindOff <- ElecCap[energy_technology=="Wind Offshore"]
+ElecCapWindOn<- ElecCap[energy_technology=="Wind Onshore"]
+ElecCapSolarPV<- ElecCap[energy_technology=="PV"]
+ElecCapSolarCSP<- ElecCap[energy_technology=="CSP"]
+ElecCapHydro<- ElecCap[energy_technology=="Hydro"]
+ElecCapWaste<- ElecCap[energy_technology=="Waste"]
+ElecCapNuclear<- ElecCap[energy_technology=="Nuclear"]
+ElecCapCoalCCS<- ElecCap[energy_technology=="Coal + CS"]
+ElecCapCoalTrad<- ElecCap[energy_technology=="Conv. Coal"]
+
+#Calculate some technologies as sum of others
+ElecCapTot<- spread(ElecCap,energy_technology,value) %>% mutate(Solar = PV + CSP, Wind = `Wind Offshore` + `Wind Onshore`, 
+                                                                Coal = `Conv. Coal`+`Coal + CS`+`CHP coal`+`CHP coal + CS`,
+                                                                Biomass = `Waste`+`Biomass CC`+`Biomass + CS`+`CHP biomass`+`CHP biomass + CS`,
+                                                                WindSolar=Solar+Wind,
+                                                                Renewable= Solar+Wind+Hydro+Biomass+`Other Renewable`+Nuclear) 
+ElecCapTot <- data.table(gather(ElecCapTot,energy_technology,value,c(PV:Renewable)))
+ElecCapCoalTot<- ElecCapTot[energy_technology=="Coal"] 
+ElecCapBioTot <- ElecCapTot[energy_technology=="Biomass"]
+ElecCapSolarTot <- ElecCapTot[energy_technology=="Solar"]
+ElecCapWindTot <- ElecCapTot[energy_technology=="Wind"]
+ElecCapRenTot <- ElecCapTot[energy_technology=="Renewable"]
+ElecCapWSTot <- ElecCapTot[energy_technology=="WindSolar"]
+
+# Intensity ---------------------------------------------------------------
+
+
 #6. Oil and gas intensity
 # GHG intensity of oil and gas production (in ktCO2e/Mtoe)
 CO2_oil <- filter(Scenario$ENEMISCO2, sector=="losses/leakages", energy_carrier=="Heavy oil")
@@ -252,25 +303,12 @@ OilGas_Intensity <- select(OilGas_Intensity, year, region, value)
 OilGas_Intensity$value <- OilGas_Intensity$value*1000
 OilGas_Intensity <- data.frame(OilGas_Intensity)
 
-# Energy intensity of industry sector (Kwh/US$2005)
-Industry_FinalEnergy <- filter(Scenario$FinalEnergy, sector=="Industry", energy_carrier=="Total")
-Industry_FinalEnergy <- select(Industry_FinalEnergy, year, region, value)
-Industry_Efficiency <- inner_join(Industry_FinalEnergy, Scenario$IVA, by=c('year', 'region'))
-Industry_Efficiency <- mutate(Industry_Efficiency, value=(10^3*(1/GWhToTJ)*10^6*value.x) / (10^6*value.y))
-Industry_Efficiency <- select(Industry_Efficiency, year, region, value)
-Industry_Efficiency <- data.frame(Industry_Efficiency)
+# Energy use --------------------------------------------------------------
 
-#F-Gas index with reduction relative to 2010
-HFC_TOT_tmp = select(HFC_TOT, year, region, value)
-PFC_TOT_tmp = select(PFC_TOT, year, region, value)
-FGases = inner_join(HFC_TOT_tmp, PFC_TOT_tmp, by = c('year', 'region'))
-FGases = mutate(FGases, value=value.x+value.y)
-FGases = select(FGases, year, region, value)
-FGases_2010 = filter(FGases, year==2010)
-FGases_2010 = select(FGases_2010, region, value)
-FGas_Reduction_index = inner_join(FGases_2010, FGases, by=c('region'))
-FGas_Reduction_index = mutate(FGas_Reduction_index, value=value.y/value.x)
-FGas_Reduction_index = select(FGas_Reduction_index, year, region, value)
+
+
+# Buildings ---------------------------------------------------------------
+
 
 # Final Energy  per capita residential sector (GJ/capita)
 Residential_FinalEnergy_capita <- filter(Scenario$FinalEnergy, sector=="Residential", energy_carrier=="Total")
@@ -302,6 +340,10 @@ Appliances_FinalEnergy_capita <- mutate(Appliances_FinalEnergy_capita, value=val
 Appliances_FinalEnergy_capita <- select(Appliances_FinalEnergy_capita, year, region, value)
 Appliances_FinalEnergy_capita <- data.frame(Appliances_FinalEnergy_capita)
 
+
+# Transport ---------------------------------------------------------------
+
+
 # Car final energy use per kilometer
 FuelUse_cars <- filter(Scenario$FinalEnergy_Transport, travel_mode=="Car")
 FuelUse_cars <- select(FuelUse_cars, year, region, value)
@@ -329,6 +371,17 @@ ElectricCars_share <- ElectricCars_share %>% group_by(year, region) %>% summaris
 ElectricCars_share <- select(ElectricCars_share, year, region, value)
 ElectricCars_share <- ungroup(ElectricCars_share)
 
+
+# Industry ----------------------------------------------------------------
+
+# Energy intensity of industry sector (Kwh/US$2005)
+Industry_FinalEnergy <- filter(Scenario$FinalEnergy, sector=="Industry", energy_carrier=="Total")
+Industry_FinalEnergy <- select(Industry_FinalEnergy, year, region, value)
+Industry_Efficiency <- inner_join(Industry_FinalEnergy, Scenario$IVA, by=c('year', 'region'))
+Industry_Efficiency <- mutate(Industry_Efficiency, value=(10^3*(1/GWhToTJ)*10^6*value.x) / (10^6*value.y))
+Industry_Efficiency <- select(Industry_Efficiency, year, region, value)
+Industry_Efficiency <- data.frame(Industry_Efficiency)
+
 # INDUSTRY
 
 # final energy per IVA (PJ/million US$(2005)
@@ -338,6 +391,10 @@ Industry_Energy_IVA <- rbind(Industry_Energy, Industry_IVA)
 Industry_Energy_IVA <- spread(Industry_Energy_IVA, key=v, value=value)
 Industry_Energy_IVA <- mutate(Industry_Energy_IVA, value=energy/IVA) %>% select(year, region, value)
 Industry_Energy_IVA <- mutate(Industry_Energy_IVA, unit="PJ/million US$(2005)")
+
+
+# Compile list ------------------------------------------------------------
+
 
 l <- list(EMISCO2EQ=EMISCO2EQ,EMISCO2EQpc=EMISCO2EQpc, EMIS_demand=EMIS_demand, EMIS_supply=EMIS_supply, FGases=FGases,
           RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, NonFossilElecShare=NonFossilElecShare,
