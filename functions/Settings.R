@@ -65,6 +65,7 @@ energy_carrier_demand = c('Coal', 'Heavy oil', 'Light oil', 'Natural gas', 'Mode
 energy_carrier_ren = c('Modern biofuels', 'Solar/wind', 'Hydro-electricity')
 energy_carrier_ren_excl_hydro = c('Modern biofuels', 'Solar/wind')
 energy_carrier_nf = c('Modern biofuels', 'Traditional biofuels', 'Nuclear', 'Solar/wind', 'hydro-electricity')
+energy_technology = c('PV','CSP', 'Wind Onshore','Wind Offshore','Hydro','Other Renewable','Nuclear','8','Conv. Coal','Conv. Oil','Conv. Natural gas','Waste','IGCC','OGCC','NG CC','Biomass CC','Coal + CS','Oil + CS','Natural gas + CS','Biomass + CS','CHP coal','CHP oil','CHP natural gas','CHP biomass','CHP coal + CS','CHP oil + CS','CHP natural gas + CS','CHP biomass + CS','total')
 industrial_process_CO2 = c('cement', 'feedstock', 'total')
 industrial_process_CH4 = c('iron & steel', 'chemicals', 'bulk chemicals', 'total')
 industrial_process_N2O = c('adipic acid', 'nitric acid', 'chemicals', 'total')
