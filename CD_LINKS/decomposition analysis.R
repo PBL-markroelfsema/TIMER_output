@@ -1,5 +1,6 @@
-source('Settings.R')
-source('Import_TIMER_output.R')
+source('functions/Settings.R')
+source('functions/Import_TIMER_output.R')
+source('functions/Process_TIMER_output.R')
 library(tidyverse)
 
 ProjectDir = "~/disks/y/ontwapps/Timer/Users/Mark"
@@ -11,11 +12,32 @@ getwd()
 NoPolicy <- ImportTimerScenario('NoPolicy_update','NoPolicy_update')
 NoPolicyi <- ProcessTimerScenario(NoPolicy)
 
-CAFETargets <- ImportTimerScenario('CAFE_Targets','NoPolicy')
+CAFETargets <- ImportTimerScenario('NPi_update_CAFEStandards','NoPolicy')
 CAFETargetsi <- ProcessTimerScenario(CAFETargets)
 
-BiofuelTargets <- ImportTimerScenario('Biofuel_targets','NoPolicy')
-BiofuelTargetsi <- ProcessTimerScenario(BiofuelTargets)
+select_regions = c("CAN", "USA","MEX", "BRA","EU","TUR", "UKR", "RUS","INDIA","KOR", "CHN","INDO", "JAP","World")
+ReductionFromPolicies1a <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "CAFE Standard (total)")
+ReductionFromPolicies1b <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Transport', "CAFE Standard (sector)")
+
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies1a, ReductionFromPolicies1b)
+
+# make table with reductions per policy
+ReductionFromPolicies <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Cafe target")
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, BiofuelTargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Biofuel target"))
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, BuildingTargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Building target"))
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, CarbonTaxesi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Carbon Tax"))
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, ElectricVehiclesTargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Electric vehicle share"))
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, FGasTargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "F-gas target"))
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, OilImportTargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Oil import target"))
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, OilMethaneTargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Oil Methane target"))
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, PowerPlantStandardsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Power plant standard"))
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, RenTargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Renewable target"))
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, AFOLUPolicyi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "AFOLU policies"))
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies, CalcReductions(2030, NoPolicyi, NPii, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Current policies"))
+
+
+
+#####################################
 
 BuildingTargets <- ImportTimerScenario('Building_standards_targets','NoPolicy')
 BuildingTargetsi <- ProcessTimerScenario(BuildingTargets)
@@ -51,18 +73,6 @@ INDCi <- ImportTimerScenario('INDCi','NPi')
 INDCii <- ProcessTimerScenario(INDCi)
 
 select_regions = c("CAN", "USA","MEX", "BRA","EU","TUR", "UKR", "RUS","INDIA","KOR", "CHN","INDO", "JAP","World")
-
-CalcReductions <- function(select_year, Scenario_i_1, Scenario_i_2, select_regions, select_main_sector, policy)
-{ source('Settings.R')
-  tmp1 <- Scenario_i_1$EMISCO2EQ %>% filter(year==select_year & region %in% select_regions, main_sector==select_main_sector) %>% select(region, main_sector, GHG_Category, value)
-  tmp2 <- Scenario_i_2$EMISCO2EQ %>% filter(year==select_year & region %in% select_regions, main_sector==select_main_sector) %>% select(region, main_sector, GHG_Category, value)
-  ReductionFromPolicies <- inner_join(tmp1, tmp2, by=c('region', 'main_sector', 'GHG_Category'))
-  #ReductionFromPoliciesEx <- arrange(ReductionFromPolicies, region, main_sector, GHG_Category)
-  ReductionFromPolicies <- mutate(ReductionFromPolicies, value = value.x-value.y)
-  ReductionFromPolicies <- mutate(ReductionFromPolicies, policy=policy)
-  ReductionFromPolicies <- select(ReductionFromPolicies, policy, region, main_sector, GHG_Category, value)
-  ReductionFromPolicies <- arrange(ReductionFromPolicies, policy, region, main_sector, GHG_Category)
-}
 
 # make table with reductions per policy
 ReductionFromPolicies <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Cafe target")
