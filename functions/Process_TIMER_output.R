@@ -12,10 +12,10 @@
 # ElecRenShare gives for each region and year the renewable share in electricity production
 
 #TODO: 
-# make EMISCO2EQ excl LULUCF - Done, ok?
+# make EMISCO2EQ excl LULUCF - DONE, ok?
 # make variable with individual and total GHG emissions per sector (energy supply, transport, industry, buildings, AFOLU, bunkers) - in progress: bunkers to do, all sectors add individual GHGs
-# CO2_intensity_GDP
-# Energy_intensity_TPES_GDP
+# CO2_intensity_GDP - DONE, ok?
+# Energy_intensity_TPES_GDP - DONE, ok?
 
 ProcessTimerScenario <- function(Scenario)
 { s <- deparse(substitute(Scenario)) # get object name as string
@@ -379,8 +379,23 @@ ElecCapWSTot <- ElecCapTot[energy_technology=="WindSolar"]
 
 # Intensity ---------------------------------------------------------------
 
-# CO2 intensity of GDP - TODO
-#CO2_intensity <- merge(EMISCO2,GDP_MER,by=c('year','region')) %>% mutate(intensity=value.x/value.y)
+# CO2 intensity of GDP
+CO2_intensity <- merge(EMISCO2,GDP_MER,by=c('year','region')) %>% mutate(value=value.x/value.y, unit.int=paste("MtCO2/",unit,sep=""))%>%filter(main_sector=="Total" & GHG_Category=="EMISCO2")%>%select(year,region,main_sector,GHG_Category,value,unit.int)
+setnames(CO2_intensity,"unit.int","unit")
+CO2_intensity_2015 = filter(CO2_intensity, year==2015)
+CO2_intensity_2015 = select(CO2_intensity_2015, region, value)
+CO2_intensity_index = inner_join(CO2_intensity_2015, CO2_intensity, by=c('region'))
+CO2_intensity_index = mutate(CO2_intensity_index, value=value.y/value.x,unit="index 2015")
+CO2_intensity_index = select(CO2_intensity_index, year, region, value,unit)
+
+# Energy intensity of GDP
+TPES = data.table(Scenario$TPES)[energy_carrier == "Total" & year >= StartYear]
+TPES_intensity <- merge(TPES,GDP_MER,by=c('year','region'))%>% mutate(value=1000*value.x/value.y, unit="MJ/US$(2005)")%>%select(year,region,energy_carrier,value,unit)
+TPES_intensity_2015 = filter(TPES_intensity, year==2015)
+TPES_intensity_2015 = select(TPES_intensity_2015, region, value)
+TPES_intensity_index = inner_join(TPES_intensity_2015, TPES_intensity, by=c('region'))
+TPES_intensity_index = mutate(TPES_intensity_index, value=value.y/value.x,unit="index 2015")
+TPES_intensity_index = select(TPES_intensity_index, year, region, value,unit)
 
 #6. Oil and gas intensity
 # GHG intensity of oil and gas production (in ktCO2e/Mtoe)
@@ -411,7 +426,27 @@ OilGas_Intensity <- data.frame(OilGas_Intensity)
 
 # Energy use --------------------------------------------------------------
 
+#Share of renewables in TPES
+Renewable <- ifelse(Scenario$TPES$energy_carrier %in% energy_carrier_ren, TRUE, FALSE)
+tmp1 <- cbind(Scenario$TPES,Renewable)
+tmp1 <- subset(tmp1, Renewable==TRUE)
+tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
+tmp2 <- subset(Scenario$TPES, energy_carrier=="Total")
+tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
+RenTPESShare <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
+RenTPESShare <- data.frame(RenTPESShare)
+RenTPESShare <- mutate(RenTPESShare, unit="%")
 
+#including nuclear
+RenewableN <- ifelse(Scenario$TPES$energy_carrier %in% c('Modern biofuels', 'Solar/wind', 'Hydro-electricity','Nuclear'), TRUE, FALSE)
+tmp1 <- cbind(Scenario$TPES,RenewableN)
+tmp1 <- subset(tmp1, RenewableN==TRUE)
+tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
+tmp2 <- subset(Scenario$TPES, energy_carrier=="Total")
+tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
+RenNucTPESShare <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
+RenNucTPESShare <- data.frame(RenNucTPESShare)
+RenNucTPESShare <- mutate(RenNucTPESShare, unit="%")
 
 # Buildings ---------------------------------------------------------------
 
@@ -506,8 +541,8 @@ l <- list(EMISCO2EQ=EMISCO2EQ,EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQp
           EMIS_demand=EMIS_demand,EMIS_buildings=EMIS_buildings,EMIS_supply=EMIS_supply,EMIS_industry=EMIS_industry,EMIS_transport=EMIS_transport,
           EMISCO2EQ_AGRI=EMISCO2EQ_AGRI,EMISCO2EQ_LU=EMISCO2EQ_LU,EMISCO2EQ_WAS=EMISCO2EQ_WAS,LUEMCO2_TOT=LUEMCO2_TOT,EMIS_AFOLU=EMIS_AFOLU,
           FGases=FGases,HFC_TOT=HFC_TOT,
-          RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, NonFossilElecShare=NonFossilElecShare,
-          OilGas_Intensity = OilGas_Intensity, 
+          RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, NonFossilElecShare=NonFossilElecShare,RenTPESShare=RenTPESShare,RenNucTPESShare=RenNucTPESShare,
+          OilGas_Intensity = OilGas_Intensity, CO2_intensity=CO2_intensity,CO2_intensity_index=CO2_intensity_index,TPES_intensity=TPES_intensity,TPES_intensity_index=TPES_intensity_index,
           IndustryEfficiency = Industry_Efficiency, FGas_Reduction_index = FGas_Reduction_index, 
           Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2, 
           Appliances_FinalEnergy_capita=Appliances_FinalEnergy_capita,
