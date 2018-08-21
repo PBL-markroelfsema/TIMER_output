@@ -271,6 +271,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2'
   EU$region = factor(EU$region, levels=regions28_EU)
   ElecCap <- rbind(ElecCap, EU)
   ElecCap$region = factor(ElecCap$region,levels=regions28_EU)
+  ElecCap$unit <- "MW"
   
   # TPES (Primary energy)
   TPES = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/indicatoren", sep=""), 

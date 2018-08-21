@@ -15,6 +15,7 @@ IMAGE_folder = '../../3_IMAGE/Scenario_lib/scen'
 StartYear = 1990
 
 # PBL colors
+source('functions/pbl_colors.R')
 rhg_cols <- c(hemelblauw3010, mosgroen3020, violet3030, donkergeel3040, paars3050, lichtblauw3060, roze3070, groen3080, rood3090, 
               donkergroen3100, oranje3110, donkerbruin3120, robijnrood3130, bruin3140, mintgroen3150, geel3160)
 

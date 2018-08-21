@@ -1,25 +1,35 @@
 source('functions/Settings.R')
 source('functions/Import_TIMER_output.R')
 source('functions/Process_TIMER_output.R')
+source('CD_LINKS/decomposition_functions.R')
 library(tidyverse)
 
 ProjectDir = "~/disks/y/ontwapps/Timer/Users/Mark"
 Project = 'CD_LINKSupdate'
-R_dir = paste(ProjectDir, Project, "R-scripts/TIMER_output", sep="/")
+R_dir = paste(ProjectDir, Project, "6_R/TIMER_output", sep="/")
 setwd(R_dir)
 getwd()
 
 NoPolicy <- ImportTimerScenario('NoPolicy_update','NoPolicy_update')
 NoPolicyi <- ProcessTimerScenario(NoPolicy)
 
-CAFETargets <- ImportTimerScenario('NPi_update_CAFEStandards','NoPolicy')
+CAFETargets <- ImportTimerScenario('NPi_update_CAFEStandards','NoPolicy_update')
 CAFETargetsi <- ProcessTimerScenario(CAFETargets)
 
 select_regions = c("CAN", "USA","MEX", "BRA","EU","TUR", "UKR", "RUS","INDIA","KOR", "CHN","INDO", "JAP","World")
 ReductionFromPolicies1a <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "CAFE Standard (total)")
-ReductionFromPolicies1b <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Transport', "CAFE Standard (sector)")
+ReductionFromPolicies1b <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Transport', "CAFE Standard (Transport)")
+ReductionFromPolicies1c <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Industry', "CAFE Standard (Industry)")
+ReductionFromPolicies1d <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Buildings', "CAFE Standard (Buildings)")
+ReductionFromPolicies1e <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Energy Supply', "CAFE Standard (Energy Supply)")
 
-ReductionFromPolicies <- bind_rows(ReductionFromPolicies1a, ReductionFromPolicies1b)
+ReductionFromPolicies <- bind_rows(ReductionFromPolicies1a, ReductionFromPolicies1b) %>%
+  bind_rows(ReductionFromPolicies1c) %>%
+  bind_rows(ReductionFromPolicies1d) %>%
+  bind_rows(ReductionFromPolicies1e)
+  
+format(ReductionFromPolicies$value, digits=2, nsmall=2, Scientific=FALSE)
+write.table(ReductionFromPolicies,file="Data/test.csv", sep=",", row.names=FALSE)
 
 # make table with reductions per policy
 ReductionFromPolicies <- CalcReductions(2030, NoPolicyi, CAFETargetsi, c("USA","BRA","EU","RUS","INDIA","CHN","JAP","World"), 'Total', "Cafe target")

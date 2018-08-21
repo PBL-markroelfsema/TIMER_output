@@ -350,8 +350,7 @@ NonFossilElecShare <- mutate(NonFossilElecShare, unit="%")
 
 #7. Electricity capacity
 # List electricity capacity per technology
-ElecCap$unit <- "MW"
-ElecCap=data.table(ElecCap)
+ElecCap=data.table(Scenario$ElecCap)
 ElecCapGeo <- ElecCap[energy_technology=="Other Renewable"]
 ElecCapWindOff <- ElecCap[energy_technology=="Wind Offshore"]
 ElecCapWindOn<- ElecCap[energy_technology=="Wind Onshore"]

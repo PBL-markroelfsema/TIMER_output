@@ -1,6 +1,6 @@
+library(tidyverse)
 CalcReductions <- function(select_year, Scenario_i_1, Scenario_i_2, select_regions, select_main_sector, policy)
-{ source('Settings.R')
-  tmp1 <- Scenario_i_1$EMISCO2EQ %>% filter(year==select_year & region %in% select_regions, main_sector==select_main_sector) %>% select(region, main_sector, GHG_Category, value)
+{ tmp1 <- Scenario_i_1$EMISCO2EQ %>% filter(year==select_year & region %in% select_regions, main_sector==select_main_sector) %>% select(region, main_sector, GHG_Category, value)
   tmp2 <- Scenario_i_2$EMISCO2EQ %>% filter(year==select_year & region %in% select_regions, main_sector==select_main_sector) %>% select(region, main_sector, GHG_Category, value)
   ReductionFromPolicies <- inner_join(tmp1, tmp2, by=c('region', 'main_sector', 'GHG_Category'))
   #ReductionFromPoliciesEx <- arrange(ReductionFromPolicies, region, main_sector, GHG_Category)
