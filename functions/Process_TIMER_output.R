@@ -376,6 +376,10 @@ ElecCapWindTot <- ElecCapTot[energy_technology=="Wind"]
 ElecCapRenTot <- ElecCapTot[energy_technology=="Renewable"]
 ElecCapWSTot <- ElecCapTot[energy_technology=="WindSolar"]
 
+# Electricity access
+ElecAccTot=data.table(Scenario$ElecAcc)
+ElecAccTot=ElecAccTot[population_group=="Total"]
+
 # Intensity ---------------------------------------------------------------
 
 # CO2 intensity of GDP
@@ -546,5 +550,6 @@ l <- list(EMISCO2EQ=EMISCO2EQ,EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQp
           Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2, 
           Appliances_FinalEnergy_capita=Appliances_FinalEnergy_capita,
           CO2_km_cars=CO2_km_cars, FuelUse_pkm_cars=FuelUse_pkm_cars, ElectricCars_share=ElectricCars_share,
-          Industry_Energy_IVA=Industry_Energy_IVA)
+          Industry_Energy_IVA=Industry_Energy_IVA,
+          ElecAccTot=ElecAccTot)
 }
