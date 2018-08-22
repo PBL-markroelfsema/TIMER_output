@@ -76,6 +76,7 @@ land_use_source_CO2 = c('biomass burning', 'burning of traditional biomass', 'ti
 land_use_source_CH4 = c('biomass burning', 'fuelwood burning', 'agricultural waste burning', 'savanna burning', 'landfills', 'sewage', 'wetland rice', 'animals', 'animal waste', 'Total')
 land_use_source_N2O = c('deforestation/biomass burning', 'traditional biomass/fuelwood burning', 'agricultural waste burning', 'savanna burning', 'land clearing', 'fertilizers', 'stables', 'grazing', 'manure application', 'fertilizers indirect', 'domestic sewage', 'from residues', 'biological N-fixation', 'Total')
 population_groups = c('Total', 'Urban', 'Rural', 'U_1', 'U_2', 'U_3', 'U_4', 'U_5', 'R_1', 'R_2', 'R_3', 'R_4', 'R_5')
+population_groups3 = c('Total', 'Urban', 'Rural')
 res_enduse_functions = c('HouseholdAppliances', 'Lighting', 'Cooking', 'WaterHeating', 'SpaceHeating', 'SpaceCooling')
 travel_mode = c('Walking', 'Biking', 'Bus', 'Train', 'Car', 'High speed train', 'Air', 'Total')
 car_type = c('ICE2000', 'x1', 'x2', 'ICE Adv H2', 'x3', 'ICE Diesel Oil', 'ICE Diesel Bio', 'ICE HEV Oil', 'ICE HEV Gas', 'x4', 'x5', 'ICE EFT50', 'x6', 'x7', 'FCV H2', 'Phev 10 oil', 'Phev 30 oil', 'x8', 'Phev 10 Bio', 'Phev 30 Bio', 'x9', 'BEV', 'x10', 'BEV 150', '-')
