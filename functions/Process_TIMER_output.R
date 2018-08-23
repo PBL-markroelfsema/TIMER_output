@@ -379,7 +379,7 @@ ElecCapWSTot <- ElecCapTot[energy_technology=="WindSolar"]
 # Intensity ---------------------------------------------------------------
 
 # CO2 intensity of GDP
-CO2_intensity <- merge(EMISCO2,GDP_MER,by=c('year','region')) %>% mutate(value=value.x/value.y, unit.int=paste("MtCO2/",unit,sep=""))%>%filter(main_sector=="Total" & GHG_Category=="EMISCO2")%>%select(year,region,main_sector,GHG_Category,value,unit.int)
+CO2_intensity <- merge(EMISCO2,Scenario$GDP_MER,by=c('year','region')) %>% mutate(value=value.x/value.y, unit.int=paste("MtCO2/",unit,sep=""))%>%filter(main_sector=="Total" & GHG_Category=="EMISCO2")%>%select(year,region,main_sector,GHG_Category,value,unit.int)
 setnames(CO2_intensity,"unit.int","unit")
 CO2_intensity_2015 = filter(CO2_intensity, year==2015)
 CO2_intensity_2015 = select(CO2_intensity_2015, region, value)
@@ -389,7 +389,7 @@ CO2_intensity_index = select(CO2_intensity_index, year, region, value,unit)
 
 # Energy intensity of GDP
 TPES = data.table(Scenario$TPES)[energy_carrier == "Total" & year >= StartYear]
-TPES_intensity <- merge(TPES,GDP_MER,by=c('year','region'))%>% mutate(value=1000*value.x/value.y, unit="MJ/US$(2005)")%>%select(year,region,energy_carrier,value,unit)
+TPES_intensity <- merge(TPES,Scenario$GDP_MER,by=c('year','region'))%>% mutate(value=1000*value.x/value.y, unit="MJ/US$(2005)")%>%select(year,region,energy_carrier,value,unit)
 TPES_intensity_2015 = filter(TPES_intensity, year==2015)
 TPES_intensity_2015 = select(TPES_intensity_2015, region, value)
 TPES_intensity_index = inner_join(TPES_intensity_2015, TPES_intensity, by=c('region'))
@@ -534,13 +534,16 @@ Industry_Energy_IVA <- mutate(Industry_Energy_IVA, unit="PJ/million US$(2005)")
 
 
 # Compile list ------------------------------------------------------------
-
+abc <- 0
 
 l <- list(EMISCO2EQ=EMISCO2EQ,EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2,
           EMIS_demand=EMIS_demand,EMIS_buildings=EMIS_buildings,EMIS_supply=EMIS_supply,EMIS_industry=EMIS_industry,EMIS_transport=EMIS_transport,
           EMISCO2EQ_AGRI=EMISCO2EQ_AGRI,EMISCO2EQ_LU=EMISCO2EQ_LU,EMISCO2EQ_WAS=EMISCO2EQ_WAS,LUEMCO2_TOT=LUEMCO2_TOT,EMIS_AFOLU=EMIS_AFOLU,
           FGases=FGases,HFC_TOT=HFC_TOT,
           RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, NonFossilElecShare=NonFossilElecShare,RenTPESShare=RenTPESShare,RenNucTPESShare=RenNucTPESShare,
+          ElecCapGeo=ElecCapGeo, ElecCapWindOff=ElecCapWindOff, ElecCapWindOn=ElecCapWindOn, ElecCapSolarPV=ElecCapSolarPV, ElecCapSolarCSP=ElecCapSolarCSP, ElecCapHydro=ElecCapHydro, 
+          ElecCapWaste=ElecCapWaste, ElecCapNuclear=ElecCapNuclear, ElecCapCoalCCS=ElecCapCoalCCS, ElecCapCoalTrad=ElecCapCoalTrad,
+          ElecCapCoalTot=ElecCapCoalTot, ElecCapBioTot=ElecCapBioTot, ElecCapSolarTot=ElecCapSolarTot, ElecCapWindTot=ElecCapWindTot, ElecCapRenTot=ElecCapRenTot, ElecCapWSTot=ElecCapWSTot, 
           OilGas_Intensity = OilGas_Intensity, CO2_intensity=CO2_intensity,CO2_intensity_index=CO2_intensity_index,TPES_intensity=TPES_intensity,TPES_intensity_index=TPES_intensity_index,
           IndustryEfficiency = Industry_Efficiency, FGas_Reduction_index = FGas_Reduction_index, 
           Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2, 
