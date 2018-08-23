@@ -324,7 +324,7 @@ tmp1 <- subset(tmp1, Renewable==TRUE)
 tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
 tmp2 <- subset(Scenario$ElecProd, energy_carrier=="Total")
 tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
-RenElecShare <- tmp3 %>% group_by(year, region) %>% summarise(value=value.x/value.y)
+RenElecShare <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
 RenElecShare <- data.frame(RenElecShare)
 RenElecShare <- mutate(RenElecShare, unit="%")
 
@@ -334,7 +334,7 @@ tmp1 <- subset(tmp1, Renewable_excl_hydro==TRUE)
 tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
 tmp2 <- subset(Scenario$ElecProd, energy_carrier=="Total")
 tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
-RenElecShare_excl_hydro <- tmp3 %>% group_by(year, region) %>% summarise(value=value.x/value.y)
+RenElecShare_excl_hydro <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
 RenElecShare_excl_hydro <- data.frame(RenElecShare_excl_hydro)
 RenElecShare_excl_hydro <- mutate(RenElecShare_excl_hydro, unit="%")
 
@@ -344,7 +344,7 @@ tmp1 <- subset(tmp1, NonFossil==TRUE)
 tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
 tmp2 <- subset(Scenario$ElecProd, energy_carrier=="Total")
 tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
-NonFossilElecShare <- tmp3 %>% group_by(year, region) %>% summarise(value=value.x/value.y)
+NonFossilElecShare <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
 NonFossilElecShare <- data.frame(NonFossilElecShare)
 NonFossilElecShare <- mutate(NonFossilElecShare, unit="%")
 
@@ -383,7 +383,7 @@ ElecAccTot=ElecAccTot[population_group=="Total"]
 # Intensity ---------------------------------------------------------------
 
 # CO2 intensity of GDP
-CO2_intensity <- merge(EMISCO2,Scenario$GDP_MER,by=c('year','region')) %>% mutate(value=value.x/value.y, unit.int=paste("MtCO2/",unit,sep=""))%>%filter(main_sector=="Total" & GHG_Category=="EMISCO2")%>%select(year,region,main_sector,GHG_Category,value,unit.int)
+CO2_intensity <- merge(EMISCO2,Scenario$GDP_MER,by=c('year','region')) %>% mutate(value=value.x/value.y, unit.int=paste("MtCO2/",unit,sep=""))%>%filter(main_sector=="Total" & GHG_Category=="EMISCO2")%>%select(year,region,value,unit.int)
 setnames(CO2_intensity,"unit.int","unit")
 CO2_intensity_2015 = filter(CO2_intensity, year==2015)
 CO2_intensity_2015 = select(CO2_intensity_2015, region, value)
@@ -393,7 +393,7 @@ CO2_intensity_index = select(CO2_intensity_index, year, region, value,unit)
 
 # Energy intensity of GDP
 TPES = data.table(Scenario$TPES)[energy_carrier == "Total" & year >= StartYear]
-TPES_intensity <- merge(TPES,Scenario$GDP_MER,by=c('year','region'))%>% mutate(value=1000*value.x/value.y, unit="MJ/US$(2005)")%>%select(year,region,energy_carrier,value,unit)
+TPES_intensity <- merge(TPES,Scenario$GDP_MER,by=c('year','region'))%>% mutate(value=1000*value.x/value.y, unit="MJ/US$(2005)")%>%select(year,region, value,unit)
 TPES_intensity_2015 = filter(TPES_intensity, year==2015)
 TPES_intensity_2015 = select(TPES_intensity_2015, region, value)
 TPES_intensity_index = inner_join(TPES_intensity_2015, TPES_intensity, by=c('region'))
@@ -538,8 +538,6 @@ Industry_Energy_IVA <- mutate(Industry_Energy_IVA, unit="PJ/million US$(2005)")
 
 
 # Compile list ------------------------------------------------------------
-abc <- 0
-
 l <- list(EMISCO2EQ=EMISCO2EQ,EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2,
           EMIS_demand=EMIS_demand,EMIS_buildings=EMIS_buildings,EMIS_supply=EMIS_supply,EMIS_industry=EMIS_industry,EMIS_transport=EMIS_transport,
           EMISCO2EQ_AGRI=EMISCO2EQ_AGRI,EMISCO2EQ_LU=EMISCO2EQ_LU,EMISCO2EQ_WAS=EMISCO2EQ_WAS,LUEMCO2_TOT=LUEMCO2_TOT,EMIS_AFOLU=EMIS_AFOLU,
