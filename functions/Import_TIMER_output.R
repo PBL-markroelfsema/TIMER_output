@@ -2,8 +2,12 @@
 #     e.g. Y:\ontwapps\Timer\Users\Mark\CD_LINKSupdate\R-scripts/TIMER_output
 #     Timer_scenario and IMAGE_scenario are the names of the scenarios.
 #     These scenarios should come from the TIMER outputlib and IMAGE Scenlib (do not change structure).
-#     and must be located in TIMER_folder and IMAGE_folder (set in 'Settings.R')
-#      
+#     and must be located in TIMER_folder and IMAGE_folder
+# Example:
+# Rundir=paste("~/disks/y/ontwapps/Timer/Users/Mark", sep="")
+# Project=paste("CD_LINKSupdate")
+# TIMERGeneration = 'TIMER_2015'
+
 #post: this script imports TIMER and IMAGE output and adds each file as data frame to a list
 # 1. Creates lables for TIMER output files
 # 2. Imports files from TIMER_folder
@@ -55,21 +59,24 @@
 # IVA
 
 #library(base)
-ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2')
+ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2', Rundir, Project, TIMERGeneration)
 { 
   
   source(paste('functions', 'mym2r.R', sep='/'))
   source(paste('functions', 'Settings.R', sep='/'))
   
-  #TIMER_scenario = 'NPi_update'
-  #IMAGE_scenario = 'NPi'
-  
+  TIMER_folder = paste(Rundir, Project, "2_TIMER/outputlib", TIMERGeneration, Project, sep="/")
+  IMAGE_folder = paste(Rundir, Project, "3_IMAGE/Scenario_lib/scen", sep="/")
+
+print(TIMER_folder)
+print(IMAGE_folder)
+
   if(!dir.exists(paste(TIMER_folder, TIMER_scenario, sep="/")))
-  { print("The TIMER scenario is not recognised, is it located in the TIMER_folder (see Settings.r)?")
+  { print(paste("The TIMER scenario ", TIMER_scenario, " in the folder", TIMER_folder, " is not recognised", sep=""))
     stop()
   }
   if(!dir.exists(paste(IMAGE_folder, IMAGE_scenario, sep="/")))
-  { print("The IMAGE scenario is not recognised, is it located in the TIMER_folder (see Settings.r)?")
+  { print(paste("The IMAGE scenario ", IMAGE_scenario, " in the folder", IMAGE_folder, " is not recognised", sep=""))
     stop()
   }
   #1.

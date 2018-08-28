@@ -9,9 +9,6 @@ if("plyr" %in% (.packages())){
 library(tidyverse)
 
 # settings
-#TIMERGeneration = 'TIMER_2015'
-TIMER_folder = paste("../../2_TIMER/outputlib/TIMER_2015/",Project, sep="")
-IMAGE_folder = '../../3_IMAGE/Scenario_lib/scen'
 StartYear = 1990
 
 # PBL colors
