@@ -17,15 +17,15 @@
 # CO2_intensity_GDP - DONE, ok?
 # Energy_intensity_TPES_GDP - DONE, ok?
 
-ProcessTimerScenario <- function(Scenario)
+ProcessTimerScenario <- function(Scenario, Rundir, Project)
 { s <- deparse(substitute(Scenario)) # get object name as string
   if(!exists(s))
   { print(paste("Scenario ", s, " is not imported yet. First execute ImportTimerFile", sep=""))
     stop()
   }
 
-source(paste('functions', 'Settings.R', sep='/'))
-source(paste('functions', 'General Functions.R', sep='/'))
+source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'Settings.R', sep='/'))
+source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'General Functions.R', sep='/'))
 
 
 # Emissions ---------------------------------------------------------------

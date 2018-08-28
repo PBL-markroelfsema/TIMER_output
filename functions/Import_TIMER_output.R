@@ -1,5 +1,5 @@
 #pre: Make sure you are in the 1-click environment R-scripts directory
-#     e.g. Y:\ontwapps\Timer\Users\Mark\CD_LINKSupdate\R-scripts/TIMER_output
+#     e.g. Y:\ontwapps\Timer\Users\Mark\CD_LINKSupdate\6_R
 #     Timer_scenario and IMAGE_scenario are the names of the scenarios.
 #     These scenarios should come from the TIMER outputlib and IMAGE Scenlib (do not change structure).
 #     and must be located in TIMER_folder and IMAGE_folder
@@ -61,9 +61,8 @@
 #library(base)
 ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2', Rundir, Project, TIMERGeneration)
 { 
-  
-  source(paste('functions', 'mym2r.R', sep='/'))
-  source(paste('functions', 'Settings.R', sep='/'))
+  source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'mym2r.R', sep='/'))
+  source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'Settings.R', sep='/'))
   
   TIMER_folder = paste(Rundir, Project, "2_TIMER/outputlib", TIMERGeneration, Project, sep="/")
   IMAGE_folder = paste(Rundir, Project, "3_IMAGE/Scenario_lib/scen", sep="/")
