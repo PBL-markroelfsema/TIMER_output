@@ -133,37 +133,57 @@ PFC_TOT = select(PFC_TOT, year, region, main_sector, value) %>%
   summarise(value=sum(value, na.rm=TRUE))
 PFC_TOT <- mutate(PFC_TOT, GHG_Category="PFC")
 
+# First determine emissions per main_sector
+# Then determine total emissions
 LUEMCO2_TOT = data.table(Scenario$LUEMCO2)[year >= StartYear]
+LUEMCO2_TOT <- filter(LUEMCO2_TOT, source != 'Total')
 LUEMCO2_TOT$value = LUEMCO2_TOT$value*10^3*CToCO2
 LUEMCO2_TOT = mutate(LUEMCO2_TOT, main_sector=mapply(function(x) MainSector(x), source))
 LUEMCO2_TOT$main_sector = factor(LUEMCO2_TOT$main_sector,levels=main_sector)
-tmp <- LUEMCO2_TOT %>% mutate(main_sector="Total")
-LUEMCO2_TOT <- rbind(LUEMCO2_TOT, tmp)
 LUEMCO2_TOT = select(LUEMCO2_TOT, year, region, main_sector, value) %>%
   group_by(year, region, main_sector) %>%
   summarise(value=sum(value, na.rm=TRUE))
+tmp <- select(LUEMCO2_TOT, year, region, main_sector, value) %>%
+  group_by(year, region) %>%
+  summarise(value=sum(value, na.rm=TRUE))
+tmp <- mutate(tmp, main_sector="Total")
+tmp$main_sector = factor(tmp$main_sector,levels=main_sector)
+LUEMCO2_TOT <- rbind(LUEMCO2_TOT, tmp)
+LUEMCO2_TOT = select(LUEMCO2_TOT, year, region, main_sector, value)
 LUEMCO2_TOT <- mutate(LUEMCO2_TOT, GHG_Category="LUEMCO2")
 
 LUEMCH4_TOT = data.table(Scenario$LUEMCH4)[year >= StartYear]
+LUEMCH4_TOT <- filter(LUEMCH4_TOT, source != 'Total')
 LUEMCH4_TOT$value = LUEMCH4_TOT$value*GWP_CH4
 LUEMCH4_TOT = mutate(LUEMCH4_TOT, main_sector=mapply(function(x) MainSector(x), source))
 LUEMCH4_TOT$main_sector = factor(LUEMCH4_TOT$main_sector,levels=main_sector)
-tmp <- LUEMCH4_TOT %>% mutate(main_sector="Total")
-LUEMCH4_TOT <- rbind(LUEMCH4_TOT, tmp)
 LUEMCH4_TOT = select(LUEMCH4_TOT, year, region, main_sector, value) %>%
   group_by(year, region, main_sector) %>%
   summarise(value=sum(value, na.rm=TRUE))
+tmp <- select(LUEMCH4_TOT, year, region, main_sector, value) %>%
+  group_by(year, region) %>%
+  summarise(value=sum(value, na.rm=TRUE))
+tmp <- mutate(tmp, main_sector="Total")
+tmp$main_sector = factor(tmp$main_sector,levels=main_sector)
+LUEMCH4_TOT <- rbind(LUEMCH4_TOT, tmp)
+LUEMCH4_TOT = select(LUEMCH4_TOT, year, region, main_sector, value)
 LUEMCH4_TOT <- mutate(LUEMCH4_TOT, GHG_Category="LUEMCH4")
 
 LUEMN2O_TOT = data.table(Scenario$LUEMN2O)[year >= StartYear]
+LUEMN2O_TOT <- filter(LUEMN2O_TOT, source != 'Total')
 LUEMN2O_TOT$value = LUEMN2O_TOT$value*NToN2O*GWP_N2O
 LUEMN2O_TOT = mutate(LUEMN2O_TOT, main_sector=mapply(function(x) MainSector(x), source))
 LUEMN2O_TOT$main_sector = factor(LUEMN2O_TOT$main_sector,levels=main_sector)
-tmp <- LUEMN2O_TOT %>% mutate(main_sector="Total")
-LUEMN2O_TOT <- rbind(LUEMN2O_TOT, tmp)
 LUEMN2O_TOT = select(LUEMN2O_TOT, year, region, main_sector, value) %>%
   group_by(year, region, main_sector) %>%
   summarise(value=sum(value, na.rm=TRUE))
+tmp <- select(LUEMN2O_TOT, year, region, main_sector, value) %>%
+  group_by(year, region) %>%
+  summarise(value=sum(value, na.rm=TRUE))
+tmp <- mutate(tmp, main_sector="Total")
+tmp$main_sector = factor(tmp$main_sector,levels=main_sector)
+LUEMN2O_TOT <- rbind(LUEMN2O_TOT, tmp)
+LUEMN2O_TOT = select(LUEMN2O_TOT, year, region, main_sector, value)
 LUEMN2O_TOT <- mutate(LUEMN2O_TOT, GHG_Category="LUEMN2O")
 
 ## 3b. Sector aggregates - before summing to total GHG  incl./excl. LULUCF ###
@@ -303,14 +323,14 @@ EMIS_AFOLU <- EMIS_AFOLU %>% group_by(year, region) %>% summarise(value=sum(valu
 EMISCO2  <- bind_rows(ENEMISCO2_TOT,INDEMISCO2_TOT,LUEMCO2_TOT)
 EMISCO2$main_sector <- factor(EMISCO2$main_sector, levels=main_sector)
 EMISCO2 <- select(EMISCO2, year, region, main_sector, value)
-EMISCO2_tmp <- EMISCO2 %>% filter(main_sector=='Total') %>% group_by(year, region, main_sector) %>% summarise(value=sum(value))
-EMISCO2_tmp <- ungroup(EMISCO2_tmp)
+EMISCO2 <- EMISCO2 %>% filter(main_sector=='Total') %>% group_by(year, region, main_sector) %>% summarise(value=sum(value))
+EMISCO2 <- ungroup(EMISCO2)
 #EMISCO2_tmp <- mutate(EMISCO2_tmp, GHG_Category="EMISCO2")
-EMISCO2_tmp <- mutate(EMISCO2_tmp, main_sector='Total')
-EMISCO2_tmp$main_sector <- factor(EMISCO2_tmp$main_sector, levels=main_sector)
-EMISCO2 <- bind_rows(EMISCO2, EMISCO2_tmp)
+#EMISCO2_tmp <- mutate(EMISCO2_tmp, main_sector='Total')
+#EMISCO2_tmp$main_sector <- factor(EMISCO2_tmp$main_sector, levels=main_sector)
+#EMISCO2 <- EMISCO2_tmp
+#EMISCO2 <- bind_rows(EMISCO2, EMISCO2_tmp)
 EMISCO2$main_sector <- factor(EMISCO2$main_sector, levels=main_sector)
-#EMISCO2$GHG_Category <- factor(EMISCO2$GHG_Category)
 
 #calculate emissions per capita
 Scenario$POP$value <- 10^6*Scenario$POP$value
@@ -408,7 +428,10 @@ ElecAccTot=ElecAccTot[population_group=="Total"]
 # Intensity ---------------------------------------------------------------
 
 # CO2 intensity of GDP
-CO2_intensity <- merge(EMISCO2,Scenario$GDP_MER,by=c('year','region')) %>% mutate(value=value.x/value.y, unit.int=paste("MtCO2/",unit,sep=""))%>%filter(main_sector=="Total")%>%select(year,region,value,unit.int)
+CO2_intensity <- merge(filter(EMISCO2,main_sector=="Total"), Scenario$GDP_MER,by=c('year','region')) 
+CO2_intensity <- mutate(CO2_intensity, value=value.x/value.y, unit.int=paste("MtCO2/",unit,sep=""))
+#CO2_intesnity <- filter(CO2_intensity, main_sector=="Total")
+CO2_intensity <- select(CO2_intensity, year,region,value,unit.int)
 setnames(CO2_intensity,"unit.int","unit")
 CO2_intensity_2015 = filter(CO2_intensity, year==2015)
 CO2_intensity_2015 = select(CO2_intensity_2015, region, value)
@@ -563,7 +586,7 @@ Industry_Energy_IVA <- mutate(Industry_Energy_IVA, unit="PJ/million US$(2005)")
 l <- list(EMISCO2EQ=EMISCO2EQ,EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2,
           EMIS_demand=EMIS_demand,EMIS_buildings=EMIS_buildings,EMIS_supply=EMIS_supply,EMIS_industry=EMIS_industry,EMIS_transport=EMIS_transport,
           EMISCO2EQ_AGRI=EMISCO2EQ_AGRI,EMISCO2EQ_LU=EMISCO2EQ_LU,EMISCO2EQ_WAS=EMISCO2EQ_WAS,LUEMCO2_TOT=LUEMCO2_TOT,EMIS_AFOLU=EMIS_AFOLU,
-          FGases=FGases,HFC_TOT=HFC_TOT,
+          FGases=FGases,HFC_TOT=HFC_TOT,LUEMCH4_TOT=LUEMCH4_TOT, LUEMN2O_TOT=LUEMN2O_TOT,
           RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, NonFossilElecShare=NonFossilElecShare,RenTPESShare=RenTPESShare,RenNucTPESShare=RenNucTPESShare,
           ElecCapGeo=ElecCapGeo, ElecCapWindOff=ElecCapWindOff, ElecCapWindOn=ElecCapWindOn, ElecCapSolarPV=ElecCapSolarPV, ElecCapSolarCSP=ElecCapSolarCSP, ElecCapHydro=ElecCapHydro, 
           ElecCapWaste=ElecCapWaste, ElecCapNuclear=ElecCapNuclear, ElecCapCoalCCS=ElecCapCoalCCS, ElecCapCoalTrad=ElecCapCoalTrad,

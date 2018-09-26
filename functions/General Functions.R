@@ -70,3 +70,10 @@ MainSector <- function(sector)
          'SF6'='Industry',
          'C6F14'='Industry')
 }
+
+wait <- function(x)
+{
+  p1 <- proc.time()
+  Sys.sleep(x)
+  proc.time() - p1 # The cpu usage should be negligible
+}
