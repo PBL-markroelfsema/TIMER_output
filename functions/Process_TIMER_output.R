@@ -115,6 +115,8 @@ HFC_TOT <- ungroup(HFC_TOT)
 HFC_TOT <- mutate(HFC_TOT, HFC_gas="Total")
 HFC_TOT = mutate(HFC_TOT, main_sector=mapply(function(x) MainSector(x), HFC_gas))
 HFC_TOT$main_sector = factor(HFC_TOT$main_sector,levels=main_sector)
+HFC_TOT_indicator <- HFC_TOT
+HFC_TOT_indicator <- mutate(HFC_TOT_indicator, unit="MtCO2eq")
 tmp <- HFC_TOT %>% mutate(main_sector="Industry")
 HFC_TOT <- rbind(HFC_TOT, tmp)
 HFC_TOT = select(HFC_TOT, year, region, main_sector, value) %>%
@@ -151,6 +153,9 @@ LUEMCO2_TOT$main_sector = factor(LUEMCO2_TOT$main_sector,levels=main_sector)
 LUEMCO2_TOT = select(LUEMCO2_TOT, year, region, main_sector, value) %>%
   group_by(year, region, main_sector) %>%
   summarise(value=sum(value, na.rm=TRUE))
+LUEMCO2_TOT_indicator=LUEMCO2_TOT # TODO, gives errors?
+LUEMCO2_TOT_indicator$unit<-"MtCO2eq"
+LUEMCO2_TOT_indicator<-filter(LUEMCO2_TOT_indicator,main_sector=="LULUCF") %>% select(year,region,unit,value)
 tmp <- select(LUEMCO2_TOT, year, region, main_sector, value) %>%
   group_by(year, region) %>%
   summarise(value=sum(value, na.rm=TRUE))
@@ -217,6 +222,9 @@ EMISCO2EQ_AGRI <- select(EMISCO2EQ_AGRI, year, region, main_sector, value)
 EMISCO2EQ_AGRI <- EMISCO2EQ_AGRI %>% filter(main_sector=='Agriculture') %>% group_by(year, region, main_sector) %>% summarise(value=sum(value))
 EMISCO2EQ_AGRI <- ungroup(EMISCO2EQ_AGRI)
 EMISCO2EQ_AGRI <- select(EMISCO2EQ_AGRI, year, region, main_sector, value)
+EMISCO2EQ_AGRI_indicator<-EMISCO2EQ_AGRI
+EMISCO2EQ_AGRI_indicator$unit<-"MtCO2eq"
+EMISCO2EQ_AGRI_indicator <- select(EMISCO2EQ_AGRI_indicator, year, region, value,unit)
 tmp <- EMISCO2EQ_AGRI %>% mutate(main_sector="Total")
 tmp$main_sector = factor(tmp$main_sector,levels=main_sector)
 EMISCO2EQ_AGRI <- rbind(EMISCO2EQ_AGRI, tmp)
@@ -244,11 +252,13 @@ EMISCO2EQ_LU <- select(EMISCO2EQ_LU, year, region, main_sector, value)
 EMISCO2EQ_LU <- EMISCO2EQ_LU %>% filter(main_sector=='LULUCF') %>% group_by(year, region, main_sector) %>% summarise(value=sum(value))
 EMISCO2EQ_LU <- ungroup(EMISCO2EQ_LU)
 EMISCO2EQ_LU <- select(EMISCO2EQ_LU, year, region, main_sector, value)
+EMISCO2EQ_LU_indicator <- EMISCO2EQ_LU
 tmp <- EMISCO2EQ_LU %>% mutate(main_sector="Total")
 tmp$main_sector = factor(tmp$main_sector,levels=main_sector)
 EMISCO2EQ_LU <- rbind(EMISCO2EQ_LU, tmp) 
 EMISCO2EQ_LU <- mutate(EMISCO2EQ_LU, GHG_Category="LULUCFEMISCO2EQ")
 EMISCO2EQ_LU$unit <- "MtCO2eq"
+EMISCO2EQ_LU_indicator$unit<-"MtCO2eq"
   
 #3b3. Waste emissions:CH4 and N2O
 EMISCH4_WAS <- filter(LUEMCH4_TOT, main_sector=='Waste')
@@ -293,6 +303,10 @@ EMISCO2EQ_tmp <- ungroup(EMISCO2EQ_tmp)
 EMISCO2EQ_tmp <- mutate(EMISCO2EQ_tmp, GHG_Category="EMISCO2EQ")
 EMISCO2EQ <- bind_rows(EMISCO2EQ, EMISCO2EQ_tmp)
 EMISCO2EQ$GHG_Category <- factor(EMISCO2EQ$GHG_Category)
+EMISCO2EQ$unit<-"MtCO2eq"
+EMISCO2EQ_indicator<-filter(EMISCO2EQ,main_sector=="Total")
+EMISCO2EQ_indicator<-filter(EMISCO2EQ_indicator,GHG_Category=="EMISCO2EQ")
+EMISCO2EQ_indicator<-select(EMISCO2EQ_indicator, year, region, main_sector, value,unit) 
 
 # change GHG_Category and main_sector to factor
 #EMISCO2EQ$main_sector <- factor(EMISCO2EQ$main_sector, levels=main_sector)
@@ -309,6 +323,7 @@ EMISCO2EQexcl_tmp$main_sector <- factor(EMISCO2EQexcl_tmp$main_sector, levels=ma
 EMISCO2EQexcl <- bind_rows(EMISCO2EQexcl, EMISCO2EQexcl_tmp)
 EMISCO2EQexcl$main_sector <- factor(EMISCO2EQexcl$main_sector, levels=main_sector)
 #EMISCO2EQexcl$GHG_Category <- factor(EMISCO2EQexcl$GHG_Category)
+EMISCO2EQexcl <- mutate(EMISCO2EQexcl, unit="MtCO2eq")
 
 # calculate total demand sector emissions (does not include f-gases)
 EMIS <- bind_rows(ENEMISCO2_TOT, ENEMISCH4_TOT) %>% bind_rows(ENEMISN2O_TOT) %>% 
@@ -342,13 +357,15 @@ EMISCO2  <- bind_rows(ENEMISCO2_TOT,INDEMISCO2_TOT,LUEMCO2_TOT)
 EMISCO2$main_sector <- factor(EMISCO2$main_sector, levels=main_sector)
 EMISCO2 <- select(EMISCO2, year, region, main_sector, value)
 EMISCO2 <- EMISCO2 %>% filter(main_sector=='Total') %>% group_by(year, region, main_sector) %>% summarise(value=sum(value))
-EMISCO2 <- ungroup(EMISCO2)
 #EMISCO2_tmp <- mutate(EMISCO2_tmp, GHG_Category="EMISCO2")
 #EMISCO2_tmp <- mutate(EMISCO2_tmp, main_sector='Total')
 #EMISCO2_tmp$main_sector <- factor(EMISCO2_tmp$main_sector, levels=main_sector)
 #EMISCO2 <- EMISCO2_tmp
 #EMISCO2 <- bind_rows(EMISCO2, EMISCO2_tmp)
 EMISCO2$main_sector <- factor(EMISCO2$main_sector, levels=main_sector)
+
+EMISCO2_indicator <- select(EMISCO2, year, region, value)
+EMISCO2_indicator <- mutate(EMISCO2_indicator, unit="MtCO2eq")
 
 #calculate emissions per capita
 Scenario$POP$value <- 10^6*Scenario$POP$value
@@ -360,6 +377,27 @@ EMISCO2EQpc <- select(EMISCO2EQpc, year, region, main_sector, value)
 # 2. Can we do this with piping?
 # temp2 <- EMISCO2EQ %>% group_by('year', 'region') %>% (function(x) sum(x$value))
 
+# Emissions ETS-sector (industry+electricity)
+ENEMISCO2_power = subset(Scenario$ENEMISCO2, sector == "Power generation" & energy_carrier=="Total" & year >= StartYear)
+ENEMISCO2_power$value = ENEMISCO2_power$value*10^3*CToCO2
+ENEMISCO2_power <- mutate(ENEMISCO2_power, unit="MtCO2eq")
+ENEMISCO2_power = select(ENEMISCO2_power, year, region, value, unit)
+
+ENEMISCH4_power = subset(Scenario$ENEMISCH4, sector == "Power generation" & energy_carrier=="Total" & year >= StartYear)
+ENEMISCH4_power$value = ENEMISCH4_power$value*GWP_CH4
+ENEMISCH4_power <- mutate(ENEMISCH4_power, unit="MtCO2eq")
+ENEMISCH4_power = select(ENEMISCH4_power, year, region, value, unit)
+
+ENEMISN2O_power = subset(Scenario$ENEMISN2O, sector == "Power generation" & energy_carrier=="Total" & year >= StartYear)
+ENEMISN2O_power$value = ENEMISN2O_power$value*NToN2O*GWP_N2O
+ENEMISN2O_power <- mutate(ENEMISN2O_power, unit="MtCO2eq")
+ENEMISN2O_power = select(ENEMISN2O_power, year, region, value, unit)
+
+EMIS_power = rbind(ENEMISCO2_power,ENEMISCH4_power,ENEMISN2O_power) %>% group_by(year, region,unit) %>% summarise(value=sum(value))
+
+EMIS_ETS <- bind_rows(EMIS_industry, EMIS_power)
+EMIS_ETS <- EMIS_ETS %>% group_by(year, region,unit) %>% summarise(value=sum(value))
+
 #F-Gas index with reduction relative to 2010
 # TO DO
 HFC_TOT_tmp <- HFC_TOT %>% filter(main_sector=="Total") %>% select(year, region, value)
@@ -367,6 +405,8 @@ PFC_TOT_tmp <- PFC_TOT %>% filter(main_sector=="Total") %>% select(year, region,
 FGases = inner_join(HFC_TOT_tmp, PFC_TOT_tmp, by = c('year', 'region'))
 FGases = mutate(FGases, value=value.x+value.y)
 FGases = select(FGases, year, region, value)
+FGases_indicator<-FGases
+FGases_indicator$unit<-"MtCO2eq/yr"
 FGases_2010 = filter(FGases, year==2010)
 FGases_2010 = select(FGases_2010, year, region, value)
 #FGas_Reduction_index <- NULL
@@ -443,6 +483,26 @@ ElecCapWSTot <- ElecCapTot[energy_technology=="WindSolar"]
 ElecAccTot=data.table(Scenario$ElecAcc)
 ElecAccTot=ElecAccTot[population_group=="Total"]
 
+# CO2 standard new power plants
+CO2EPGNew=data.table(Scenario$CO2EPG_new)
+CO2EPGCoalNew=CO2EPGNew[energy_technology=="Conv. Coal"]%>%select(year, region,value,unit)
+# TODO: weighting factor must be applied (electricity production/consumption)
+CO2EPGNew=CO2EPGNew%>% group_by(year, region,unit) %>% summarise(value=mean(value))
+
+# Efficiency new power plants(%)
+ElecEffNewPct=data.table(Scenario$ElecEffPct_new)
+# TODO: make weighted factor for diferent coal technologies
+ElecEffCoalNewPct=ElecEffNewPct[energy_technology=="Conv. Coal"]%>%select(year, region,value,unit)
+# TODO: weighting factor must be applied (electricity production/consumption)
+ElecEffNewPct=ElecEffNewPct%>% group_by(year, region,unit) %>% summarise(value=mean(value))
+
+# Efficiency power plants(%)
+ElecEffPct=data.table(Scenario$ElecEffPct)
+# TODO: make weighted factor for diferent coal technologies
+ElecEffCoalPct=ElecEffPct[energy_technology=="Conv. Coal"]%>%select(year, region,value,unit)
+# TODO: weighting factor must be applied (electricity production/consumption)
+ElecEffPct=ElecEffPct%>% group_by(year, region,unit) %>% summarise(value=mean(value))
+
 # Intensity ---------------------------------------------------------------
 
 # CO2 intensity of GDP
@@ -458,8 +518,8 @@ CO2_intensity_index = mutate(CO2_intensity_index, value=value.y/value.x,unit="in
 CO2_intensity_index = select(CO2_intensity_index, year, region, value,unit)
 
 # Energy intensity of GDP
-TPES = data.table(Scenario$TPES)[energy_carrier == "Total" & year >= StartYear]
-TPES_intensity <- merge(TPES,Scenario$GDP_MER,by=c('year','region'))%>% mutate(value=1000*value.x/value.y, unit="MJ/US$(2005)")%>%select(year,region, value,unit)
+TPES_total = data.table(Scenario$TPES)[energy_carrier == "Total" & year >= StartYear]
+TPES_intensity <- merge(TPES_total,Scenario$GDP_MER,by=c('year','region'))%>% mutate(value=1000*value.x/value.y, unit="MJ/US$(2005)")%>%select(year,region, value,unit)
 TPES_intensity_2015 = filter(TPES_intensity, year==2015)
 TPES_intensity_2015 = select(TPES_intensity_2015, region, value)
 TPES_intensity_index = inner_join(TPES_intensity_2015, TPES_intensity, by=c('region'))
@@ -481,6 +541,9 @@ OilGas_CH4 <- filter(Scenario$ENEMISCH4, sector=="losses/leakages", (energy_carr
 OilGas_CH4$value <- OilGas_CH4$value*GWP_CH4                     
 OilGas_GHG <- bind_rows(OilGas_CO2, OilGas_CH4) 
 OilGas_GHG_total <- OilGas_GHG %>% group_by(year, region) %>% summarise(value=sum(value))
+OilGas_CH4_indicator<-OilGas_CH4 %>% group_by(year, region,unit) %>% summarise(value=sum(value))
+OilGas_GHG_total_indicator<-OilGas_GHG_total
+OilGas_GHG_total_indicator$unit<-"MtCO2eq"
 
 OilGas_Prod <- filter(Scenario$EnergyProd, energy_carrier=="Heavy oil" | energy_carrier=="Light oil" | energy_carrier=="Natural gas")
 OilGas_Prod$value <- OilGas_Prod$value*10^3*(1/MtoeToTJ) # from TJ to Mtoe
@@ -517,6 +580,25 @@ RenNucTPESShare <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value
 RenNucTPESShare <- data.frame(RenNucTPESShare)
 RenNucTPESShare <- mutate(RenNucTPESShare, unit="%")
 
+#including nuclear + Chinese accounting method
+# 1. Chines accounting
+TPES_CHN_accounting <- Scenario$TPES
+TPES_CHN_accounting <- inner_join(TPES_CHN_accounting, ElecEffCoalPct, by=c("year", "region"))
+TPES_CHN_accounting$value.y <- ifelse(!(TPES_CHN_accounting$energy_carrier %in% c('Solar/wind', 'Hydro-electricity','Nuclear')),1, TPES_CHN_accounting$value.y )
+TPES_CHN_accounting <- mutate(TPES_CHN_accounting, value=value.x/value.y)  
+TPES_CHN_accounting <- select(TPES_CHN_accounting, year, region, energy_carrier, value, unit.x)
+TPES_CHN_accounting <- rename(TPES_CHN_accounting, unit=unit.x)
+# 2. determine renewable TPES share
+RenewableN <- ifelse(TPES_CHN_accounting$energy_carrier %in% c('Modern biofuels','Solar/wind', 'Hydro-electricity','Nuclear'), TRUE, FALSE)
+tmp1 <- cbind(TPES_CHN_accounting,RenewableN)
+tmp1 <- subset(tmp1, RenewableN==TRUE)
+tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
+tmp2 <- subset(TPES_CHN_accounting, energy_carrier=="Total")
+tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
+RenNucTPESShare_CHN_acccounting <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
+RenNucTPESShare_CHN_acccounting <- data.frame(RenNucTPESShare_CHN_acccounting)
+RenNucTPESShare_CHN_acccounting <- mutate(RenNucTPESShare_CHN_acccounting, unit="%")
+
 # Gas share in TPES
 NatGasTPES <- data.table(Scenario$TPES)[energy_carrier %in%c("Total","Natural gas") & year >= StartYear]
 NatGasTPESshare <- spread(NatGasTPES,energy_carrier,value) %>% mutate(Gasshare=`Natural gas`/Total*100)
@@ -545,8 +627,40 @@ RENfinalenergyshare <- data.frame(RENfinalenergyshare)
 RENfinalenergyshare <- mutate(RENfinalenergyshare, unit="%")
 
 # coal consumption
-Coal_consumption <- filter(Scenario$FinalEnergy, sector=="Total", energy_carrier=="Coal") 
+Coal_consumption <- filter(Scenario$TPES, energy_carrier=="Coal") 
 Coal_consumption <- data.frame(Coal_consumption)
+
+# Energy consumption industry and power supply
+FinalEnergy_industry <- filter(Scenario$FinalEnergy, sector=="Industry", energy_carrier=="Total")
+FinalEnergy_industry <- select(FinalEnergy_industry, year, region, value, unit)
+FinalEnergy_electricity <- filter(Scenario$FinalEnergy, energy_carrier=="Electricity", sector=="Total")
+FinalEnergy_electricity <- select(FinalEnergy_electricity, year, region, value, unit)
+PowerSupply_consumption <- filter(Scenario$ElecFuelUseTot, energy_technology=="Total")
+PowerSupply_consumption$value <- (Giga/Peta)*PowerSupply_consumption$value
+PowerSupply_consumption$unit <- "PJ"
+PowerSupply_consumption <- select(PowerSupply_consumption, year, region, value, unit)
+PowerSupply_consumption <- inner_join(PowerSupply_consumption, FinalEnergy_electricity, by=c('year', 'region'))
+PowerSupply_consumption <- mutate(PowerSupply_consumption, value=value.x-value.y)
+PowerSupply_consumption <- select(PowerSupply_consumption, year, region, value, unit.x)
+PowerSupply_consumption <- rename(PowerSupply_consumption, unit=unit.x)
+EnergyConsumption_industry_powersupply <- rbind(FinalEnergy_industry, PowerSupply_consumption)
+EnergyConsumption_industry_powersupply <- EnergyConsumption_industry_powersupply %>% group_by(year, region,unit) %>% summarise(value=sum(value))
+
+# Trade oil, gas
+TradeOil <- filter(Scenario$NetTrade, energy_carrier=="Oil")
+TradeOil <- select(TradeOil, year, region, value, unit)
+TradeGas <- filter(Scenario$NetTrade, energy_carrier=="Natural gas")
+TradeGas <- select(TradeGas, year, region, value, unit)
+
+# Total final energy
+FinalEnergy_total <- filter(Scenario$FinalEnergy, sector=="Total", energy_carrier=="Total")
+FinalEnergy_total <- select(FinalEnergy_total, year, region, value, unit)
+
+# gas flaring oil production
+GasFlaringCO2 <- filter(Scenario$ENEMISCO2, sector=='losses/leakages', energy_carrier=="Heavy oil")
+GasFlaringCO2 <- select(GasFlaringCO2, year, region, value, unit)
+GasFlaringCO2$value <- 10^3*CToCO2*GasFlaringCO2$value 
+GasFlaringCO2$unit <- "MtCO2eq"
 
 # Buildings ---------------------------------------------------------------
 
@@ -559,6 +673,7 @@ Residential_Efficiency_capita <- mutate(Residential_Efficiency_capita, value=val
 Residential_Efficiency_capita <- select(Residential_Efficiency_capita, year, region, value)
 Residential_Efficiency_capita$value <- Residential_Efficiency_capita$value*10^6
 Residential_Efficiency_capita <- data.frame(Residential_Efficiency_capita)
+Residential_Efficiency_capita$unit<-"GJ/capita"
 
 # Final Energy  per m2 residential sector (GJ/m2)
 Residential_FinalEnergy_m2 <- filter(Scenario$FinalEnergy, sector=="Residential", energy_carrier=="Total")
@@ -579,6 +694,20 @@ Appliances_FinalEnergy_capita <- inner_join(Appliances_FinalEnergy_capita, Scena
 Appliances_FinalEnergy_capita <- mutate(Appliances_FinalEnergy_capita, value=value.x / value.y)
 Appliances_FinalEnergy_capita <- select(Appliances_FinalEnergy_capita, year, region, value)
 Appliances_FinalEnergy_capita <- data.frame(Appliances_FinalEnergy_capita)
+Appliances_FinalEnergy_capita$unit<-"GJ/capita"
+
+# total energy use in residential sector
+FinalEnergy_Residential_total <- filter(Scenario$FinalEnergy_Residential, population_group=="Total", enduse_function=="HouseholdAppliances")
+FinalEnergy_Residential_total <- select(FinalEnergy_Residential_total, year, region, value, unit)
+
+# appliances energy use in residential sector
+FinalEnergy_Residential_appliances <- filter(Scenario$FinalEnergy_Residential, population_group=="Total", enduse_function=="Total")
+FinalEnergy_Residential_appliances <- select(FinalEnergy_Residential_total, year, region, value, unit)
+
+# Total carbon capture (kgC)
+CarbonCaptured_total <- filter(Scenario$CarbonCaptured, energy_carrier=='Total')
+CarbonCaptured_total <- CarbonCaptured_total %>% group_by(year, region, unit) %>% summarise(value=sum(value))
+CarbonCaptured_total <- select(CarbonCaptured_total, year, region, value, unit)
 
 # Transport ---------------------------------------------------------------
 
@@ -593,6 +722,7 @@ FuelUse_pkm_cars <- select(FuelUse_pkm_cars, year, region, value)
 # Convert to km/l
 FuelUse_pkm_cars$value <- (MJ_l_gasoline/FuelUse_pkm_cars$value)/Load_car
 FuelUse_pkm_cars <- data.frame(FuelUse_pkm_cars)
+FuelUse_pkm_cars$unit<-"km/L"
 
 # Car CO2 per km
 CO2_km_cars <- filter(Scenario$TransportCO2Emissions, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v="CO2")
@@ -604,7 +734,7 @@ CO2_km_cars <- mutate(CO2_km_cars, value=(Load_car/Tera)*10^12*CO2/pkm) %>% sele
 CO2_km_cars <- mutate(CO2_km_cars, unit= "gCO2/km")
 
 # Share of Electric cars
-ElectricCars_share <- filter(Scenario$VehicleShare_cars, car_type=="BEV" | car_type=="BEV 150")
+ElectricCars_share <- filter(Scenario$VehicleShare_cars, car_type=="BEV" | car_type=="BEV 100km")
 ElectricCars_share <- ElectricCars_share %>% group_by(year, region) %>% summarise(value=sum(value))
 ElectricCars_share <- select(ElectricCars_share, year, region, value)
 ElectricCars_share <- ungroup(ElectricCars_share)
@@ -629,8 +759,17 @@ fuel_total <- select(fuel_total, year, region, travel_mode, value)
 RenTransportShare <- inner_join(elec_share_mode, fuel_elec, by=c('year', 'region', 'travel_mode')) %>%
                        inner_join(fuel_bio, by=c('year', 'region', 'travel_mode')) %>%
                        inner_join(fuel_total, by=c('year', 'region', 'travel_mode'))
-RenTransportShare <- RenTransportShare %>% mutate(value=(value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, travel_mode)
+# Mark TODO: calculate ren share in total transport, not just cars 
+# RenTransportShare_total<-select(RenTransportShare,year,region,value.x,value.y,value.x.x,value.y.y) %>% group_by(year, region) 
+# RenTransportShare_total %>% summarise(value.x=sum(value.x, na.rm=TRUE),value.y=sum(value.y, na.rm=TRUE),value.x.x=sum(value.x.x, na.rm=TRUE),value.y.y=sum(value.y.y, na.rm=TRUE)) 
+# RenTransportShare_total%>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, travel_mode)
+RenTransportShare <- RenTransportShare %>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, travel_mode)
+RenTransportShare <- mutate(RenTransportShare, unit= "%")
 
+# Renewable transport share for cars
+RenTransportShare_cars <- filter(RenTransportShare, travel_mode=="Car") %>% select(year, region, value, unit)
+
+# Blending share for cars
 BlendingShareBio_cars_energy <- filter(Scenario$BlendingShareBio_energy, travel_mode=="Car") %>% select(year, region, value, unit)
 
 # Industry ----------------------------------------------------------------
@@ -642,6 +781,7 @@ Industry_Efficiency <- inner_join(Industry_FinalEnergy, Scenario$IVA, by=c('year
 Industry_Efficiency <- mutate(Industry_Efficiency, value=(10^3*(1/GWhToTJ)*10^6*value.x) / (10^6*value.y))
 Industry_Efficiency <- select(Industry_Efficiency, year, region, value)
 Industry_Efficiency <- data.frame(Industry_Efficiency)
+Industry_Efficiency$unit<-"Kwh/US$2005"
 
 # INDUSTRY
 
@@ -653,23 +793,46 @@ Industry_Energy_IVA <- spread(Industry_Energy_IVA, key=v, value=value)
 Industry_Energy_IVA <- mutate(Industry_Energy_IVA, value=energy/IVA) %>% select(year, region, value)
 Industry_Energy_IVA <- mutate(Industry_Energy_IVA, unit="PJ/million US$(2005)")
 
+# CO2 emissions per IVA (MtCO2/million US$(2005)
+Industry_Emis <- filter(INDEMISCO2_TOT, main_sector=="Total") %>% select(year, region, value) %>% mutate(v="emis")
+Industry_Emis_IVA <- rbind(data.table(Industry_Emis), data.table(Industry_IVA))
+Industry_Emis_IVA <- spread(Industry_Emis_IVA, key=v, value=value)
+Industry_Emis_IVA <- mutate(Industry_Emis_IVA, value=emis/IVA) %>% select(year, region, value)
+Industry_Emis_IVA <- mutate(Industry_Emis_IVA, unit="MtCO2/million US$(2005)")
+
+# IMAGE
+# Reforestation (in 100 km2)
+Forest_area_total <- filter(Scenario$ForestArea, forest_type=="Total")
+
 # Compile list ------------------------------------------------------------
-l <- list(EMISCO2EQ=EMISCO2EQ,EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2,
-          EMIS_demand=EMIS_demand,EMIS_buildings=EMIS_buildings,EMIS_supply=EMIS_supply,EMIS_industry=EMIS_industry,EMIS_transport=EMIS_transport,
-          EMISCO2EQ_AGRI=EMISCO2EQ_AGRI,EMISCO2EQ_LU=EMISCO2EQ_LU,EMISCO2EQ_WAS=EMISCO2EQ_WAS,LUEMCO2_TOT=LUEMCO2_TOT,EMIS_AFOLU=EMIS_AFOLU,
-          FGases=FGases,HFC_TOT=HFC_TOT,LUEMCH4_TOT=LUEMCH4_TOT, LUEMN2O_TOT=LUEMN2O_TOT,
-          RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, NonFossilElecShare=NonFossilElecShare,RenTPESShare=RenTPESShare,RenNucTPESShare=RenNucTPESShare,
-          NatGasTPESshare=NatGasTPESshare,
+l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, EMISCO2EQ=EMISCO2EQ,EMIS_ETS=EMIS_ETS,
+          EMIS_demand=EMIS_demand,EMIS_buildings=EMIS_buildings,EMIS_supply=EMIS_supply,EMIS_industry=EMIS_industry,EMIS_transport=EMIS_transport,EMIS_power=EMIS_power,
+          EMISCO2EQ_LU=EMISCO2EQ_LU,EMISCO2EQ_WAS=EMISCO2EQ_WAS,LUEMCO2_TOT=LUEMCO2_TOT,EMIS_AFOLU=EMIS_AFOLU,LUEMCH4_TOT=LUEMCH4_TOT, LUEMN2O_TOT=LUEMN2O_TOT,
+          EMISCO2EQ_LU_indicator=EMISCO2EQ_LU_indicator,LUEMCO2_TOT_indicator=LUEMCO2_TOT_indicator,EMISCO2EQ_indicator=EMISCO2EQ_indicator,
+          EMISCO2EQ_AGRI_indicator=EMISCO2EQ_AGRI_indicator,HFC_TOT_indicator=HFC_TOT_indicator,FGases_indicator=FGases_indicator,EMISCO2_indicator=EMISCO2_indicator,
+          # energy supply
+          TPES_total=TPES_total, TPES_CHN_accounting=TPES_CHN_accounting,
+          RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, NonFossilElecShare=NonFossilElecShare,
+          RenTPESShare=RenTPESShare,RenNucTPESShare_CHN_acccounting=RenNucTPESShare_CHN_acccounting,RenNucTPESShare=RenNucTPESShare,
+          RENfinalenergyshare=RENfinalenergyshare,
+          NatGasTPESshare=NatGasTPESshare,Coal_consumption=Coal_consumption, EnergyConsumption_industry_powersupply=EnergyConsumption_industry_powersupply,
           ElecCapGeo=ElecCapGeo, ElecCapWindOff=ElecCapWindOff, ElecCapWindOn=ElecCapWindOn, ElecCapSolarPV=ElecCapSolarPV, ElecCapSolarCSP=ElecCapSolarCSP, ElecCapHydro=ElecCapHydro, 
           ElecCapWaste=ElecCapWaste, ElecCapNuclear=ElecCapNuclear, ElecCapCoalCCS=ElecCapCoalCCS, ElecCapCoalTrad=ElecCapCoalTrad,
           ElecCapCoalTot=ElecCapCoalTot, ElecCapBioTot=ElecCapBioTot, ElecCapSolarTot=ElecCapSolarTot, ElecCapWindTot=ElecCapWindTot, ElecCapRenTot=ElecCapRenTot, ElecCapWSTot=ElecCapWSTot, 
-          OilGas_Intensity = OilGas_Intensity, CO2_intensity=CO2_intensity,CO2_intensity_index=CO2_intensity_index,TPES_intensity=TPES_intensity,TPES_intensity_index=TPES_intensity_index,
-          IndustryEfficiency = Industry_Efficiency, FGas_Reduction_index = FGas_Reduction_index, 
-          Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2, 
-          Appliances_FinalEnergy_capita=Appliances_FinalEnergy_capita,
-          CO2_km_cars=CO2_km_cars, FuelUse_pkm_cars=FuelUse_pkm_cars, ElectricCars_share=ElectricCars_share, RenTransportShare=RenTransportShare, BlendingShareBio_cars_energy=BlendingShareBio_cars_energy, 
-          Industry_Energy_IVA=Industry_Energy_IVA,
+          CO2EPGNew=CO2EPGNew,CO2EPGCoalNew=CO2EPGCoalNew,ElecEffNewPct=ElecEffNewPct,ElecEffCoalNewPct=ElecEffCoalNewPct,ElecEffPct=ElecEffPct,ElecEffCoalPct=ElecEffCoalPct,
+          OilGas_Intensity = OilGas_Intensity,OilGas_CH4_indicator=OilGas_CH4_indicator, OilGas_GHG_total_indicator=OilGas_GHG_total_indicator,
+          CO2_intensity=CO2_intensity,CO2_intensity_index=CO2_intensity_index,TPES_intensity=TPES_intensity,TPES_intensity_index=TPES_intensity_index,
+          TradeOil=TradeOil, TradeGas=TradeGas, FinalEnergy_total=FinalEnergy_total,GasFlaringCO2=GasFlaringCO2,
+          CarbonCaptured_total=CarbonCaptured_total,
+          # industry
+          Industry_Efficiency = Industry_Efficiency, FGas_Reduction_index = FGas_Reduction_index, Industry_Energy_IVA=Industry_Energy_IVA,Industry_Emis_IVA=Industry_Emis_IVA,
+          # buildigns
+          Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2,Appliances_FinalEnergy_capita=Appliances_FinalEnergy_capita,
+          FinalEnergy_Residential_total=FinalEnergy_Residential_total, FinalEnergy_Residential_appliances=FinalEnergy_Residential_appliances,
+          # transport
+          CO2_km_cars=CO2_km_cars, FuelUse_pkm_cars=FuelUse_pkm_cars, ElectricCars_share=ElectricCars_share, RenTransportShare=RenTransportShare, BlendingShareBio_cars_energy=BlendingShareBio_cars_energy,RenTransportShare_cars=RenTransportShare_cars, 
+          # SDG
           ElecAccTot=ElecAccTot,
-          RENfinalenergyshare=RENfinalenergyshare,
-          Coal_consumption=Coal_consumption)
+          # AFOLU
+          Forest_area_total=Forest_area_total)
 }
