@@ -8,7 +8,7 @@ library(tidyverse)
 StartYear = 1990
 
 # PBL colors
-source('TIMER_output/functions/pbl_colors.R')
+source('../TIMER_output/functions/pbl_colors.R')
 rhg_cols <- c(hemelblauw3010, mosgroen3020, violet3030, donkergeel3040, paars3050, lichtblauw3060, roze3070, groen3080, rood3090, 
               donkergroen3100, oranje3110, donkerbruin3120, robijnrood3130, bruin3140, mintgroen3150, geel3160)
 
@@ -88,7 +88,7 @@ travel_mode_freight = c('Inland shipping', 'Freigth train', 'Medium truck', 'Hea
 travel_mode_freight_excl_total = c('Inland shipping', 'Freigth train', 'Medium truck', 'Heavy truck', 'Air cargo', 'International shipping', '-')
 car_type = c('ICE2000', 'ICE2010', 'ICEAdvOil', 'ICE Adv H2', 'ICE Turbo Diesel', 'ICE Diesel Oil', 'ICE Diesel Bio', 'ICE HEV Oil', 'ICE HEV Gas', 'ICE HEV H2', 'ICE HEV Oil2', 'ICE EFT50', 'FCV Oil', 'FCV Bio', 'FCV H2', 'Phev 10 oil', 'Phev 30 oil', 'Phev 60 oil', 'Phev 10 Bio', 'Phev 30 Bio', 'Phev 60 Bio', 'BEV', 'BEV range extended', 'BEV 100km', '-')
 #car_type = c('ICE2000', 'x1', 'x2', 'ICE Adv H2', 'x3', 'ICE Diesel Oil', 'ICE Diesel Bio', 'ICE HEV Oil', 'ICE HEV Gas', 'x4', 'x5', 'ICE EFT50', 'x6', 'x7', 'FCV H2', 'Phev 10 oil', 'Phev 30 oil', 'x8', 'Phev 10 Bio', 'Phev 30 Bio', 'x9', 'BEV', 'x10', 'BEV 150', '-')
-bus_type =c('Oil', 'Bio', 'Gas', 'ElectricTrolley', 'HybridOil', 'HybridBio', 'ElectricBattery', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '')
+bus_type =c('Oil', 'Bio', 'Gas', 'ElectricTrolley', 'HybridOil', 'HybridBio', 'ElectricBattery', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x18')
 train_type =c('Oil', 'Bio', 'Electric','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25')
 aircraft_type=c('Air conv', 'Air conv 1980', 'Air conv 2000', 'conv, bio', 'eff.oil', 'eff.bio', 'BWB oil', 'BWB bio', 'BWB eff. oil', 'BWB eff bio', 'Cryoplane','12','13','14','15','16','17','18','19','20','21','22','23','24','25')
 forest_type=c('Mature forest', 'Regrowth (Abandond land)', 'Regrowth (Timber)', 'Carbon plantations', 'Total')
