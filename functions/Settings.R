@@ -12,6 +12,7 @@ source('../TIMER_output/functions/pbl_colors.R')
 rhg_cols <- c(hemelblauw3010, mosgroen3020, violet3030, donkergeel3040, paars3050, lichtblauw3060, roze3070, groen3080, rood3090, 
               donkergroen3100, oranje3110, donkerbruin3120, robijnrood3130, bruin3140, mintgroen3150, geel3160)
 
+Kilo = 10^3
 Mega = 10^6
 Giga = 10^9
 Tera = 10^12
