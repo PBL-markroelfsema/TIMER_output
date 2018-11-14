@@ -58,8 +58,9 @@
 # GDP_PP
 # IVA
 
+# policy = TRUE if this directory is in the scenario output in the TIMER outputlib
 #library(base)
-ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2', Rundir, Project, TIMERGeneration)
+ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2', Rundir, Project, TIMERGeneration, Policy = FALSE)
 { 
   source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'mym2r.R', sep='/'))
   source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'Settings.R', sep='/'))
@@ -475,6 +476,7 @@ print(IMAGE_folder)
 
   # Person Kilometers Travelled for new cars(Tera km)
   # First get share of new cars
+  if (Policy==TRUE) {
   ShareNewCars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                      filename='trp_trvl_cars_VehNewCapTot.dat', varname=NULL, 
                                      collist=list(regions26), 
@@ -486,6 +488,10 @@ print(IMAGE_folder)
   PersonKilometersNewCars <- inner_join(ShareNewCars, PersonKilometersCars, by=c("year", "region"))
   PersonKilometersNewCars <- mutate(PersonKilometersNewCars, value=value.x*value.y)
   PersonKilometersNewCars <- select(PersonKilometersNewCars, region, value, unit)
+  }
+  else {
+    PersonKilometersNewCars = data.frame(matrix(ncol=0,nrow=0))
+  }
   
   # Person Kilometers Travelled (Tera km)
   TonneKilometers = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
@@ -515,17 +521,27 @@ print(IMAGE_folder)
   FinalEnergy_Transport <- mutate(FinalEnergy_Transport, unit="XJ")
   
   # Total new vehicles for cars (in %-share)
+  if (Policy==TRUE) {
   VehicleNewCapacity_cars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                                   filename='trp_trvl_cars_VehNewCapTot.dat', varname=NULL, 
                                                   collist=list(regions26), 
                                                   namecols=c('region'), novarname = TRUE)
+  }
+  else {
+    VehicleNewCapacity_cars = data.frame(matrix(ncol=0,nrow=0))
+  }
   # TO DO: finish, add up for EU with personkilometers
   
   # Vehicle share NEW cars
+  if (Policy==TRUE) {
   VehicleShare_new_cars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                       filename='trp_trvl_cars_V_share_new.dat', varname=NULL, 
                                       collist=list(regions27,car_type), 
                                       namecols=c('region','car_type'), novarname = TRUE)
+  }
+  else {
+    VehicleShare_new_cars = data.frame(matrix(ncol=0,nrow=0))
+  }
   # TO DO: finish, add up for EU with personkilometers and VehNewCap
 
   # TO DO: for EU, the shares must be added using 'pkm' as weighting factor
@@ -583,6 +599,7 @@ print(IMAGE_folder)
   VehicleShare_aircrafts <- mutate(VehicleShare_aircrafts, unit="%")
   
   # blending share biofuels for cars (in terms of personkilometers)
+  if (Policy==TRUE) {
   BlendingShareBio_cars_pkm = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                               filename='trp_trvl_cars_V_Blending_share_bio_pkm.dat', varname=NULL, 
                                               collist=list(regions27), 
@@ -598,8 +615,12 @@ print(IMAGE_folder)
   BlendingShareBio_cars_pkm <- rbind(BlendingShareBio_cars_pkm, EU)
   BlendingShareBio_cars_pkm$region = factor(BlendingShareBio_cars_pkm$region,levels=regions28_EU)
   BlendingShareBio_cars_pkm <- mutate(BlendingShareBio_cars_pkm, unit="%")
- 
+  }
+  else {
+    BlendingShareBio_cars_pkm = data.frame(matrix(ncol=0,nrow=0))
+  }
   # transport fuel use per region, mode and energy carrier (secondary fuel use)
+  if (Policy==TRUE) {
   FuelUseFleet = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                             filename='trp_trvl_fuel_use_fleet_tot.dat', varname=NULL, 
                                             collist=list(regions26, travel_mode_excl_total, energy_carrier_sec_fuel2), 
@@ -611,9 +632,12 @@ print(IMAGE_folder)
   FuelUseFleet <- rbind(FuelUseFleet, EU)
   FuelUseFleet$region = factor(FuelUseFleet$region,levels=regions28_EU)
   FuelUseFleet <- mutate(FuelUseFleet, unit="TJ") # TJ?
-  
-  
+  }
+  else {
+    FuelUseFleet = data.frame(matrix(ncol=0,nrow=0))
+  }
   # blending share biofuels (in terms of energy))
+  if (Policy==TRUE) {
   BlendingShareBio_energy = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                               filename='trp_trvl_Blending_share_bio_energy.dat', varname=NULL, 
                                               collist=list(regions26, travel_mode_excl_total), 
@@ -631,8 +655,12 @@ print(IMAGE_folder)
   BlendingShareBio_energy <- rbind(BlendingShareBio_energy, EU)
   BlendingShareBio_energy$region = factor(BlendingShareBio_energy$region,levels=regions28_EU)
   BlendingShareBio_energy <- mutate(BlendingShareBio_energy, unit="%")
-  
+  }
+  else {
+    BlendingShareBio_energy = data.frame(matrix(ncol=0,nrow=0))
+  }
   # Share of electric cars
+  if (Policy==TRUE) {
   ElectricShare_new_cars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                            filename='trp_trvl_cars_V_share_electric_new.dat', varname=NULL, 
                                            collist=list(regions26), 
@@ -648,8 +676,12 @@ print(IMAGE_folder)
   ElectricShare_new_cars <- rbind(ElectricShare_new_cars, EU)
   ElectricShare_new_cars$region = factor(ElectricShare_new_cars$region,levels=regions28_EU)
   ElectricShare_new_cars <- mutate(ElectricShare_new_cars, unit="%")
-
+  }
+  else{
+    ElectricShare_new_cars = data.frame(matrix(ncol=0,nrow=0))
+  }
   # Efficiency total fleet for new cars
+  if (Policy==TRUE) {
   EfficiencyFleet_new_cars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
                                          filename='trp_trvl_cars_Eff_new.dat', varname=NULL, 
                                          collist=list(regions26), 
@@ -666,8 +698,12 @@ print(IMAGE_folder)
   EfficiencyFleet_new_cars <- rbind(EfficiencyFleet_new_cars, EU)
   EfficiencyFleet_new_cars$region = factor(EfficiencyFleet_new_cars$region,levels=regions28_EU)
   EfficiencyFleet_new_cars <- mutate(EfficiencyFleet_new_cars, unit="MJ/pkm")
-
+  }
+  else {
+    EfficiencyFleet_new_cars = data.frame(matrix(ncol=0,nrow=0))
+  }
   # Efficiency total fleet for new medium trucks
+  if (Policy==TRUE) {
   EfficiencyFleet_new_MedT = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
                                              filename='trp_frgt_MedT_Eff_new.dat', varname=NULL, 
                                              collist=list(regions26), 
@@ -683,8 +719,12 @@ print(IMAGE_folder)
   EfficiencyFleet_new_MedT <- rbind(EfficiencyFleet_new_MedT, EU)
   EfficiencyFleet_new_MedT$region = factor(EfficiencyFleet_new_MedT$region,levels=regions28_EU)
   EfficiencyFleet_new_MedT <- mutate(EfficiencyFleet_new_MedT, unit="MJ/tkm") 
-  
+  }
+  else {
+    EfficiencyFleet_new_MedT = data.frame(matrix(ncol=0,nrow=0))
+  }
   # Efficiency total fleet for new heavy trucks
+  if (Policy==TRUE) {
   EfficiencyFleet_new_HvyT = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
                                              filename='trp_frgt_HvyT_Eff_new.dat', varname=NULL, 
                                              collist=list(regions26), 
@@ -700,7 +740,10 @@ print(IMAGE_folder)
   EfficiencyFleet_new_HvyT <- rbind(EfficiencyFleet_new_HvyT, EU)
   EfficiencyFleet_new_HvyT$region = factor(EfficiencyFleet_new_HvyT$region,levels=regions28_EU)
   EfficiencyFleet_new_HvyT <- mutate(EfficiencyFleet_new_HvyT, unit="MJ/tkm") 
-  
+  }
+  else {
+    EfficiencyFleet_new_HvyT = data.frame(matrix(ncol=0,nrow=0))
+  }
   #POP
   # Unit: million people
   POP = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 

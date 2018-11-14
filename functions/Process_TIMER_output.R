@@ -17,7 +17,7 @@
 # CO2_intensity_GDP - DONE, ok?
 # Energy_intensity_TPES_GDP - DONE, ok?
 
-ProcessTimerScenario <- function(Scenario, Rundir, Project)
+ProcessTimerScenario <- function(Scenario, Rundir, Project, Policy = FALSE)
 { s <- deparse(substitute(Scenario)) # get object name as string
   if(!exists(s))
   { print(paste("Scenario ", s, " is not imported yet. First execute ImportTimerFile", sep=""))
@@ -503,6 +503,22 @@ ElecEffCoalPct=ElecEffPct[energy_technology=="Conv. Coal"]%>%select(year, region
 # TODO: weighting factor must be applied (electricity production/consumption)
 ElecEffPct=ElecEffPct%>% group_by(year, region,unit) %>% summarise(value=mean(value))
 
+# CO2 emissions per Kwh electricity generated
+# CO2 emissions per Kwh electricity generated
+CO2_elec <- filter(Scenario$ENEMISCO2, sector=="Power generation", energy_carrier=="Total")
+#CO2_elec$value <- (Giga/Kilo)*10^9*CToCO2*CO2_elec$value
+# GtC to gCO2
+CO2_elec$value <- 10^15*CToCO2*CO2_elec$value 
+CO2_elec <- select(CO2_elec, year, region, value)
+Elec_Kwh <- filter(Scenario$ElecProd, energy_carrier=="Total")
+# PJ to KWh
+#Elec_Kwh$value <- (Peta/Tera)*(1/GWhToTJ)*(Giga/Kilo)*Elec_Kwh$value
+Elec_Kwh$value <- (2.777778*10^8)*Elec_Kwh$value
+Elec_Kwh <- select(Elec_Kwh, year, region, value)
+CO2_KWh <- inner_join(CO2_elec, Elec_Kwh, by=c("year", "region"))
+CO2_KWh <- mutate(CO2_KWh, value=value.x/value.y)
+CO2_KWh <- mutate(CO2_KWh, unit="gCO2/Kwh")
+
 # Intensity ---------------------------------------------------------------
 
 # CO2 intensity of GDP
@@ -741,6 +757,7 @@ ElectricCars_share <- ungroup(ElectricCars_share)
 ElectricCars_share <- mutate(ElectricCars_share, unit= "%")
 
 # renewable share in transport
+if (Policy==TRUE) {
 elec_share_mode <- rbind(mutate(RenElecShare, travel_mode=travel_mode_excl_total[1])) %>%
                      rbind(mutate(RenElecShare, travel_mode=travel_mode_excl_total[2])) %>%
                      rbind(mutate(RenElecShare, travel_mode=travel_mode_excl_total[3])) %>%
@@ -765,13 +782,23 @@ RenTransportShare <- inner_join(elec_share_mode, fuel_elec, by=c('year', 'region
 # RenTransportShare_total%>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, travel_mode)
 RenTransportShare <- RenTransportShare %>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, travel_mode)
 RenTransportShare <- mutate(RenTransportShare, unit= "%")
-
 # Renewable transport share for cars
 RenTransportShare_cars <- filter(RenTransportShare, travel_mode=="Car") %>% select(year, region, value, unit)
+}
+else {
+  RenTransportShare = data.frame(matrix(ncol=0,nrow=0))
+  RenTransportShare_cars = data.frame(matrix(ncol=0,nrow=0))
+}
+
 
 # Blending share for cars
-BlendingShareBio_cars_energy <- filter(Scenario$BlendingShareBio_energy, travel_mode=="Car") %>% select(year, region, value, unit)
-
+if (Policy==TRUE) {
+  BlendingShareBio_cars_energy <- filter(Scenario$BlendingShareBio_energy, travel_mode=="Car") %>% select(year, region, value, unit)
+}
+else {
+  BlendingShareBio_cars_energy = data.frame(matrix(ncol=0,nrow=0))
+  }
+  
 # Industry ----------------------------------------------------------------
 
 # Energy intensity of industry sector (Kwh/US$2005)
@@ -820,6 +847,7 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           ElecCapWaste=ElecCapWaste, ElecCapNuclear=ElecCapNuclear, ElecCapCoalCCS=ElecCapCoalCCS, ElecCapCoalTrad=ElecCapCoalTrad,
           ElecCapCoalTot=ElecCapCoalTot, ElecCapBioTot=ElecCapBioTot, ElecCapSolarTot=ElecCapSolarTot, ElecCapWindTot=ElecCapWindTot, ElecCapRenTot=ElecCapRenTot, ElecCapWSTot=ElecCapWSTot, 
           CO2EPGNew=CO2EPGNew,CO2EPGCoalNew=CO2EPGCoalNew,ElecEffNewPct=ElecEffNewPct,ElecEffCoalNewPct=ElecEffCoalNewPct,ElecEffPct=ElecEffPct,ElecEffCoalPct=ElecEffCoalPct,
+          CO2_KWh=CO2_KWh,
           OilGas_Intensity = OilGas_Intensity,OilGas_CH4_indicator=OilGas_CH4_indicator, OilGas_GHG_total_indicator=OilGas_GHG_total_indicator,
           CO2_intensity=CO2_intensity,CO2_intensity_index=CO2_intensity_index,TPES_intensity=TPES_intensity,TPES_intensity_index=TPES_intensity_index,
           TradeOil=TradeOil, TradeGas=TradeGas, FinalEnergy_total=FinalEnergy_total,GasFlaringCO2=GasFlaringCO2,
