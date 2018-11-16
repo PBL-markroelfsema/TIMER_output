@@ -758,15 +758,19 @@ ElectricCars_share <- mutate(ElectricCars_share, unit= "%")
 
 # renewable share in transport
 if (Policy==TRUE) {
-elec_share_mode <- rbind(mutate(RenElecShare, travel_mode=travel_mode_excl_total[1])) %>%
-                     rbind(mutate(RenElecShare, travel_mode=travel_mode_excl_total[2])) %>%
-                     rbind(mutate(RenElecShare, travel_mode=travel_mode_excl_total[3])) %>%
-                     rbind(mutate(RenElecShare, travel_mode=travel_mode_excl_total[4])) %>%
-                     rbind(mutate(RenElecShare, travel_mode=travel_mode_excl_total[5])) %>%
-                     rbind(mutate(RenElecShare, travel_mode=travel_mode_excl_total[6])) %>%
-                     rbind(mutate(RenElecShare, travel_mode=travel_mode_excl_total[7]))
+elec_share_mode <- rbind(mutate(RenElecShare, travel_mode=travel_mode[1])) %>%
+                   rbind(mutate(RenElecShare, travel_mode=travel_mode[2])) %>%
+                   rbind(mutate(RenElecShare, travel_mode=travel_mode[3])) %>%
+                   rbind(mutate(RenElecShare, travel_mode=travel_mode[4])) %>%
+                   rbind(mutate(RenElecShare, travel_mode=travel_mode[5])) %>%
+                   rbind(mutate(RenElecShare, travel_mode=travel_mode[6])) %>%
+                   rbind(mutate(RenElecShare, travel_mode=travel_mode[7])) %>%
+                   rbind(mutate(RenElecShare, travel_mode=travel_mode[8]))
 elec_share_mode <- select(elec_share_mode, year, region, travel_mode, value)
-elec_share_mode$travel_mode = factor(elec_share_mode$travel_mode, levels=travel_mode_excl_total)
+elec_share_mode$travel_mode = factor(elec_share_mode$travel_mode, levels=travel_mode)
+FuelUseFleet_trvl_tmp <- mutate(Scenario$FuelUseFleet_trvl, type="Travel")
+FuelUseFleet_frgt_tmp <- mutate(Scenario$FuelUseFleet_frgt, type= "Freight")
+FuelUseFleet <- rbind(FuelUseFleet_trvl, FuelUseFleet_frgt)
 fuel_bio <- filter(Scenario$FuelUseFleet, energy_carrier == "Modern biofuel")
 fuel_bio <- select(fuel_bio, year, region, travel_mode, value)
 fuel_elec <- filter(Scenario$FuelUseFleet, energy_carrier == "Electricity")
@@ -776,18 +780,26 @@ fuel_total <- select(fuel_total, year, region, travel_mode, value)
 RenTransportShare <- inner_join(elec_share_mode, fuel_elec, by=c('year', 'region', 'travel_mode')) %>%
                        inner_join(fuel_bio, by=c('year', 'region', 'travel_mode')) %>%
                        inner_join(fuel_total, by=c('year', 'region', 'travel_mode'))
-# Mark TODO: calculate ren share in total transport, not just cars 
-# RenTransportShare_total<-select(RenTransportShare,year,region,value.x,value.y,value.x.x,value.y.y) %>% group_by(year, region) 
-# RenTransportShare_total %>% summarise(value.x=sum(value.x, na.rm=TRUE),value.y=sum(value.y, na.rm=TRUE),value.x.x=sum(value.x.x, na.rm=TRUE),value.y.y=sum(value.y.y, na.rm=TRUE)) 
-# RenTransportShare_total%>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, travel_mode)
+# x=%-REN electricity, y=electricity fuel use, x.x = bio fuel use, y.y = total fuel use
 RenTransportShare <- RenTransportShare %>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, travel_mode)
 RenTransportShare <- mutate(RenTransportShare, unit= "%")
+
+# Renewable transport share for travel and freight
+RenTransportShare_type <- inner_join(elec_share_mode, fuel_elec, by=c('year', 'region', 'travel_mode', 'type')) %>%
+  inner_join(fuel_bio, by=c('year', 'region', 'travel_mode', 'type')) %>%
+  inner_join(fuel_total, by=c('year', 'region', 'travel_mode', 'type'))
+# x=%-REN electricity, y=electricity fuel use, x.x = bio fuel use, y.y = total fuel use
+RenTransportShare_type <- RenTransportShare_type %>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, travel_mode, type)
+RenTransportShare_type <- mutate(RenTransportShare_type, unit= "%")
+RenTransportShare_trvl <- select(RenTransportShare_type, type=="Travel")
+RenTransportShare_frgt <- select(RenTransportShare_type, type=="Freight")
 # Renewable transport share for cars
 RenTransportShare_cars <- filter(RenTransportShare, travel_mode=="Car") %>% select(year, region, value, unit)
 }
-else {
-  RenTransportShare = data.frame(matrix(ncol=0,nrow=0))
-  RenTransportShare_cars = data.frame(matrix(ncol=0,nrow=0))
+else {RenTransportShare = data.frame(matrix(ncol=0,nrow=0))
+      RenTransportShare_trvl = data.frame(matrix(ncol=0,nrow=0))
+      RenTransportShare_frgt = data.frame(matrix(ncol=0,nrow=0))
+      RenTransportShare_cars = data.frame(matrix(ncol=0,nrow=0))
 }
 
 
@@ -858,7 +870,9 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2,Appliances_FinalEnergy_capita=Appliances_FinalEnergy_capita,
           FinalEnergy_Residential_total=FinalEnergy_Residential_total, FinalEnergy_Residential_appliances=FinalEnergy_Residential_appliances,
           # transport
-          CO2_km_cars=CO2_km_cars, FuelUse_pkm_cars=FuelUse_pkm_cars, ElectricCars_share=ElectricCars_share, RenTransportShare=RenTransportShare, BlendingShareBio_cars_energy=BlendingShareBio_cars_energy,RenTransportShare_cars=RenTransportShare_cars, 
+          CO2_km_cars=CO2_km_cars, FuelUse_pkm_cars=FuelUse_pkm_cars, ElectricCars_share=ElectricCars_share, 
+          RenTransportShare_trvl=RenTransportShare_trvl, RenTransportShare_frgt=RenTransportShare_frgt, RenTransportShare=RenTransportShare, RenTransportShare_cars=RenTransportShare_cars,
+          BlendingShareBio_cars_energy=BlendingShareBio_cars_energy,
           # SDG
           ElecAccTot=ElecAccTot,
           # AFOLU

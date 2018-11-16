@@ -619,22 +619,56 @@ print(IMAGE_folder)
   else {
     BlendingShareBio_cars_pkm = data.frame(matrix(ncol=0,nrow=0))
   }
-  # transport fuel use per region, mode and energy carrier (secondary fuel use)
+ 
+   # transport fuel use per region, mode and energy carrier (secondary fuel use)
   if (Policy==TRUE) {
-  FuelUseFleet = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+  # travel
+  FuelUseFleet_trvl = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                             filename='trp_trvl_fuel_use_fleet_tot.dat', varname=NULL, 
-                                            collist=list(regions26, travel_mode_excl_total, energy_carrier_sec_fuel2), 
+                                            collist=list(regions28, travel_mode_excl_total, energy_carrier_sec_fuel2), 
                                             namecols=c('region', 'travel_mode', 'energy_carrier'), novarname = TRUE)
-  EU <- inner_join(filter(FuelUseFleet, region=='WEU'), filter(FuelUseFleet, region=='CEU'), by=c("year", "travel_mode", "energy_carrier"))
+  FuelUseFleet_trvl <- subset(FuelUseFleet_trvl, region != "dummy")
+  EU <- inner_join(filter(FuelUseFleet_trvl, region=='WEU'), filter(FuelUseFleet_trvl, region=='CEU'), by=c("year", "travel_mode", "energy_carrier"))
   EU$region <- "EU"
   EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, travel_mode, energy_carrier, value)
   EU$region = factor(EU$region, levels=regions28_EU)
-  FuelUseFleet <- rbind(FuelUseFleet, EU)
-  FuelUseFleet$region = factor(FuelUseFleet$region,levels=regions28_EU)
-  FuelUseFleet <- mutate(FuelUseFleet, unit="TJ") # TJ?
+  FuelUseFleet_trvl$region = factor(FuelUseFleet_trvl$region, levels=regions28_EU)
+  FuelUseFleet_trvl <- rbind(FuelUseFleet_trvl, EU)
+  FuelUseFleet_trvl <- mutate(FuelUseFleet_trvl, unit="TJ") # TJ?
+  # add total fuel use
+  FuelUseFleet_total_trvl <- FuelUseFleet_trvl %>% group_by(year, region, energy_carrier, unit) %>% 
+                                                    summarize(value=sum(value), na.rm=TRUE) %>%
+                                                    mutate(travel_mode='Total') %>%
+                                                    select(year, region, travel_mode, energy_carrier, value, unit)
+  FuelUseFleet_trvl <- as.data.frame(FuelUseFleet_trvl)
+  FuelUseFleet_total_trvl <- as.data.frame(FuelUseFleet_total_trvl)
+  FuelUseFleet_trvl <- rbind(FuelUseFleet_trvl, FuelUseFleet_total_trvl)
+  # freight
+  FuelUseFleet_frgt = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+                                      filename='trp_frgt_fuel_use_fleet_tot.dat', varname=NULL, 
+                                      collist=list(regions28, travel_mode_excl_total, energy_carrier_sec_fuel2), 
+                                      namecols=c('region', 'travel_mode', 'energy_carrier'), novarname = TRUE)
+  FuelUseFleet_frgt <- subset(FuelUseFleet_frgt, region != "dummy")
+  EU <- inner_join(filter(FuelUseFleet_frgt, region=='WEU'), filter(FuelUseFleet_frgt, region=='CEU'), by=c("year", "travel_mode", "energy_carrier"))
+  EU$region <- "EU"
+  EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, travel_mode, energy_carrier, value)
+  EU$region = factor(EU$region, levels=regions28_EU)
+  FuelUseFleet_frgt$region = factor(FuelUseFleet_frgt$region, levels=regions28_EU)
+  FuelUseFleet_frgt <- rbind(FuelUseFleet_frgt, EU)
+  FuelUseFleet_frgt <- mutate(FuelUseFleet_frgt, unit="TJ") # TJ?
+  # add total fuel use
+  FuelUseFleet_total_frgt <- FuelUseFleet_frgt %>% group_by(year, region, energy_carrier, unit) %>% 
+    summarize(value=sum(value), na.rm=TRUE) %>%
+    mutate(travel_mode='Total') %>%
+    select(year, region, travel_mode, energy_carrier, value, unit)
+  FuelUseFleet_frgt <- as.data.frame(FuelUseFleet_frgt)
+  FuelUseFleet_total_frgt <- as.data.frame(FuelUseFleet_total_frgt)
+  FuelUseFleet_frgt <- rbind(FuelUseFleet_frgt, FuelUseFleet_total_frgt)
+  
   }
   else {
-    FuelUseFleet = data.frame(matrix(ncol=0,nrow=0))
+    FuelUseFleet_trvl = data.frame(matrix(ncol=0,nrow=0))
+    FuelUseFleet_frgt = data.frame(matrix(ncol=0,nrow=0))
   }
   # blending share biofuels (in terms of energy))
   if (Policy==TRUE) {
@@ -644,7 +678,7 @@ print(IMAGE_folder)
                                               namecols=c('region', 'travel_mode'), novarname = TRUE)
   BlendingShareBio_energy <- subset(BlendingShareBio_energy, region != "dummy")
   EU_bio <- inner_join(filter(BlendingShareBio_energy, region=='WEU'), filter(BlendingShareBio_energy, region=='CEU'), by=c("year", "travel_mode"))
-  FuelUseFleet_total <- filter(FuelUseFleet, energy_carrier == 'Total') %>%
+  FuelUseFleet_total <- filter(FuelUseFleet_trvl, energy_carrier == 'Total') %>%
                           group_by(year, region, travel_mode) %>%
                           summarise(value=sum(value, na.rm=TRUE))
   EU_energy <- inner_join(filter(FuelUseFleet_total, region=='WEU'), filter(FuelUseFleet_total, region=='CEU'), by=c("year", "travel_mode"))
@@ -869,7 +903,8 @@ print(IMAGE_folder)
             # transport
             TransportCO2Emissions=TransportCO2Emissions, PersonKilometers=PersonKilometers, FinalEnergy_Transport=FinalEnergy_Transport, 
             VehicleShare_cars=VehicleShare_cars, VehicleShare_busses=VehicleShare_busses, VehicleShare_trains=VehicleShare_trains, VehicleShare_aircrafts=VehicleShare_aircrafts,
-            BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, FuelUseFleet=FuelUseFleet, BlendingShareBio_energy=BlendingShareBio_energy, ElectricShare_new_cars=ElectricShare_new_cars, 
+            BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, FuelUseFleet_trvl=FuelUseFleet_trvl, FuelUseFleet_frgt=FuelUseFleet_frgt,
+            BlendingShareBio_energy=BlendingShareBio_energy, ElectricShare_new_cars=ElectricShare_new_cars, 
             EfficiencyFleet_new_cars=EfficiencyFleet_new_cars, EfficiencyFleet_new_MedT=EfficiencyFleet_new_MedT, EfficiencyFleet_new_HvyT=EfficiencyFleet_new_HvyT,
             CarbonCaptured=CarbonCaptured,
             # SDG
