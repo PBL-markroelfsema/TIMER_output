@@ -730,8 +730,7 @@ CarbonCaptured_total <- select(CarbonCaptured_total, year, region, value, unit)
 # Buildings -------------
 
 # renewable share in residential buildigns
-elec_share_residential_buildings <- rbind(mutate(RenElecShare, population_group=population_groups[1])) %>% #walking
-    rbind(mutate(RenElecShare, population_group=population_groups[1])) %>% #total
+elec_share_residential_buildings <- rbind(mutate(RenElecShare, population_group=population_groups[1])) %>% #total
     rbind(mutate(RenElecShare, population_group=population_groups[2])) %>% #urban
     rbind(mutate(RenElecShare, population_group=population_groups[3])) %>% #rural
     rbind(mutate(RenElecShare, population_group=population_groups[4])) %>% #U_1
@@ -745,18 +744,39 @@ elec_share_residential_buildings <- rbind(mutate(RenElecShare, population_group=
     rbind(mutate(RenElecShare, population_group=population_groups[12])) %>% #R_4
     rbind(mutate(RenElecShare, population_group=population_groups[13])) #R_5
 FuelUseResBuildings <- Scenario$FinalEnergy_Residential_energy_carrier
-FuelUseResBuildings_bio <- filter(FuelUseResBuildings, energy_carrier == "Modern biofuel")
-FuelUseResBuildings_bio <- select(FuelUseResBuildings, year, region, population_group, value)
+FuelUseResBuildings_bio <- filter(FuelUseResBuildings, energy_carrier == "Modern biofuels")
+FuelUseResBuildings_bio <- select(FuelUseResBuildings_bio, year, region, population_group, value)
 FuelUseResBuildings_elec <- filter(FuelUseResBuildings, energy_carrier == "Electricity")
-FuelUseResBuildings_elec <- select(FuelUseResBuildings, year, region,population_group, value)
+FuelUseResBuildings_elec <- select(FuelUseResBuildings_elec, year, region,population_group, value)
 FuelUseResBuildings_total <- filter(FuelUseResBuildings, energy_carrier == "Total")
-FuelUseResBuildings_total <- select(FuelUseResBuildings, year, region, population_group, value)
-RenResBuildingsShare <- inner_join(elec_share_residential_buildings, FuelUseResBuildings, by=c('year', 'region', 'population_group')) %>%
+FuelUseResBuildings_total <- select(FuelUseResBuildings_total, year, region, population_group, value)
+RenResBuildingsShare <- inner_join(elec_share_residential_buildings, FuelUseResBuildings_elec, by=c('year', 'region', 'population_group')) %>%
     inner_join(FuelUseResBuildings_bio, by=c('year', 'region', 'population_group')) %>%
     inner_join(FuelUseResBuildings_total, by=c('year', 'region', 'population_group'))
 # x=%-REN electricity, y=electricity fuel use, x.x = bio fuel use, y.y = total fuel use
 RenResBuildingsShare <- RenResBuildingsShare %>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, population_group)
 RenResBuildingsShare <- mutate(RenResBuildingsShare, unit= "%")
+
+# non-fossil residential share
+NonFossil_share_residential_buildings <- rbind(mutate(NonFossilElecShare, population_group=population_groups[1])) %>% #total
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[2])) %>% #urban
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[3])) %>% #rural
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[4])) %>% #U_1
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[5])) %>% #U_2
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[6])) %>% #U_3
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[7])) %>% #U_4
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[8])) %>% #U_5
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[9])) %>% #R_1
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[10])) %>% #R_2
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[11])) %>% #R_3
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[12])) %>% #R_4
+  rbind(mutate(NonFossilElecShare, population_group=population_groups[13])) #R_5
+NonFossilResBuildingsShare <- inner_join(NonFossil_share_residential_buildings, FuelUseResBuildings_elec, by=c('year', 'region', 'population_group')) %>%
+  inner_join(FuelUseResBuildings_bio, by=c('year', 'region', 'population_group')) %>%
+  inner_join(FuelUseResBuildings_total, by=c('year', 'region', 'population_group'))
+# x=%-REN electricity, y=electricity fuel use, x.x = bio fuel use, y.y = total fuel use
+NonFossilResBuildingsShare <- NonFossilResBuildingsShare %>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, population_group)
+NonFossilResBuildingsShare <- mutate(NonFossilResBuildingsShare, unit= "%")
 
 # Transport ---------------------------------------------------------------
 
@@ -837,11 +857,43 @@ RenTransportShare <- mutate(RenTransportShare, unit= "%")
 RenTransportShare_trvl <- filter(RenTransportShare, type=="Travel") %>% select(-type)
 RenTransportShare_frgt <- filter(RenTransportShare, type=="Freight") %>% select(-type)
 RenTransportShare_cars <- filter(RenTransportShare, travel_mode=="Car") %>% select(year, region, value, unit)
+
+# Non-fossil share
+NonFossil_share_transport_travel <- rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_travel[1])) %>% #walking
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_travel[2])) %>% #biking
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_travel[3])) %>% #Bus
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_travel[4])) %>% #Train
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_travel[5])) %>% #Car
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_travel[6])) %>% #High speed train
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_travel[7])) %>% #Air
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_travel[8]))     #Total travel
+NonFossil_share_transport_travel <- mutate(NonFossil_share_transport_travel, type="Travel")
+NonFossil_share_transport_freight <- rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_freight[1])) %>% #inland shipping
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_freight[2])) %>% #freight train
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_freight[3])) %>% #medium truck
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_freight[4])) %>% #heavy truck
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_freight[5])) %>% #air cargo
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_freight[6])) %>% #international shipping
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_freight[7])) %>% #-
+  rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_freight[8])) #Total freight
+NonFossil_share_transport_freight <- mutate(NonFossil_share_transport_freight, type="Freight")
+NonFossil_share_transport_total <- rbind(mutate(NonFossilElecShare, travel_mode="Total"))
+NonFossil_share_transport_total <- mutate(NonFossil_share_transport_total, type="Total")
+NonFossil_share_transport <- rbind(NonFossil_share_transport_travel, NonFossil_share_transport_freight) %>% rbind(NonFossil_share_transport_total)
+NonFossil_share_transport <- select(NonFossil_share_transport, year, region, travel_mode, type, value)
+NonFossil_share_transport$travel_mode = factor(NonFossil_share_transport$travel_mode, levels=travel_mode)
+NonFossilTransportShare <- inner_join(NonFossil_share_transport, fuel_transport_elec, by=c('year', 'region', 'travel_mode', 'type')) %>%
+  inner_join(fuel_transport_bio, by=c('year', 'region', 'travel_mode','type')) %>%
+  inner_join(fuel_transport_total, by=c('year', 'region', 'travel_mode', 'type'))
+# x=%-NonFossil electricity, y=electricity fuel use, x.x = bio fuel use, y.y = total fuel use
+NonFossilTransportShare <- NonFossilTransportShare %>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, travel_mode, type)
+NonFossilTransportShare <- mutate(NonFossilTransportShare, unit= "%")
 }
 else {RenTransportShare = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_trvl = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_frgt = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_cars = data.frame(matrix(ncol=0,nrow=0))
+      NonFossilTransportShare = data.frame(matrix(ncol=0,nrow=0))
 }
 
 
@@ -911,10 +963,11 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           # buildigns
           Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2,Appliances_FinalEnergy_capita=Appliances_FinalEnergy_capita,
           FinalEnergy_Residential_total=FinalEnergy_Residential_total, FinalEnergy_Residential_appliances=FinalEnergy_Residential_appliances,
-          RenResBuildingsShare=RenResBuildingsShare,
+          RenResBuildingsShare=RenResBuildingsShare, NonFossilResBuildingsShare=NonFossilResBuildingsShare,
           # transport
           CO2_km_cars=CO2_km_cars, FuelUse_pkm_cars=FuelUse_pkm_cars, ElectricCars_share=ElectricCars_share, 
           RenTransportShare_trvl=RenTransportShare_trvl, RenTransportShare_frgt=RenTransportShare_frgt, RenTransportShare=RenTransportShare, RenTransportShare_cars=RenTransportShare_cars,
+          NonFossilTransportShare=NonFossilTransportShare,
           BlendingShareBio_cars_energy=BlendingShareBio_cars_energy,
           # SDG
           ElecAccTot=ElecAccTot,
