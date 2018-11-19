@@ -61,7 +61,7 @@
 # policy = TRUE if this directory is in the scenario output in the TIMER outputlib
 #library(base)
 ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2', Rundir, Project, TIMERGeneration, Policy = FALSE)
-{ 
+{ source("../TIMER_output/functions/Settings.R")
   source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'mym2r.R', sep='/'))
   source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'Settings.R', sep='/'))
   
@@ -425,10 +425,10 @@ print(IMAGE_folder)
   
   # RESIDENTIAL
   
-  #Residential Final Energy
+  #Residential Final Energy per end use function
   FinalEnergy_Residential = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
                                             filename='res_EU.out', varname=NULL, 
-                                            collist=list(regions28,population_groups,res_enduse_functions), 
+                                            collist=list(regions28,population_groups, res_enduse_functions), 
                                             namecols=c('region','population_group', 'enduse_function'), novarname = TRUE)
   FinalEnergy_Residential <- subset(FinalEnergy_Residential, region != "dummy")
   EU <- inner_join(filter(FinalEnergy_Residential, region=='WEU'), filter(FinalEnergy_Residential, region=='CEU'), by=c("year", "population_group", "enduse_function"))
@@ -447,10 +447,32 @@ print(IMAGE_folder)
   FinalEnergy_Residential$region = factor(FinalEnergy_Residential$region,levels=regions28_EU)
   FinalEnergy_Residential <- mutate(FinalEnergy_Residential, unit="GJ")
   
+  #Residential Final Energy per energy carrier
+  FinalEnergy_Residential_energy_carrier = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
+                                                    filename='res_EnergyUse.out', varname=NULL, 
+                                                    collist=list(regions28,population_groups, energy_carrier_residential), 
+                                                    namecols=c('region','population_group', 'energy_carrier'), novarname = TRUE)
+  FinalEnergy_Residential_energy_carrier <- subset(FinalEnergy_Residential_energy_carrier, region != "dummy")
+  EU <- inner_join(filter(FinalEnergy_Residential_energy_carrier, region=='WEU'), filter(FinalEnergy_Residential_energy_carrier, region=='CEU'), by=c("year", "population_group", "energy_carrier"))
+  EU$region <- "EU"
+  EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, population_group, energy_carrier, value)
+  EU$region = factor(EU$region, levels=regions28_EU)
+  FinalEnergy_Residential_energy_carrier <- rbind(FinalEnergy_Residential_energy_carrier, EU)
+  # add total
+  FinalEnergy_Residential_energy_carrier$population_group <- as.character(FinalEnergy_Residential_energy_carrier$population_group)
+  FinalEnergy_Residential_energy_carrier$energy_carrier <- as.character(FinalEnergy_Residential_energy_carrier$energy_carrier)
+  FinalEnergy_Residential_energy_carrier_tmp <- FinalEnergy_Residential_energy_carrier %>% group_by(year, region, population_group) %>% summarise(value=sum(value))
+  FinalEnergy_Residential_energy_carrier_tmp <- ungroup(FinalEnergy_Residential_energy_carrier_tmp)
+  FinalEnergy_Residential_energy_carrier_tmp <- mutate(FinalEnergy_Residential_energy_carrier_tmp, energy_carrier="Total")
+  FinalEnergy_Residential_energy_carrier_tmp <- select(FinalEnergy_Residential_energy_carrier_tmp, year, region, population_group, energy_carrier, value)
+  FinalEnergy_Residential_energy_carrier <- bind_rows(FinalEnergy_Residential_energy_carrier, FinalEnergy_Residential_energy_carrier_tmp)
+  FinalEnergy_Residential_energy_carrier$region = factor(FinalEnergy_Residential_energy_carrier$region,levels=regions28_EU)
+  FinalEnergy_Residential_energy_carrier <- mutate(FinalEnergy_Residential_energy_carrier, unit="GJ")
+  
   # TRANSPORT
   TransportCO2Emissions = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
                                            filename='trp_trvl_CO2.out', varname=NULL, 
-                                           collist=list(regions28,travel_mode), 
+                                           collist=list(regions28,travel_mode_travel), 
                                            namecols=c('region','travel_mode'), novarname = TRUE)
   TransportCO2Emissions <- subset(TransportCO2Emissions, region != "dummy")
   EU <- filter(TransportCO2Emissions, region %in% c('WEU', 'CEU'))
@@ -463,7 +485,7 @@ print(IMAGE_folder)
   # Person Kilometers Travelled (Tera km)
   PersonKilometers = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
                                      filename='trp_trvl_pkm.out', varname=NULL, 
-                                     collist=list(regions28,travel_mode), 
+                                     collist=list(regions28,travel_mode_travel), 
                                      namecols=c('region','travel_mode'), novarname = TRUE)
   PersonKilometers <- subset(PersonKilometers, region != "dummy")
   EU <- inner_join(filter(PersonKilometers, region=='WEU'), filter(PersonKilometers, region=='CEU'), by=c("year", "travel_mode"))
@@ -510,7 +532,7 @@ print(IMAGE_folder)
   # Energy use travel fuels
   FinalEnergy_Transport = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
                                           filename='trp_trvl_Energy.out', varname=NULL, 
-                                          collist=list(regions28,travel_mode), 
+                                          collist=list(regions28,travel_mode_travel), 
                                           namecols=c('region','travel_mode'), novarname = TRUE)
   FinalEnergy_Transport <- subset(FinalEnergy_Transport, region != "dummy")
   EU <- inner_join(filter(FinalEnergy_Transport, region=='WEU'), filter(FinalEnergy_Transport, region=='CEU'), by=c("year", "travel_mode"))
@@ -619,32 +641,66 @@ print(IMAGE_folder)
   else {
     BlendingShareBio_cars_pkm = data.frame(matrix(ncol=0,nrow=0))
   }
-  # transport fuel use per region, mode and energy carrier (secondary fuel use)
+ 
+   # transport fuel use per region, mode and energy carrier (secondary fuel use)
   if (Policy==TRUE) {
-  FuelUseFleet = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+  # travel
+  FuelUseFleet_trvl = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                             filename='trp_trvl_fuel_use_fleet_tot.dat', varname=NULL, 
-                                            collist=list(regions26, travel_mode_excl_total, energy_carrier_sec_fuel2), 
+                                            collist=list(regions28, travel_mode_travel_excl_total, energy_carrier_sec_fuel2), 
                                             namecols=c('region', 'travel_mode', 'energy_carrier'), novarname = TRUE)
-  EU <- inner_join(filter(FuelUseFleet, region=='WEU'), filter(FuelUseFleet, region=='CEU'), by=c("year", "travel_mode", "energy_carrier"))
+  FuelUseFleet_trvl <- subset(FuelUseFleet_trvl, region != "dummy")
+  EU <- inner_join(filter(FuelUseFleet_trvl, region=='WEU'), filter(FuelUseFleet_trvl, region=='CEU'), by=c("year", "travel_mode", "energy_carrier"))
   EU$region <- "EU"
   EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, travel_mode, energy_carrier, value)
   EU$region = factor(EU$region, levels=regions28_EU)
-  FuelUseFleet <- rbind(FuelUseFleet, EU)
-  FuelUseFleet$region = factor(FuelUseFleet$region,levels=regions28_EU)
-  FuelUseFleet <- mutate(FuelUseFleet, unit="TJ") # TJ?
+  FuelUseFleet_trvl$region = factor(FuelUseFleet_trvl$region, levels=regions28_EU)
+  FuelUseFleet_trvl <- rbind(FuelUseFleet_trvl, EU)
+  FuelUseFleet_trvl <- mutate(FuelUseFleet_trvl, unit="TJ") # TJ?
+  # add total fuel use
+  FuelUseFleet_total_trvl <- FuelUseFleet_trvl %>% group_by(year, region, energy_carrier, unit) %>% 
+                                                    summarize(value=sum(value), na.rm=TRUE) %>%
+                                                    mutate(travel_mode='Total') %>%
+                                                    select(year, region, travel_mode, energy_carrier, value, unit)
+  FuelUseFleet_trvl <- as.data.frame(FuelUseFleet_trvl)
+  FuelUseFleet_total_trvl <- as.data.frame(FuelUseFleet_total_trvl)
+  FuelUseFleet_trvl <- rbind(FuelUseFleet_trvl, FuelUseFleet_total_trvl)
+  # freight
+  FuelUseFleet_frgt = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+                                      filename='trp_frgt_fuel_use_fleet_tot.dat', varname=NULL, 
+                                      collist=list(regions28, travel_mode_freight_excl_total, energy_carrier_sec_fuel2), 
+                                      namecols=c('region', 'travel_mode', 'energy_carrier'), novarname = TRUE)
+  FuelUseFleet_frgt <- subset(FuelUseFleet_frgt, region != "dummy")
+  EU <- inner_join(filter(FuelUseFleet_frgt, region=='WEU'), filter(FuelUseFleet_frgt, region=='CEU'), by=c("year", "travel_mode", "energy_carrier"))
+  EU$region <- "EU"
+  EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, travel_mode, energy_carrier, value)
+  EU$region = factor(EU$region, levels=regions28_EU)
+  FuelUseFleet_frgt$region = factor(FuelUseFleet_frgt$region, levels=regions28_EU)
+  FuelUseFleet_frgt <- rbind(FuelUseFleet_frgt, EU)
+  FuelUseFleet_frgt <- mutate(FuelUseFleet_frgt, unit="TJ") # TJ?
+  # add total fuel use
+  FuelUseFleet_total_frgt <- FuelUseFleet_frgt %>% group_by(year, region, energy_carrier, unit) %>% 
+    summarize(value=sum(value), na.rm=TRUE) %>%
+    mutate(travel_mode='Total') %>%
+    select(year, region, travel_mode, energy_carrier, value, unit)
+  FuelUseFleet_frgt <- as.data.frame(FuelUseFleet_frgt)
+  FuelUseFleet_total_frgt <- as.data.frame(FuelUseFleet_total_frgt)
+  FuelUseFleet_frgt <- rbind(FuelUseFleet_frgt, FuelUseFleet_total_frgt)
+  
   }
   else {
-    FuelUseFleet = data.frame(matrix(ncol=0,nrow=0))
+    FuelUseFleet_trvl = data.frame(matrix(ncol=0,nrow=0))
+    FuelUseFleet_frgt = data.frame(matrix(ncol=0,nrow=0))
   }
   # blending share biofuels (in terms of energy))
   if (Policy==TRUE) {
   BlendingShareBio_energy = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                               filename='trp_trvl_Blending_share_bio_energy.dat', varname=NULL, 
-                                              collist=list(regions26, travel_mode_excl_total), 
+                                              collist=list(regions26, travel_mode_travel_excl_total), 
                                               namecols=c('region', 'travel_mode'), novarname = TRUE)
   BlendingShareBio_energy <- subset(BlendingShareBio_energy, region != "dummy")
   EU_bio <- inner_join(filter(BlendingShareBio_energy, region=='WEU'), filter(BlendingShareBio_energy, region=='CEU'), by=c("year", "travel_mode"))
-  FuelUseFleet_total <- filter(FuelUseFleet, energy_carrier == 'Total') %>%
+  FuelUseFleet_total <- filter(FuelUseFleet_trvl, energy_carrier == 'Total') %>%
                           group_by(year, region, travel_mode) %>%
                           summarise(value=sum(value, na.rm=TRUE))
   EU_energy <- inner_join(filter(FuelUseFleet_total, region=='WEU'), filter(FuelUseFleet_total, region=='CEU'), by=c("year", "travel_mode"))
@@ -865,11 +921,12 @@ print(IMAGE_folder)
             NetTrade=NetTrade,
             # buildings
             FloorSpace=FloorSpace,
-            FinalEnergy_Residential=FinalEnergy_Residential, 
+            FinalEnergy_Residential=FinalEnergy_Residential, FinalEnergy_Residential_energy_carrier=FinalEnergy_Residential_energy_carrier,
             # transport
             TransportCO2Emissions=TransportCO2Emissions, PersonKilometers=PersonKilometers, FinalEnergy_Transport=FinalEnergy_Transport, 
             VehicleShare_cars=VehicleShare_cars, VehicleShare_busses=VehicleShare_busses, VehicleShare_trains=VehicleShare_trains, VehicleShare_aircrafts=VehicleShare_aircrafts,
-            BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, FuelUseFleet=FuelUseFleet, BlendingShareBio_energy=BlendingShareBio_energy, ElectricShare_new_cars=ElectricShare_new_cars, 
+            BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, FuelUseFleet_trvl=FuelUseFleet_trvl, FuelUseFleet_frgt=FuelUseFleet_frgt,
+            BlendingShareBio_energy=BlendingShareBio_energy, ElectricShare_new_cars=ElectricShare_new_cars, 
             EfficiencyFleet_new_cars=EfficiencyFleet_new_cars, EfficiencyFleet_new_MedT=EfficiencyFleet_new_MedT, EfficiencyFleet_new_HvyT=EfficiencyFleet_new_HvyT,
             CarbonCaptured=CarbonCaptured,
             # SDG
