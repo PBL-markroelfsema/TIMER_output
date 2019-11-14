@@ -30,7 +30,7 @@ source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'General Functions.R
 
 
 # Emissions ---------------------------------------------------------------
-
+cat(sprintf("Emissions: \n"))
 
 #3. 
 # Aggregate emissions to CO2eq per TIMER file
@@ -419,6 +419,7 @@ FGas_Reduction_index = select(FGas_Reduction_index, year, region, value)
 
 
 # Electricity -------------------------------------------------------------
+cat(sprintf("Energy supply sector: \n"))
 
 #5.
 # Calcualte share of renewable electricity production
@@ -619,6 +620,7 @@ else {RenHydrogenShare <- NULL
 
 
 # Intensity ---------------------------------------------------------------
+cat(sprintf("Different intensities: \n"))
 
 # CO2 intensity of GDP
 CO2_intensity <- merge(filter(EMISCO2,main_sector=="Total"), Scenario$GDP_MER,by=c('year','region')) 
@@ -672,6 +674,7 @@ OilGas_Intensity$value <- OilGas_Intensity$value*1000
 OilGas_Intensity <- data.frame(OilGas_Intensity)
 
 # Energy use --------------------------------------------------------------
+cat(sprintf("Total energy use: \n"))
 
 #Share of renewables in TPES
 Renewable <- ifelse(Scenario$TPES$energy_carrier %in% energy_carrier_ren, TRUE, FALSE)
@@ -778,7 +781,7 @@ GasFlaringCO2$value <- 10^3*CToCO2*GasFlaringCO2$value
 GasFlaringCO2$unit <- "MtCO2eq"
 
 # Buildings ---------------------------------------------------------------
-
+cat(sprintf("Buildings sector: \n"))
 
 # Final Energy  per capita residential sector (GJ/capita)
 Residential_FinalEnergy_capita <- filter(Scenario$FinalEnergy, sector=="Residential", energy_carrier=="Total")
@@ -823,9 +826,6 @@ FinalEnergy_Residential_appliances <- select(FinalEnergy_Residential_total, year
 CarbonCaptured_total <- filter(Scenario$CarbonCaptured, energy_carrier=='Total')
 CarbonCaptured_total <- CarbonCaptured_total %>% group_by(year, region, unit) %>% summarise(value=sum(value))
 CarbonCaptured_total <- select(CarbonCaptured_total, year, region, value, unit)
-
-
-# Buildings -------------
 
 # renewable share in residential buildigns
 elec_share_residential_buildings <- rbind(mutate(RenElecShare, population_group=population_groups[1])) %>% #total
@@ -879,9 +879,10 @@ NonFossilResBuildingsShare$value <- 100*NonFossilResBuildingsShare$value
 NonFossilResBuildingsShare <- mutate(NonFossilResBuildingsShare, unit= "%")
 
 # Transport ---------------------------------------------------------------
+cat(sprintf("Transport sector: \n"))
 
 # Car final energy use per kilometer
-FuelUse_cars <- filter(Scenario$FinalEnergy_Transport, travel_mode=="Car")
+FuelUse_cars <- filter(Scenario$FinalEnergy_trvl_Transport, travel_mode=="Car")
 FuelUse_cars <- select(FuelUse_cars, year, region, value)
 PKm_cars <- filter(Scenario$PersonKilometers, travel_mode=="Car")
 Pkm_cars <- select(PKm_cars, year, region, value)
@@ -895,6 +896,7 @@ FuelUse_pkm_cars$unit<-"km/L"
 
 # Car CO2 per km
 CO2_cars <- filter(Scenario$TransportCO2Emissions, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v="CO2")
+CO2_km_cars <- filter(Scenario$TransportTravelCO2Emissions, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v="CO2")
 Pkm_cars <- filter(Scenario$PersonKilometers, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v='pkm')
 CO2_km_cars <- rbind(CO2_cars, Pkm_cars)
 CO2_km_cars <- spread(CO2_km_cars, key=v, value=value)
@@ -1052,8 +1054,22 @@ setnames(CO2_cars_2021_2030_Reduction_index,"year.y","year")
 CO2_cars_2021_2030_Reduction_index <- ungroup(CO2_cars_2021_2030_Reduction_index)
 CO2_cars_2021_2030_Reduction_index = select(CO2_cars_2021_2030_Reduction_index, year, region, value)
 CO2_cars_2021_2030_Reduction_index <- mutate(CO2_cars_2021_2030_Reduction_index, unit="%")
+=======
+
+# total travel transport co2 emissions including indirect electricity
+CO2_i_tmp <- filter(Scenario$CO2EPG, energy_technology=="Total") %>%
+  select(-unit)
+Elec_trvl_transport_tmp <- filter(Scenario$FinalEnergy_carrier_trvl_Transport, energy_carrier=="Electricity") %>%
+  select(-unit)
+TransportTravelCO2Emissions_Elec = inner_join(CO2_i_tmp, Elec_trvl_transport_tmp, by=c('year', 'region')) %>%
+                             mutate(CO2_elec=(1/10^-6*GWhToTJ)*value.x*value.y/10^12, unit="MtCO2") %>%
+                             select(-value.y, -value.y, -energy_carrier) %>%
+                             rename(value=CO2_elec)
+TransportTravelCO2Emissions_inclElec = inner_join(TransportTravelCO2Emissions, TransportTravelCO2Emissions_inclElec, by=c('year', 'region', 'travel_mode'))
+>>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
 
 # Industry ----------------------------------------------------------------
+cat(sprintf("Industry sector: \n"))
 
 # Energy intensity of industry sector (Kwh/US$2005)
 Industry_FinalEnergy <- filter(Scenario$FinalEnergy, sector=="Industry", energy_carrier=="Total")
@@ -1082,10 +1098,13 @@ Industry_Emis_IVA <- mutate(Industry_Emis_IVA, value=emis/IVA) %>% select(year, 
 Industry_Emis_IVA <- mutate(Industry_Emis_IVA, unit="MtCO2/million US$(2005)")
 
 # IMAGE
+cat(sprintf("AFOLU sector: \n"))
+
 # Reforestation (in 100 km2)
 Forest_area_total <- filter(Scenario$ForestArea, forest_type=="Total")
 
 # Compile list ------------------------------------------------------------
+cat(sprintf("Process list: \n"))
 l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, EMISCO2EQ=EMISCO2EQ,EMIS_ETS=EMIS_ETS,
           EMIS_demand=EMIS_demand,EMIS_buildings=EMIS_buildings,EMIS_supply=EMIS_supply,EMIS_industry=EMIS_industry,EMIS_transport=EMIS_transport,EMIS_power=EMIS_power,
           EMISCO2EQ_LU=EMISCO2EQ_LU,EMISCO2EQ_WAS=EMISCO2EQ_WAS,LUEMCO2_TOT=LUEMCO2_TOT,EMIS_AFOLU=EMIS_AFOLU,LUEMCH4_TOT=LUEMCH4_TOT, LUEMN2O_TOT=LUEMN2O_TOT,
@@ -1111,7 +1130,7 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           CarbonCaptured_total=CarbonCaptured_total,
           # industry
           Industry_Efficiency = Industry_Efficiency, FGas_Reduction_index = FGas_Reduction_index, Industry_Energy_IVA=Industry_Energy_IVA,Industry_Emis_IVA=Industry_Emis_IVA,
-          # buildigns
+          # buildings
           Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2,Appliances_FinalEnergy_capita=Appliances_FinalEnergy_capita,
           FinalEnergy_Residential_total=FinalEnergy_Residential_total, FinalEnergy_Residential_appliances=FinalEnergy_Residential_appliances,
           RenResBuildingsShare=RenResBuildingsShare, NonFossilResBuildingsShare=NonFossilResBuildingsShare,
@@ -1121,7 +1140,11 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           RenTransportShare_trvl=RenTransportShare_trvl, RenTransportShare_frgt=RenTransportShare_frgt, RenTransportShare=RenTransportShare, RenTransportShare_cars=RenTransportShare_cars,
           NonFossilTransportShare=NonFossilTransportShare,
           BlendingShareBio_cars_energy=BlendingShareBio_cars_energy,
+<<<<<<< HEAD
           CO2_cars_2021_2030_Reduction_index=CO2_cars_2021_2030_Reduction_index, CO2_cars_2021_2025_Reduction_index=CO2_cars_2021_2025_Reduction_index,
+=======
+          TransportCO2Emissions_Elec=TransportCO2Emissions_Elec,
+>>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
           # SDG
           ElecAccTot=ElecAccTot,
           # AFOLU

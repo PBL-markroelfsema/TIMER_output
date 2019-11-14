@@ -56,6 +56,7 @@ sector2 = c('Industry','Transport','Residential','Services', 'Other1', 'Bunker o
 sector3 = c('End-use industry', 'End-use transport', 'End-use residential', 'End-use services', 'End-use other', 'Energy transformation', 'Power generation', 'losses/leakages', 'Bunkers', 'Total')
 sector_capture = c('electricity', 'other industry', 'cement', 'hydrogen', 'transformation', 'heat')
 sector_hydrogen = c('Industry', 'Transport', 'Residential', 'Service', 'Other', 'H2 in gas', 'Total')
+sector_energy_supply = c('Electricity', 'Heat', 'Total')
 main_sector = c('Energy supply', 'Transport', 'Industry', 'Buildings', 'LULUCF', 'Agriculture', 'Waste', 'Bunkers', 'Total')
 energy_carrier_emis = c('Coal', 'Heavy oil', 'Light oil', 'Natural gas', 'Modern biofuels', 'Total')
 energy_carrier_energy = c('Coal', 'Heavy oil', 'Light oil', 'Natural gas', 'Modern biofuels', 'Traditional biofuels', 'Nuclear', 'Solar/wind', 'Hydro-electricity')
@@ -69,6 +70,7 @@ energy_carrier_trade = c('Coal', 'Oil', 'Natural gas', 'Modern biofuels', '-') #
 energy_carrier_capture= c('Coal', 'Oil', 'Natural gas', 'Biomass', 'Other', 'Total') 
 energy_carrier_ren = c('Modern biofuels', 'Solar/wind', 'Hydro-electricity')
 energy_carrier_ren_excl_hydro = c('Modern biofuels', 'Solar/wind')
+<<<<<<< HEAD
 energy_carrier_nf = c('Modern biofuels', 'Nuclear', 'Solar/wind', 'Hydro-electricity')
 energy_carrier_ren_28        = c('PV','CSP', 'Wind Onshore','Wind Offshore','Hydro','Other Renewable',          '8','Waste','Biomass CC',                                          'Biomass + CS','CHP biomass'                   )
 energy_carrier_nf_28         = c('PV','CSP', 'Wind Onshore','Wind Offshore','Hydro','Other Renewable','Nuclear','8','Waste','Biomass CC',                                          'Biomass + CS','CHP biomass'                   )
@@ -80,6 +82,11 @@ energy_carrier_hydrogen2_ren = c('Modern Biofuel', 'Modern Biofuel + CCS','Solar
 energy_carrier_hydrogen2_innovative = c('Coal + CCS', 'Oil + CCS', 'Natural Gas + CCS', 'Modern Biofuel + CCS', 'Solar Thermal')
 
 energy_technology    = c('PV','CSP', 'Wind Onshore','Wind Offshore','Hydro','Other Renewable','Nuclear','8','Conv. Coal','Conv. Oil','Conv. Natural gas','Waste','IGCC','OGCC','NG CC','Biomass CC','Coal + CS','Oil + CS','Natural gas + CS','Biomass + CS','CHP coal','CHP oil','CHP natural gas','CHP biomass','CHP coal + CS','CHP oil + CS','CHP natural gas + CS','CHP biomass + CS','Total')
+=======
+energy_carrier_nf = c('Modern biofuels', 'Traditional biofuels', 'Nuclear', 'Solar/wind', 'hydro-electricity')
+energy_technology_energy_supply = c('Coal w/o CCS','LLF w/o CCS', 'HLF w/o CCS', 'NG w/o CCS', 'Biomass w/o CCS', 'Coal w/ CCS','LLF w/ CCS', 'HLF w/ CCS', 'NG w/ CCS', 'Biomass w/ CCS', 'Total')
+energy_technology = c('PV','CSP', 'Wind Onshore','Wind Offshore','Hydro','Other Renewable','Nuclear','8','Conv. Coal','Conv. Oil','Conv. Natural gas','Waste','IGCC','OGCC','NG CC','Biomass CC','Coal + CS','Oil + CS','Natural gas + CS','Biomass + CS','CHP coal','CHP oil','CHP natural gas','CHP biomass','CHP coal + CS','CHP oil + CS','CHP natural gas + CS','CHP biomass + CS','Total')
+>>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
 energy_technology_28 = c('PV','CSP', 'Wind Onshore','Wind Offshore','Hydro','Other Renewable','Nuclear','8','Conv. Coal','Conv. Oil','Conv. Natural gas','Waste','IGCC','OGCC','NG CC','Biomass CC','Coal + CS','Oil + CS','Natural gas + CS','Biomass + CS','CHP coal','CHP oil','CHP natural gas','CHP biomass','CHP coal + CS','CHP oil + CS','CHP natural gas + CS','CHP biomass + CS')
 energy_technology_plant = c('Conv. Coal','Conv. Oil','Conv. Natural gas','Waste','IGCC','OGCC','NG CC','Biomass CC','Coal + CS','Oil + CS','Natural gas + CS','Biomass + CS')
 energy_technology_ren = c('PV','CSP', 'Wind Onshore','Wind Offshore','Hydro','Other Renewable', '8','Waste','Biomass CC','Biomass + CS','CHP biomass','CHP biomass + CS')
@@ -98,6 +105,7 @@ land_use_source_N2O = c('deforestation/biomass burning', 'traditional biomass/fu
 population_groups = c('Total', 'Urban', 'Rural', 'U_1', 'U_2', 'U_3', 'U_4', 'U_5', 'R_1', 'R_2', 'R_3', 'R_4', 'R_5')
 population_groups3 = c('Total', 'Urban', 'Rural')
 res_enduse_functions = c('HouseholdAppliances', 'Lighting', 'Cooking', 'WaterHeating', 'SpaceHeating', 'SpaceCooling')
+transport_modus = c('Passenger travel' , ' Freight' , 'Total')
 travel_mode_travel = c('Walking', 'Biking', 'Bus', 'Train', 'Car', 'High speed train', 'Air', 'Total')
 travel_mode_travel_excl_total = c('Walking', 'Biking', 'Bus', 'Train', 'Car', 'High speed train', 'Air')
 travel_mode_freight = c('Inland shipping', 'Freigth train', 'Medium truck', 'Heavy truck', 'Air cargo', 'International shipping', '-', 'Total')
