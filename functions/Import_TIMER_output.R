@@ -60,11 +60,11 @@
 
 # policy = TRUE if this directory is in the scenario output in the TIMER outputlib
 #library(base)
-ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2', Rundir, Project, TIMERGeneration, Policy = FALSE)
+ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2', Rundir, Project, TIMERGeneration, RDir, Policy = FALSE)
 { source("../TIMER_output/functions/Settings.R")
-  print(paste(Rundir, Project, '6_R/TIMER_output/functions', 'mym2r.R', sep='/'))
-  source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'mym2r.R', sep='/'))
-  source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'Settings.R', sep='/'))
+  print(paste(Rundir, Project, RDir, 'TIMER_output/functions', 'mym2r.R', sep='/'))
+  source(paste(Rundir, Project, RDir, 'TIMER_output/functions', 'mym2r.R', sep='/'))
+  source(paste(Rundir, Project, RDir, 'TIMER_output/functions', 'Settings.R', sep='/'))
   
   TIMER_folder = paste(Rundir, Project, "2_TIMER/outputlib", TIMERGeneration, Project, sep="/")
   IMAGE_folder = paste(Rundir, Project, "3_IMAGE/Scenario_lib/scen", sep="/")
@@ -1040,23 +1040,6 @@ print(IMAGE_folder)
     EfficiencyFleet_cars_old = data.frame(matrix(ncol=0,nrow=0))
   }
   
-=======
-  # Global efficiency busses, cars
-  if (Policy==TRUE) {
-  EfficiencyFleet_trvl_global_new = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
-                                               filename='trp_trvl_global_eff.dat', varname=NULL, 
-                                               collist=list(travel_mode_travel_excl_total), 
-                                               namecols=c('mode'), novarname = TRUE)
-  EfficiencyFleet_global_new_cars = filter(EfficiencyFleet_trvl_global_new, mode=='Car') %>% 
-                                    select(-mode) %>%
-                                    mutate(region="World", unit = "MJ/pkm") %>%
-                                    select(year, region, value, unit)
-  EfficiencyFleet_global_new_busses = filter(EfficiencyFleet_trvl_global_new, mode=='Bus') %>% 
-    select(-mode) %>%
-    mutate(region="World", unit = "MJ/pkm") %>%
-    select(year, region, value, unit)
-  }
->>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
   # Efficiency total fleet for new cars
   EfficiencyFleet_new_cars = data.frame(matrix(ncol=0,nrow=0))
   if (Policy==TRUE) {
@@ -1077,24 +1060,15 @@ print(IMAGE_folder)
   EfficiencyFleet_new_cars <- rbind(EfficiencyFleet_new_cars, EU)
   EfficiencyFleet_new_cars$region = factor(EfficiencyFleet_new_cars$region,levels=regions28_EU)
   EfficiencyFleet_new_cars <- mutate(EfficiencyFleet_new_cars, unit="MJ/pkm")
-<<<<<<< HEAD
   }) # try
   } # if
   else {
     EfficiencyFleet_new_cars = data.frame(matrix(ncol=0,nrow=0))
   }
   
-=======
-  EfficiencyFleet_global_new_cars$region <- factor(EfficiencyFleet_global_new_cars$region, levels=regions28_EU)
-  EfficiencyFleet_new_cars <- filter(EfficiencyFleet_new_cars, region!="World")
-  EfficiencyFleet_new_cars <- rbind(EfficiencyFleet_global_new_cars,EfficiencyFleet_new_cars) %>%
-                              arrange(year, region, value, unit)
-  }
-  else {
-    EfficiencyFleet_new_cars = data.frame(matrix(ncol=0,nrow=0))
-  }
   # Efficiency total fleet for new busses
   if (Policy==TRUE) {
+    try({
     EfficiencyFleet_new_busses = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
                                                filename='trp_trvl_busses_Eff_new.dat', varname=NULL, 
                                                collist=list(regions27), 
@@ -1115,31 +1089,16 @@ print(IMAGE_folder)
     EfficiencyFleet_new_busses <- filter(EfficiencyFleet_new_busses, region!="World")
     EfficiencyFleet_new_busses <- rbind(EfficiencyFleet_global_new_busses,EfficiencyFleet_new_busses) %>%
                                   arrange(year, region, value, unit)
-  }
+    }) # try
+  } # if
   else {
     EfficiencyFleet_new_busses = data.frame(matrix(ncol=0,nrow=0))
   }
->>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
+
   # Efficiency total fleet for new medium trucks
   EfficiencyFleet_new_MedT = data.frame(matrix(ncol=0,nrow=0))
   if (Policy==TRUE) {
-<<<<<<< HEAD
   try({
-=======
-  EfficiencyFleet_frgt_global_new = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
-                                                    filename='trp_frgt_global_eff.dat', varname=NULL, 
-                                                    collist=list(travel_mode_freight_excl_total), 
-                                                    namecols=c('mode'), novarname = TRUE)
-  EfficiencyFleet_global_new_MedT = filter(EfficiencyFleet_frgt_global_new, mode=='Medium truck') %>% 
-                                    select(-mode) %>%
-                                    mutate(region="World", unit = "MJ/Tkm") %>%
-                                    select(year, region, value, unit)
-  EfficiencyFleet_global_new_HvyT = filter(EfficiencyFleet_frgt_global_new, mode=='Heavy truck') %>% 
-                                           select(-mode) %>%
-                                           mutate(region="World", unit = "MJ/Tkm") %>%
-                                           select(year, region, value, unit)
-  
->>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
   EfficiencyFleet_new_MedT = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
                                              filename='trp_frgt_MedT_Eff_new.dat', varname=NULL, 
                                              collist=list(regions27), 
@@ -1155,17 +1114,8 @@ print(IMAGE_folder)
   EfficiencyFleet_new_MedT <- rbind(EfficiencyFleet_new_MedT, EU)
   EfficiencyFleet_new_MedT$region = factor(EfficiencyFleet_new_MedT$region,levels=regions28_EU)
   EfficiencyFleet_new_MedT <- mutate(EfficiencyFleet_new_MedT, unit="MJ/tkm") 
-<<<<<<< HEAD
   }) # try
   } # if
-=======
-
-  EfficiencyFleet_global_new_MedT$region <- factor(EfficiencyFleet_global_new_MedT$region, levels=regions28_EU)
-  EfficiencyFleet_new_MedT <- filter(EfficiencyFleet_new_MedT, region!="World")
-  EfficiencyFleet_new_MedT <- rbind(EfficiencyFleet_global_new_MedT,EfficiencyFleet_new_MedT) %>%
-                              arrange(year, region, value, unit)
-  }
->>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
   else {
     EfficiencyFleet_new_MedT = data.frame(matrix(ncol=0,nrow=0))
   }
@@ -1238,22 +1188,11 @@ print(IMAGE_folder)
   EfficiencyFleet_new_HvyT <- rbind(EfficiencyFleet_new_HvyT, EU)
   EfficiencyFleet_new_HvyT$region = factor(EfficiencyFleet_new_HvyT$region,levels=regions28_EU)
   EfficiencyFleet_new_HvyT <- mutate(EfficiencyFleet_new_HvyT, unit="MJ/tkm") 
-<<<<<<< HEAD
   }) # try
   } # if
-=======
-  
-  EfficiencyFleet_global_new_HvyT$region <- factor(EfficiencyFleet_global_new_HvyT$region, levels=regions28_EU)
-  EfficiencyFleet_new_HvyT <- filter(EfficiencyFleet_new_HvyT, region!="World")
-  EfficiencyFleet_new_HvyT <- rbind(EfficiencyFleet_global_new_HvyT,EfficiencyFleet_new_HvyT) %>%
-                              arrange(year, region, value, unit)
-  
-  }
->>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
   else {
     EfficiencyFleet_new_HvyT = data.frame(matrix(ncol=0,nrow=0))
   }
-  
   
   # energy tax cars
   EnergyTax_cars = data.frame(matrix(ncol=0,nrow=0))
@@ -1443,15 +1382,12 @@ print(IMAGE_folder)
             INDEMISCH4=INDEMISCH4,INDEMISN2O=INDEMISN2O,HFC_reg=HFC_reg,PFC_reg=PFC_reg,
             LUEMCO2=LUEMCO2,LUEMCH4=LUEMCH4,LUEMN2O=LUEMN2O,
             # energy supply
-<<<<<<< HEAD
             ElecFuelUseTot=ElecFuelUseTot, ElecProd=ElecProd, ElecCap=ElecCap, ElecCap_new=ElecCap_new,
             ElecProdSpec=ElecProdSpec, EnergyProd=EnergyProd, FinalEnergy=FinalEnergy, 
             CO2EPG_new=CO2EPG_new,ElecEffPct_new=ElecEffPct_new,ElecEffPct=ElecEffPct,
             H2FuelDem=H2FuelDem, H2Prod=H2Prod,
-=======
             ElecHeatCO2=ElecHeatCO2, ElecFuelUseTot=ElecFuelUseTot, ElecProd=ElecProd, ElecCap=ElecCap, EnergyProd=EnergyProd, FinalEnergy=FinalEnergy, 
             CO2EPG=CO2EPG, CO2EPG_new=CO2EPG_new,ElecEffPct_new=ElecEffPct_new,ElecEffPct=ElecEffPct,
->>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
             NetTrade=NetTrade,
             # buildings
             FloorSpace=FloorSpace,
@@ -1462,15 +1398,13 @@ print(IMAGE_folder)
             VehicleShare_cars=VehicleShare_cars, VehicleShare_busses=VehicleShare_busses, VehicleShare_trains=VehicleShare_trains, VehicleShare_aircrafts=VehicleShare_aircrafts,
             BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, FuelUseFleet_trvl=FuelUseFleet_trvl, FuelUseFleet_frgt=FuelUseFleet_frgt,
             BlendingShareBio_energy=BlendingShareBio_energy, ElectricShare_new_cars=ElectricShare_new_cars, 
-<<<<<<< HEAD
+            
             EfficiencyFleet_new_cars=EfficiencyFleet_new_cars, EfficiencyFleet_cars=EfficiencyFleet_cars, EfficiencyFleet_cars_old=EfficiencyFleet_cars_old,
             EfficiencyFleet_new_MedT=EfficiencyFleet_new_MedT, 
             EfficiencyFleet_new_HvyT=EfficiencyFleet_new_HvyT, EfficiencyFleet_HvyT=EfficiencyFleet_HvyT, EfficiencyFleet_HvyT_old=EfficiencyFleet_HvyT_old,
-=======
-            EfficiencyFleet_new_cars=EfficiencyFleet_new_cars, EfficiencyFleet_new_busses=EfficiencyFleet_new_busses, EfficiencyFleet_new_MedT=EfficiencyFleet_new_MedT, EfficiencyFleet_new_HvyT=EfficiencyFleet_new_HvyT,
-            EfficiencyFleet_global_new_cars=EfficiencyFleet_global_new_cars, EfficiencyFleet_global_new_busses=EfficiencyFleet_global_new_busses, EfficiencyFleet_global_new_MedT=EfficiencyFleet_global_new_MedT,EfficiencyFleet_global_new_HvyT=EfficiencyFleet_global_new_HvyT,
+            EfficiencyFleet_new_busses=EfficiencyFleet_new_busses, 
+  
             # other
->>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
             CarbonCaptured=CarbonCaptured,
             EnergyTax_HvyT=EnergyTax_HvyT, EnergyTax_cars=EnergyTax_cars,
             Factor_HvyT=Factor_HvyT, Factor_cars=Factor_cars,

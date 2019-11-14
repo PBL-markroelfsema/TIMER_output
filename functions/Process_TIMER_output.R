@@ -1054,7 +1054,6 @@ setnames(CO2_cars_2021_2030_Reduction_index,"year.y","year")
 CO2_cars_2021_2030_Reduction_index <- ungroup(CO2_cars_2021_2030_Reduction_index)
 CO2_cars_2021_2030_Reduction_index = select(CO2_cars_2021_2030_Reduction_index, year, region, value)
 CO2_cars_2021_2030_Reduction_index <- mutate(CO2_cars_2021_2030_Reduction_index, unit="%")
-=======
 
 # total travel transport co2 emissions including indirect electricity
 CO2_i_tmp <- filter(Scenario$CO2EPG, energy_technology=="Total") %>%
@@ -1066,7 +1065,6 @@ TransportTravelCO2Emissions_Elec = inner_join(CO2_i_tmp, Elec_trvl_transport_tmp
                              select(-value.y, -value.y, -energy_carrier) %>%
                              rename(value=CO2_elec)
 TransportTravelCO2Emissions_inclElec = inner_join(TransportTravelCO2Emissions, TransportTravelCO2Emissions_inclElec, by=c('year', 'region', 'travel_mode'))
->>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
 
 # Industry ----------------------------------------------------------------
 cat(sprintf("Industry sector: \n"))
@@ -1140,11 +1138,8 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           RenTransportShare_trvl=RenTransportShare_trvl, RenTransportShare_frgt=RenTransportShare_frgt, RenTransportShare=RenTransportShare, RenTransportShare_cars=RenTransportShare_cars,
           NonFossilTransportShare=NonFossilTransportShare,
           BlendingShareBio_cars_energy=BlendingShareBio_cars_energy,
-<<<<<<< HEAD
           CO2_cars_2021_2030_Reduction_index=CO2_cars_2021_2030_Reduction_index, CO2_cars_2021_2025_Reduction_index=CO2_cars_2021_2025_Reduction_index,
-=======
           TransportCO2Emissions_Elec=TransportCO2Emissions_Elec,
->>>>>>> aad6cebe637e2bf7847791d9f93b23ab90daa8a1
           # SDG
           ElecAccTot=ElecAccTot,
           # AFOLU
