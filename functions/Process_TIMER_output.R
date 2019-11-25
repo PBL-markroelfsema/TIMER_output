@@ -17,7 +17,7 @@
 # CO2_intensity_GDP - DONE, ok?
 # Energy_intensity_TPES_GDP - DONE, ok?
 
-ProcessTimerScenario <- function(Scenario, Rundir, Project, Policy = FALSE)
+ProcessTimerScenario <- function(Scenario, Rundir, Project, RDir, Policy = FALSE)
 { source("../TIMER_output/functions/Settings.R")
   s <- deparse(substitute(Scenario)) # get object name as string
   if(!exists(s))
@@ -25,8 +25,8 @@ ProcessTimerScenario <- function(Scenario, Rundir, Project, Policy = FALSE)
     stop()
   }
 
-source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'Settings.R', sep='/'))
-source(paste(Rundir, Project, '6_R/TIMER_output/functions', 'General Functions.R', sep='/'))
+source(paste(Rundir, Project, RDir, 'TIMER_output/functions', 'Settings.R', sep='/'))
+source(paste(Rundir, Project, RDir, 'TIMER_output/functions', 'General Functions.R', sep='/'))
 
 
 # Emissions ---------------------------------------------------------------
@@ -895,7 +895,7 @@ FuelUse_pkm_cars <- data.frame(FuelUse_pkm_cars)
 FuelUse_pkm_cars$unit<-"km/L"
 
 # Car CO2 per km
-CO2_cars <- filter(Scenario$TransportCO2Emissions, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v="CO2")
+CO2_cars <- filter(Scenario$TransportTravelCO2Emissions, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v="CO2")
 CO2_km_cars <- filter(Scenario$TransportTravelCO2Emissions, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v="CO2")
 Pkm_cars <- filter(Scenario$PersonKilometers, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v='pkm')
 CO2_km_cars <- rbind(CO2_cars, Pkm_cars)
@@ -906,10 +906,10 @@ CO2_km_cars <- mutate(CO2_km_cars, value=(Load_car/Tera)*10^12*CO2/pkm) %>% sele
 CO2_km_cars <- mutate(CO2_km_cars, unit= "gCO2/km")
 
 # CO2 emissions medium trucks
-CO2_MedT <- filter(Scenario$TransportCO2Emissions, travel_mode=='Medium truck') %>% select(year, region, value) %>% mutate(unit="Mt CO2")
+CO2_MedT <- filter(Scenario$TransportFreightCO2Emissions, travel_mode=='Medium truck') %>% select(year, region, value) %>% mutate(unit="Mt CO2")
 
 # CO2 emissions heavy trucks
-CO2_HvyT <- filter(Scenario$TransportCO2Emissions, travel_mode=='Heavy truck') %>% select(year, region, value) %>% mutate(unit="Mt CO2")
+CO2_HvyT <- filter(Scenario$TransportFreightCO2Emissions, travel_mode=='Heavy truck') %>% select(year, region, value) %>% mutate(unit="Mt CO2")
 
 
 # Share of Electric cars
@@ -1056,15 +1056,19 @@ CO2_cars_2021_2030_Reduction_index = select(CO2_cars_2021_2030_Reduction_index, 
 CO2_cars_2021_2030_Reduction_index <- mutate(CO2_cars_2021_2030_Reduction_index, unit="%")
 
 # total travel transport co2 emissions including indirect electricity
+TransportTravelCO2Emissions_inclElec <- NULL
+if (Policy==TRUE)
+try({
 CO2_i_tmp <- filter(Scenario$CO2EPG, energy_technology=="Total") %>%
   select(-unit)
-Elec_trvl_transport_tmp <- filter(Scenario$FinalEnergy_carrier_trvl_Transport, energy_carrier=="Electricity") %>%
+Elec_trvl_transport_tmp <- filter(Scenario$FinalEnergy_trvl_Transport, energy_carrier=="Electricity") %>%
   select(-unit)
 TransportTravelCO2Emissions_Elec = inner_join(CO2_i_tmp, Elec_trvl_transport_tmp, by=c('year', 'region')) %>%
                              mutate(CO2_elec=(1/10^-6*GWhToTJ)*value.x*value.y/10^12, unit="MtCO2") %>%
                              select(-value.y, -value.y, -energy_carrier) %>%
                              rename(value=CO2_elec)
 TransportTravelCO2Emissions_inclElec = inner_join(TransportTravelCO2Emissions, TransportTravelCO2Emissions_inclElec, by=c('year', 'region', 'travel_mode'))
+})
 
 # Industry ----------------------------------------------------------------
 cat(sprintf("Industry sector: \n"))
@@ -1139,7 +1143,7 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           NonFossilTransportShare=NonFossilTransportShare,
           BlendingShareBio_cars_energy=BlendingShareBio_cars_energy,
           CO2_cars_2021_2030_Reduction_index=CO2_cars_2021_2030_Reduction_index, CO2_cars_2021_2025_Reduction_index=CO2_cars_2021_2025_Reduction_index,
-          TransportCO2Emissions_Elec=TransportCO2Emissions_Elec,
+          #TransportCO2Emissions_Elec=TransportCO2Emissions_Elec,
           # SDG
           ElecAccTot=ElecAccTot,
           # AFOLU

@@ -67,8 +67,9 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2'
   source(paste(Rundir, Project, RDir, 'TIMER_output/functions', 'Settings.R', sep='/'))
   
   TIMER_folder = paste(Rundir, Project, "2_TIMER/outputlib", TIMERGeneration, Project, sep="/")
-  IMAGE_folder = paste(Rundir, Project, "3_IMAGE/Scenario_lib/scen", sep="/")
-
+  IMAGE_folder = try({paste(Rundir, Project, "3_IMAGE/Scenario_lib/scen", sep="/")})
+  IMAGE_folder = try({paste(Rundir, Project, "3_IMAGE_land/Scenario_lib/scen", sep="/")})
+  
 print(TIMER_folder)
 print(IMAGE_folder)
 
@@ -683,7 +684,9 @@ print(IMAGE_folder)
   FinalEnergy_trvl_Transport <- mutate(FinalEnergy_trvl_Transport, unit="XJ")
 
   # Energy use travel fuels per mode and per energy carrier
+  FinalEnergy_carrier_trvl_Transport <- NULL
   if (Policy==TRUE) {
+  try({
   FinalEnergy_carrier_trvl_Transport = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                                                        filename='trp_trvl_fuel_use.dat', varname=NULL, 
                                                        collist=list(regions28,travel_mode_travel_excl_total, energy_carrier_sec_fuel2), 
@@ -696,7 +699,9 @@ print(IMAGE_folder)
   FinalEnergy_carrier_trvl_Transport$region = factor(FinalEnergy_carrier_trvl_Transport$region,levels=regions28_EU)
   FinalEnergy_carrier_trvl_Transport <- mutate(FinalEnergy_carrier_trvl_Transport, unit="TJ")
   
-  }
+  }) # try
+  } # if
+  
   # Energy use freight fuels per mode
   FinalEnergy_frgt_Transport = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
                                                filename='trp_frgt_Energy.out', varname=NULL, 
@@ -1358,6 +1363,8 @@ print(IMAGE_folder)
   FloorSpace <- mutate(FloorSpace, unit="m2")
   
   # IMAGE
+  ForestArea <- NULL
+  try({
   ForestArea = read.mym2r.nice(mym.folder=IMAGE_folder, scen.econ=paste(IMAGE_scenario, "/output", sep=""), 
                                filename='FORAREA.OUT', varname=NULL, 
                                collist=list(forest_type, regions28), 
@@ -1376,7 +1383,8 @@ print(IMAGE_folder)
   setnames(ForestArea,"V1","value")
   setnames(ForestArea,"V2","year")
   setcolorder(ForestArea,c("year","region","forest_type","value","unit"))
-
+  }) # try
+  
   #4.
   l <- list(CO2Spec=CO2Spec,ENEMISCO2=ENEMISCO2,ENEMISCH4=ENEMISCH4,ENEMISN2O=ENEMISN2O,INDEMISCO2=INDEMISCO2,
             INDEMISCH4=INDEMISCH4,INDEMISN2O=INDEMISN2O,HFC_reg=HFC_reg,PFC_reg=PFC_reg,
@@ -1393,7 +1401,8 @@ print(IMAGE_folder)
             FloorSpace=FloorSpace,
             FinalEnergy_Residential=FinalEnergy_Residential, FinalEnergy_Residential_energy_carrier=FinalEnergy_Residential_energy_carrier,
             # transport
-            TransportTravelCO2Emissions=TransportTravelCO2Emissions, FinalEnergy_Transport=FinalEnergy_Transport, FinalEnergy_trvl_Transport=FinalEnergy_trvl_Transport, FinalEnergy_frgt_Transport=FinalEnergy_frgt_Transport, FinalEnergy_carrier_trvl_Transport=FinalEnergy_carrier_trvl_Transport,
+            TransportTravelCO2Emissions=TransportTravelCO2Emissions, TransportFreightCO2Emissions=TransportFreightCO2Emissions,
+            FinalEnergy_Transport=FinalEnergy_Transport, FinalEnergy_trvl_Transport=FinalEnergy_trvl_Transport, FinalEnergy_frgt_Transport=FinalEnergy_frgt_Transport, FinalEnergy_carrier_trvl_Transport=FinalEnergy_carrier_trvl_Transport,
             PersonKilometers=PersonKilometers, 
             VehicleShare_cars=VehicleShare_cars, VehicleShare_busses=VehicleShare_busses, VehicleShare_trains=VehicleShare_trains, VehicleShare_aircrafts=VehicleShare_aircrafts,
             BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, FuelUseFleet_trvl=FuelUseFleet_trvl, FuelUseFleet_frgt=FuelUseFleet_frgt,
