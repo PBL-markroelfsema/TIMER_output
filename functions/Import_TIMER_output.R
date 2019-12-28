@@ -396,18 +396,18 @@ print(IMAGE_folder)
   # SDGs
   
   # Electricity access
-  ElecAcc = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
-                            filename='res_Elec_access.out', varname=NULL, 
-                            collist=list(regions28,population_groups3), 
-                            namecols=c('region','population_group'), novarname = TRUE)
-  ElecAcc <- subset(ElecAcc, region != "dummy")
-  EU <- inner_join(filter(ElecAcc, region=='WEU'), filter(ElecAcc, region=='CEU'), by=c("year", "population_group"))
-  EU$region <- "EU"
-  EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, population_group, value)
-  EU$region = factor(EU$region, levels=regions28_EU)
-  ElecAcc <- rbind(ElecAcc, EU)
-  ElecAcc$region = factor(ElecAcc$region,levels=regions28_EU)
-  ElecAcc$unit <- "fraction"
+  #ElecAcc = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
+  #                          filename='res_Elec_access.out', varname=NULL, 
+  #                          collist=list(regions28,population_groups3), 
+  #                          namecols=c('region','population_group'), novarname = TRUE)
+  #ElecAcc <- subset(ElecAcc, region != "dummy")
+  #EU <- inner_join(filter(ElecAcc, region=='WEU'), filter(ElecAcc, region=='CEU'), by=c("year", "population_group"))
+  #EU$region <- "EU"
+  #EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, population_group, value)
+  #EU$region = factor(EU$region, levels=regions28_EU)
+  #ElecAcc <- rbind(ElecAcc, EU)
+  #ElecAcc$region = factor(ElecAcc$region,levels=regions28_EU)
+  #ElecAcc$unit <- "fraction"
   
   #RSE
   FinalEnergy = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/indicatoren", sep=""), 
@@ -930,7 +930,7 @@ print(IMAGE_folder)
             EfficiencyFleet_new_cars=EfficiencyFleet_new_cars, EfficiencyFleet_new_MedT=EfficiencyFleet_new_MedT, EfficiencyFleet_new_HvyT=EfficiencyFleet_new_HvyT,
             CarbonCaptured=CarbonCaptured,
             # SDG
-            ElecAcc=ElecAcc,
+            #ElecAcc=ElecAcc,
             # drivers
             TPES=TPES,
             POP=POP, GDP_MER=GDP_MER, GDP_PPP=GDP_PPP, IVA=IVA, 
