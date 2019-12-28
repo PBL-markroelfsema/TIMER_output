@@ -68,7 +68,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2'
   
   TIMER_folder = paste(Rundir, Project, "2_TIMER/outputlib", TIMERGeneration, Project, sep="/")
   IMAGE_folder = try({paste(Rundir, Project, "3_IMAGE/Scenario_lib/scen", sep="/")})
-  IMAGE_folder = try({paste(Rundir, Project, "3_IMAGE_land/Scenario_lib/scen", sep="/")})
+  #IMAGE_folder = try({paste(Rundir, Project, "3_IMAGE_land/Scenario_lib/scen", sep="/")})
   
 print(TIMER_folder)
 print(IMAGE_folder)
@@ -688,7 +688,7 @@ print(IMAGE_folder)
   if (Policy==TRUE) {
   try({
   FinalEnergy_carrier_trvl_Transport = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
-                                                       filename='trp_trvl_fuel_use.dat', varname=NULL, 
+                                                       filename='trp_trvl_fuel_use_fleet_tot.dat', varname=NULL, 
                                                        collist=list(regions28,travel_mode_travel_excl_total, energy_carrier_sec_fuel2), 
                                                        namecols=c('region','travel_mode', 'energy_carrier'), novarname = TRUE)
   FinalEnergy_carrier_trvl_Transport <- subset(FinalEnergy_carrier_trvl_Transport, region != "dummy")
@@ -993,6 +993,59 @@ print(IMAGE_folder)
     ElectricShare_new_cars = data.frame(matrix(ncol=0,nrow=0))
   }
   
+  
+  # Efficiency travel
+  EfficiencyTravel = data.frame(matrix(ncol=0,nrow=0))
+  if (Policy==TRUE) {
+    try({
+      EfficiencyTravel = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
+                                             filename='trp_trvl_eff_base.dat', varname=NULL, 
+                                             collist=list(regions26, travel_mode_travel_excl_total, car_type), 
+                                             namecols=c('region', 'mode', 'travel_type'), novarname = TRUE)
+      EfficiencyTravel <- subset(EfficiencyTravel, region != "dummy")
+      #EU_fleet <- inner_join(filter(EfficiencyTravel, region=='WEU'), filter(EfficiencyTravel, region=='CEU'), by=c("year"))
+      #PersonKilometers_cars <- filter(PersonKilometers, travel_mode=='Car') %>% select(year, region, value)
+      ## weight factor should be New person kilometers, but as the share of new cars is constant and the same for each region, also PersonKilometers can be used
+      #EU_pkm <- inner_join(filter(PersonKilometers_cars, region=='WEU'), filter(PersonKilometers_cars, region=='CEU'), by=c("year"))
+      #EU <- inner_join(EU_fleet, EU_pkm, by=c('year'))
+      #EU$region <- "EU"
+      #EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value)
+      #U$region = factor(EU$region, levels=regions28_EU)
+      #EfficiencyTravel <- rbind(EfficiencyTravel, EU)
+      EfficiencyTravel$region = factor(EfficiencyTravel$region,levels=regions28_EU)
+      EfficiencyTravel <- mutate(EfficiencyTravel, unit="MJ/pkm")
+    }) # try
+  } # if
+  else {
+    EfficiencyTravel = data.frame(matrix(ncol=0,nrow=0))
+  }
+ 
+  # Efficiency freight
+  EfficiencyFreight = data.frame(matrix(ncol=0,nrow=0))
+  if (Policy==TRUE) {
+    try({
+      EfficiencyFreight = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
+                                         filename='trp_frgt_eff_base.dat', varname=NULL, 
+                                         collist=list(regions26, travel_mode_freight_excl_total, car_type), 
+                                         namecols=c('region', 'mode', 'travel_type'), novarname = TRUE)
+      EfficiencyFreight <- subset(EfficiencyFreight, region != "dummy")
+      #EU_fleet <- inner_join(filter(EfficiencyTravel, region=='WEU'), filter(EfficiencyTravel, region=='CEU'), by=c("year"))
+      #PersonKilometers_cars <- filter(PersonKilometers, travel_mode=='Car') %>% select(year, region, value)
+      ## weight factor should be New person kilometers, but as the share of new cars is constant and the same for each region, also PersonKilometers can be used
+      #EU_pkm <- inner_join(filter(PersonKilometers_cars, region=='WEU'), filter(PersonKilometers_cars, region=='CEU'), by=c("year"))
+      #EU <- inner_join(EU_fleet, EU_pkm, by=c('year'))
+      #EU$region <- "EU"
+      #EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value)
+      #U$region = factor(EU$region, levels=regions28_EU)
+      #EfficiencyTravel <- rbind(EfficiencyTravel, EU)
+      EfficiencyFreight$region = factor(EfficiencyFreight$region,levels=regions28_EU)
+      EfficiencyFreight <- mutate(EfficiencyFreight, unit="MJ/pkm")
+    }) # try
+  } # if
+  else {
+    EfficiencyFreight = data.frame(matrix(ncol=0,nrow=0))
+  } 
+  
   # Efficiency total fleet for  cars
   EfficiencyFleet_cars = data.frame(matrix(ncol=0,nrow=0))
   if (Policy==TRUE) {
@@ -1072,6 +1125,7 @@ print(IMAGE_folder)
   }
   
   # Efficiency total fleet for new busses
+  EfficiencyFleet_new_busses = NULL
   if (Policy==TRUE) {
     try({
     EfficiencyFleet_new_busses = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
@@ -1407,12 +1461,11 @@ print(IMAGE_folder)
             VehicleShare_cars=VehicleShare_cars, VehicleShare_busses=VehicleShare_busses, VehicleShare_trains=VehicleShare_trains, VehicleShare_aircrafts=VehicleShare_aircrafts,
             BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, FuelUseFleet_trvl=FuelUseFleet_trvl, FuelUseFleet_frgt=FuelUseFleet_frgt,
             BlendingShareBio_energy=BlendingShareBio_energy, ElectricShare_new_cars=ElectricShare_new_cars, 
-            
+            EfficiencyTravel=EfficiencyTravel, EfficiencyFreight=EfficiencyFreight,
             EfficiencyFleet_new_cars=EfficiencyFleet_new_cars, EfficiencyFleet_cars=EfficiencyFleet_cars, EfficiencyFleet_cars_old=EfficiencyFleet_cars_old,
             EfficiencyFleet_new_MedT=EfficiencyFleet_new_MedT, 
             EfficiencyFleet_new_HvyT=EfficiencyFleet_new_HvyT, EfficiencyFleet_HvyT=EfficiencyFleet_HvyT, EfficiencyFleet_HvyT_old=EfficiencyFleet_HvyT_old,
             EfficiencyFleet_new_busses=EfficiencyFleet_new_busses, 
-  
             # other
             CarbonCaptured=CarbonCaptured,
             EnergyTax_HvyT=EnergyTax_HvyT, EnergyTax_cars=EnergyTax_cars,
