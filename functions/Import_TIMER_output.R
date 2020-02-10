@@ -1144,10 +1144,6 @@ print(IMAGE_folder)
     EfficiencyFleet_new_busses <- rbind(EfficiencyFleet_new_busses, EU)
     EfficiencyFleet_new_busses$region = factor(EfficiencyFleet_new_busses$region,levels=regions28_EU)
     EfficiencyFleet_new_busses <- mutate(EfficiencyFleet_new_busses, unit="MJ/pkm")
-    EfficiencyFleet_global_new_busses$region <- factor(EfficiencyFleet_global_new_busses$region, levels=regions28_EU)
-    EfficiencyFleet_new_busses <- filter(EfficiencyFleet_new_busses, region!="World")
-    EfficiencyFleet_new_busses <- rbind(EfficiencyFleet_global_new_busses,EfficiencyFleet_new_busses) %>%
-                                  arrange(year, region, value, unit)
     }) # try
   } # if
   else {
@@ -1282,7 +1278,7 @@ print(IMAGE_folder)
   EnergyTax_HvyT <- subset(EnergyTax_HvyT, region != "dummy")
   EnergyTax_HvyT$region = factor(EnergyTax_HvyT$region,levels=regions28)
   EnergyTax_HvyT$region = factor(EnergyTax_HvyT$region,levels=regions28_EU)
-  EnergyTax_HvyT <- mutate(EnergyTax_HvyT, unit="MJ/tkm") 
+  EnergyTax_HvyT <- mutate(EnergyTax_HvyT, unit="US$2005/MJ") 
   }) # try
   } # if
   else {
