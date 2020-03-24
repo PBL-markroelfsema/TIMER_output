@@ -85,6 +85,7 @@ energy_carrier_nf = c('Modern biofuels', 'Traditional biofuels', 'Nuclear', 'Sol
 energy_technology_energy_supply = c('Coal w/o CCS','LLF w/o CCS', 'HLF w/o CCS', 'NG w/o CCS', 'Biomass w/o CCS', 'Coal w/ CCS','LLF w/ CCS', 'HLF w/ CCS', 'NG w/ CCS', 'Biomass w/ CCS', 'Total')
 energy_technology = c('PV','CSP', 'Wind Onshore','Wind Offshore','Hydro','Other Renewable','Nuclear','8','Conv. Coal','Conv. Oil','Conv. Natural gas','Waste','IGCC','OGCC','NG CC','Biomass CC','Coal + CS','Oil + CS','Natural gas + CS','Biomass + CS','CHP coal','CHP oil','CHP natural gas','CHP biomass','CHP coal + CS','CHP oil + CS','CHP natural gas + CS','CHP biomass + CS','Total')
 energy_technology_28 = c('PV','CSP', 'Wind Onshore','Wind Offshore','Hydro','Other Renewable','Nuclear','8','Conv. Coal','Conv. Oil','Conv. Natural gas','Waste','IGCC','OGCC','NG CC','Biomass CC','Coal + CS','Oil + CS','Natural gas + CS','Biomass + CS','CHP coal','CHP oil','CHP natural gas','CHP biomass','CHP coal + CS','CHP oil + CS','CHP natural gas + CS','CHP biomass + CS')
+energy_technology_coal <- c('Conv. Coal', 'IGCC', 'Coal + CS')
 energy_technology_plant = c('Conv. Coal','Conv. Oil','Conv. Natural gas','Waste','IGCC','OGCC','NG CC','Biomass CC','Coal + CS','Oil + CS','Natural gas + CS','Biomass + CS')
 energy_technology_ren = c('PV','CSP', 'Wind Onshore','Wind Offshore','Hydro','Other Renewable', '8','Waste','Biomass CC','Biomass + CS','CHP biomass','CHP biomass + CS')
 energy_technology_wind = c('Wind Onshore','Wind Offshore')

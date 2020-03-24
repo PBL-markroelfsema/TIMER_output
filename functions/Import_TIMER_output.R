@@ -60,6 +60,7 @@
 
 # policy = TRUE if this directory is in the scenario output in the TIMER outputlib
 #library(base)
+library(dplyr)
 ImportTimerScenario <- function(TIMER_scenario = 'SSP2', IMAGE_scenario = 'SSP2', Rundir, Project, TIMERGeneration, RDir, Policy = FALSE)
 { source("../TIMER_output/functions/Settings.R")
   print(paste(Rundir, Project, RDir, 'TIMER_output/functions', 'mym2r.R', sep='/'))
@@ -570,18 +571,24 @@ print(IMAGE_folder)
   # SDGs
   
   # Electricity access
-  #ElecAcc = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
-  #                          filename='res_Elec_access.out', varname=NULL, 
-  #                          collist=list(regions28,population_groups3), 
-  #                          namecols=c('region','population_group'), novarname = TRUE)
-  #ElecAcc <- subset(ElecAcc, region != "dummy")
+  ElecAcc = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
+                            filename='res_Elec_access.out', varname=NULL, 
+                            collist=list(regions28,population_groups3), 
+                            namecols=c('region','population_group'), novarname = TRUE)
+  ElecAcc <- subset(ElecAcc, region != "dummy")
   #EU <- inner_join(filter(ElecAcc, region=='WEU'), filter(ElecAcc, region=='CEU'), by=c("year", "population_group"))
   #EU$region <- "EU"
   #EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, population_group, value)
-  #EU$region = factor(EU$region, levels=regions28_EU)
-  #ElecAcc <- rbind(ElecAcc, EU)
-  #ElecAcc$region = factor(ElecAcc$region,levels=regions28_EU)
-  #ElecAcc$unit <- "fraction"
+  EU_ElecAcc <- inner_join(filter(ElecAcc, region=='WEU'), filter(ElecAcc, region=='CEU'), by=c("year", "population_group"))
+  ElecProd_Total <- filter(ElecProd, energy_carrier=='Total') %>% select(year, region, value)
+  EU_ElecProd_Total <- inner_join(filter(ElecProd_Total, region=='WEU'), filter(ElecProd_Total, region=='CEU'), by=c("year"))
+  EU <- inner_join(EU_ElecAcc, EU_ElecProd_Total, by=c('year'))
+  EU$region <- "EU"
+  EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, population_group, value)
+  EU$region = factor(EU$region, levels=regions28_EU)
+  ElecAcc <- rbind(ElecAcc, EU)
+  ElecAcc$region = factor(ElecAcc$region,levels=regions28_EU)
+  ElecAcc$unit <- "%"
   
   #RSE
   FinalEnergy = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/indicatoren", sep=""), 
@@ -656,6 +663,7 @@ print(IMAGE_folder)
   EU <- mutate(EU, value=WEU+CEU)
   EU <- select(EU, year, region, travel_mode, value)
   TransportTravelCO2Emissions <- rbind(TransportTravelCO2Emissions, EU)
+  TransportTravelCO2Emissions$unit <- "MtCO2"
   
   # CO2 emissions freight
   TransportFreightCO2Emissions = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""), 
@@ -862,6 +870,56 @@ print(IMAGE_folder)
   VehicleShare_aircrafts$region = factor(VehicleShare_aircrafts$region,levels=regions28_EU)
   VehicleShare_aircrafts <- mutate(VehicleShare_aircrafts, unit="%")
   
+  # biofuels share for cars in existing fleet (in terms of personkilometers)
+  BiofuelShare_existing_cars = data.frame(matrix(ncol=0,nrow=0))
+  if (Policy==TRUE) {
+    try({
+      BiofuelShare_existing_cars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+                                                  filename='trp_trvl_cars_V_share_bio.dat', varname=NULL, 
+                                                  collist=list(regions26), 
+                                                  namecols=c('region'), novarname = TRUE)
+      BiofuelShare_existing_cars <- subset(BiofuelShare_existing_cars, region != "dummy")
+      EU_bio <- inner_join(filter(BiofuelShare_existing_cars, region=='WEU'), filter(BiofuelShare_existing_cars, region=='CEU'), by=c("year"))
+      PersonKilometers_cars <- filter(PersonKilometers, travel_mode=='Car') %>% select(year, region, value)
+      EU_pkm <- inner_join(filter(PersonKilometers_cars, region=='WEU'), filter(PersonKilometers_cars, region=='CEU'), by=c("year"))
+      EU <- inner_join(EU_bio, EU_pkm, by=c('year'))
+      EU$region <- "EU"
+      EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value)
+      EU$region = factor(EU$region, levels=regions28_EU)
+      BiofuelShare_existing_cars <- rbind(BiofuelShare_existing_cars, EU)
+      BiofuelShare_existing_cars$region = factor(BiofuelShare_existing_cars$region,levels=regions28_EU)
+      BiofuelShare_existing_cars <- mutate(BiofuelShare_existing_cars, unit="%")
+  }) # try
+  } # if
+  else {
+    BiofuelShare_existing_cars = data.frame(matrix(ncol=0,nrow=0))
+  }
+
+  # biofuels share for cars in new fleet (in terms of personkilometers)
+  BiofuelShare_new_cars = data.frame(matrix(ncol=0,nrow=0))
+  if (Policy==TRUE) {
+    try({
+      BiofuelShare_new_cars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+                                                   filename='trp_trvl_cars_V_share_new_bio.dat', varname=NULL, 
+                                                   collist=list(regions26), 
+                                                   namecols=c('region'), novarname = TRUE)
+      BiofuelShare_new_cars <- subset(BiofuelShare_new_cars, region != "dummy")
+      EU_bio <- inner_join(filter(BiofuelShare_new_cars, region=='WEU'), filter(BiofuelShare_new_cars, region=='CEU'), by=c("year"))
+      PersonKilometers_cars <- filter(PersonKilometers, travel_mode=='Car') %>% select(year, region, value)
+      EU_pkm <- inner_join(filter(PersonKilometers_cars, region=='WEU'), filter(PersonKilometers_cars, region=='CEU'), by=c("year"))
+      EU <- inner_join(EU_bio, EU_pkm, by=c('year'))
+      EU$region <- "EU"
+      EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value)
+      EU$region = factor(EU$region, levels=regions28_EU)
+      BiofuelShare_new_cars <- rbind(BiofuelShare_new_cars, EU)
+      BiofuelShare_new_cars$region = factor(BiofuelShare_new_cars$region,levels=regions28_EU)
+      BiofuelShare_new_cars <- mutate(BiofuelShare_new_cars, unit="%")
+    }) # try
+  } # if
+  else {
+    BiofuelShare_new_cars = data.frame(matrix(ncol=0,nrow=0))
+  }
+  
   # blending share biofuels for cars (in terms of personkilometers)
   BlendingShareBio_cars_pkm = data.frame(matrix(ncol=0,nrow=0))
   if (Policy==TRUE) {
@@ -886,7 +944,31 @@ print(IMAGE_folder)
   else {
     BlendingShareBio_cars_pkm = data.frame(matrix(ncol=0,nrow=0))
   }
- 
+
+  # blending share biofuels for new cars (in terms of personkilometers)
+  BlendingShareBio_new_cars_pkm = data.frame(matrix(ncol=0,nrow=0))
+  if (Policy==TRUE) {
+    try({
+      BlendingShareBio_new_cars_pkm = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+                                                  filename='trp_trvl_cars_V_Blending_share_new_bio_pkm.dat', varname=NULL, 
+                                                  collist=list(regions27), 
+                                                  namecols=c('region'), novarname = TRUE)
+      BlendingShareBio_new_cars_pkm <- subset(BlendingShareBio_new_cars_pkm, region != "dummy")
+      EU_bio <- inner_join(filter(BlendingShareBio_new_cars_pkm, region=='WEU'), filter(BlendingShareBio_new_cars_pkm, region=='CEU'), by=c("year"))
+      PersonKilometers_cars <- filter(PersonKilometers, travel_mode=='Car') %>% select(year, region, value)
+      EU_pkm <- inner_join(filter(PersonKilometers_cars, region=='WEU'), filter(PersonKilometers_cars, region=='CEU'), by=c("year"))
+      EU <- inner_join(EU_bio, EU_pkm, by=c('year'))
+      EU$region <- "EU"
+      EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value)
+      EU$region = factor(EU$region, levels=regions28_EU)
+      BlendingShareBio_new_cars_pkm <- rbind(BlendingShareBio_new_cars_pkm, EU)
+      BlendingShareBio_new_cars_pkm$region = factor(BlendingShareBio_new_cars_pkm$region,levels=regions28_EU)
+      BlendingShareBio_new_cars_pkm <- mutate(BlendingShareBio_new_cars_pkm, unit="%")
+    }) # try
+  } # if
+  else {
+    BlendingShareBio_new_cars_pkm = data.frame(matrix(ncol=0,nrow=0))
+  } 
    # transport fuel use per region, mode and energy carrier (secondary fuel use)
   FuelUseFleet_trvl = data.frame(matrix(ncol=0,nrow=0))
   FuelUseFleet_frgt = data.frame(matrix(ncol=0,nrow=0))
@@ -1123,6 +1205,32 @@ print(IMAGE_folder)
   else {
     EfficiencyFleet_new_cars = data.frame(matrix(ncol=0,nrow=0))
   }
+
+  # Efficiency total fleet for new cars (excl EV)
+  EfficiencyFleet_new_cars_exclEV = data.frame(matrix(ncol=0,nrow=0))
+  if (Policy==TRUE) {
+    try({
+      EfficiencyFleet_new_cars_exclEV = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
+                                                        filename='trp_trvl_cars_Eff_new_exclEV.dat', varname=NULL, 
+                                                        collist=list(regions27), 
+                                                        namecols=c('region'), novarname = TRUE)
+      EfficiencyFleet_new_cars_exclEV <- subset(EfficiencyFleet_new_cars_exclEV, region != "dummy")
+      EU_fleet <- inner_join(filter(EfficiencyFleet_new_cars_exclEV, region=='WEU'), filter(EfficiencyFleet_new_cars_exclEV, region=='CEU'), by=c("year"))
+      PersonKilometers_cars <- filter(PersonKilometers, travel_mode=='Car') %>% select(year, region, value)
+      # weight factor should be New person kilometers (excl EV), but as the share of new cars is constant and the same for each region, also PersonKilometers can be used
+      EU_pkm <- inner_join(filter(PersonKilometers_cars, region=='WEU'), filter(PersonKilometers_cars, region=='CEU'), by=c("year"))
+      EU <- inner_join(EU_fleet, EU_pkm, by=c('year'))
+      EU$region <- "EU"
+      EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value)
+      EU$region = factor(EU$region, levels=regions28_EU)
+      EfficiencyFleet_new_cars_exclEV <- rbind(EfficiencyFleet_new_cars_exclEV, EU)
+      EfficiencyFleet_new_cars_exclEV$region = factor(EfficiencyFleet_new_cars_exclEV$region,levels=regions28_EU)
+      EfficiencyFleet_new_cars_exclEV <- mutate(EfficiencyFleet_new_cars_exclEV, unit="MJ/pkm")
+    }) # try
+  } # if
+  else {
+    EfficiencyFleet_new_cars_exclEV = data.frame(matrix(ncol=0,nrow=0))
+  }
   
   # Efficiency total fleet for new busses
   EfficiencyFleet_new_busses = NULL
@@ -1248,6 +1356,24 @@ print(IMAGE_folder)
   else {
     EfficiencyFleet_new_HvyT = data.frame(matrix(ncol=0,nrow=0))
   }
+  
+  # Cost per km for cars
+  # CostPerPkm_car
+  CostPerKm_cars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/tuss", sep=""),   
+                                                 filename='trp_trvl_CostPerPkm_car.out', varname=NULL, 
+                                                 collist=list(regions26, car_type), 
+                                                 namecols=c('region', 'travel_type'), novarname = TRUE)
+  CostPerKm_cars <- subset(CostPerKm_cars, region != "dummy")
+  #EU_fleet <- inner_join(filter(CostPerKm_cars, region=='WEU'), filter(CostPerKm_cars, region=='CEU'), by=c("year"))
+  #PersonKilometers_cars <- filter(PersonKilometers, travel_mode=='Car', region != 'World') %>% select(year, region, value)
+  #EU_pkm <- inner_join(filter(PersonKilometers_cars, region=='WEU'), filter(PersonKilometers_cars, region=='CEU'), by=c("year"))
+  #EU <- inner_join(EU_fleet, EU_pkm, by=c('year'))
+  #U$region <- "EU"
+  #U <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value)
+  #U$region = factor(EU$region, levels=regions28_EU)
+  #CostPerKm_cars <- rbind(CostPerKm_cars, EU)
+  CostPerKm_cars$region = factor(CostPerKm_cars$region,levels=regions28_EU)
+  CostPerKm_cars <- mutate(CostPerKm_cars, unit="MJ/pkm")
   
   # energy tax cars
   EnergyTax_cars = data.frame(matrix(ncol=0,nrow=0))
@@ -1455,19 +1581,21 @@ print(IMAGE_folder)
             FinalEnergy_Transport=FinalEnergy_Transport, FinalEnergy_trvl_Transport=FinalEnergy_trvl_Transport, FinalEnergy_frgt_Transport=FinalEnergy_frgt_Transport, FinalEnergy_carrier_trvl_Transport=FinalEnergy_carrier_trvl_Transport,
             PersonKilometers=PersonKilometers, 
             VehicleShare_cars=VehicleShare_cars, VehicleShare_busses=VehicleShare_busses, VehicleShare_trains=VehicleShare_trains, VehicleShare_aircrafts=VehicleShare_aircrafts,
-            BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, FuelUseFleet_trvl=FuelUseFleet_trvl, FuelUseFleet_frgt=FuelUseFleet_frgt,
+            BiofuelShare_new_cars=BiofuelShare_new_cars, BiofuelShare_existing_cars=BiofuelShare_existing_cars,
+            BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, BlendingShareBio_new_cars_pkm=BlendingShareBio_new_cars_pkm, FuelUseFleet_trvl=FuelUseFleet_trvl, FuelUseFleet_frgt=FuelUseFleet_frgt,
             BlendingShareBio_energy=BlendingShareBio_energy, ElectricShare_new_cars=ElectricShare_new_cars, 
             EfficiencyTravel=EfficiencyTravel, EfficiencyFreight=EfficiencyFreight,
-            EfficiencyFleet_new_cars=EfficiencyFleet_new_cars, EfficiencyFleet_cars=EfficiencyFleet_cars, EfficiencyFleet_cars_old=EfficiencyFleet_cars_old,
+            EfficiencyFleet_new_cars=EfficiencyFleet_new_cars, EfficiencyFleet_new_cars_exclEV=EfficiencyFleet_new_cars_exclEV, EfficiencyFleet_cars=EfficiencyFleet_cars, EfficiencyFleet_cars_old=EfficiencyFleet_cars_old,
             EfficiencyFleet_new_MedT=EfficiencyFleet_new_MedT, 
             EfficiencyFleet_new_HvyT=EfficiencyFleet_new_HvyT, EfficiencyFleet_HvyT=EfficiencyFleet_HvyT, EfficiencyFleet_HvyT_old=EfficiencyFleet_HvyT_old,
             EfficiencyFleet_new_busses=EfficiencyFleet_new_busses, 
+            CostPerKm_cars=CostPerKm_cars,
             # other
             CarbonCaptured=CarbonCaptured,
             EnergyTax_HvyT=EnergyTax_HvyT, EnergyTax_cars=EnergyTax_cars,
             Factor_HvyT=Factor_HvyT, Factor_cars=Factor_cars,
             # SDG
-            #ElecAcc=ElecAcc,
+            ElecAcc=ElecAcc,
             # drivers
             TPES=TPES,
             POP=POP, GDP_MER=GDP_MER, GDP_PPP=GDP_PPP, IVA=IVA, 
