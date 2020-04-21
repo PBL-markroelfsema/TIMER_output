@@ -369,7 +369,7 @@ EMIS_AFOLU <- mutate(EMIS_AFOLU, unit="MtCO2eq")   %>% as.data.frame()
 EMISCO2  <- bind_rows(ENEMISCO2_TOT,INDEMISCO2_TOT,LUEMCO2_TOT)
 EMISCO2$main_sector <- factor(EMISCO2$main_sector, levels=main_sector)
 EMISCO2 <- select(EMISCO2, year, region, main_sector, value)
-EMISCO2 <- EMISCO2 %>% filter(main_sector=='Total') %>% group_by(year, region, main_sector) %>% summarise(value=sum(value))   %>% as.data.frame()
+EMISCO2 <- EMISCO2 %>% filter(main_sector=='Total') %>% group_by(year, region, main_sector) %>% summarise(value=sum(value)) %>% as.data.frame()
 #EMISCO2_tmp <- mutate(EMISCO2_tmp, GHG_Category="EMISCO2")
 #EMISCO2_tmp <- mutate(EMISCO2_tmp, main_sector='Total')
 #EMISCO2_tmp$main_sector <- factor(EMISCO2_tmp$main_sector, levels=main_sector)
@@ -615,7 +615,7 @@ Elec_Kwh <- filter(Scenario$ElecProd, energy_carrier=="Total")  %>% as.data.fram
 Elec_Kwh$value <- (2.777778*10^8)*Elec_Kwh$value
 Elec_Kwh <- select(Elec_Kwh, year, region, value)  %>% as.data.frame()
 CO2_KWh <- inner_join(CO2_elec, Elec_Kwh, by=c("year", "region"))
-CO2_KWh <- mutate(CO2_KWh, value=value.x/value.y)
+CO2_KWh <- mutate(CO2_KWh, value=value.x/value.y) %>% select(-value.x, -value.y)
 CO2_KWh <- mutate(CO2_KWh, unit="gCO2/Kwh")  %>% as.data.frame()
 
 ElecProd_coal <- filter(Scenario$ElecProdSpec, energy_carrier=="Conv. Coal") %>% select(-energy_carrier)
@@ -918,6 +918,25 @@ RenResBuildingsShare <- RenResBuildingsShare %>% mutate(value=(0.01*value.x*valu
 RenResBuildingsShare$value <- 100*RenResBuildingsShare$value
 RenResBuildingsShare <- mutate(RenResBuildingsShare, unit= "%") %>% as.data.frame()
 
+FinalEnergyBuildings <- filter(Scenario$FinalEnergy, sector%in%c("Residential", "Service")) %>%
+                        spread(key=sector, value=value) %>%
+                        mutate(Buildings=`Residential`+`Service`) %>%
+                        gather(Residential, Service, Buildings, key="sector", value="value")
+tmp <- filter(FinalEnergyBuildings, sector%in%c("Residential", "Service", "Buildings"), energy_carrier%in%c("Electricity", "Secondary", "Total")) %>%
+       spread(key=energy_carrier, value=value) %>%
+       mutate(value=`Total`-`Electricity`-`Secondary`) %>%
+       select(-Electricity, -Secondary, -Total) %>%
+       mutate(energy_carrier="Total")
+FinalEnergy_Buildings_excl_scope2 <- filter(FinalEnergyBuildings, sector%in%c("Residential", "Service", "Buildings"), !(energy_carrier%in%c("Electricity", "Secondary", "Total")))
+FinalEnergy_Buildings_excl_scope2 <- rbind(FinalEnergy_Buildings_excl_scope2, tmp)
+RenBuildingsShare_excl_elec <- filter(FinalEnergy_Buildings_excl_scope2, energy_carrier%in%c("Modern biofuels", "Total")) %>% 
+                               spread(key=energy_carrier, value=value) %>% 
+                               mutate(value=100*`Modern biofuels`/`Total`, unit="%") %>% 
+                               select(-`Modern biofuels`, -`Total`)
+#RenResBuildingsShare_excl_elec <- filter(Scenario$FinalEnergy_Residential_energy_carrier,energy_carrier%in%c("Modern biofuels", "Total")) %>% 
+#                                         spread(key=energy_carrier, value=value) %>% 
+#                                         mutate(value=100*`Modern biofuels`/`Total`, unit="%") %>% 
+#                                         select(-`Modern biofuels`, -`Total`)
 
 # non-fossil residential share
 NonFossil_share_residential_buildings <- rbind(mutate(NonFossilElecShare, population_group=population_groups[1])) %>% #total
@@ -987,28 +1006,29 @@ RenTransportShare = data.frame(matrix(ncol=0,nrow=0))
 RenTransportShare_trvl = data.frame(matrix(ncol=0,nrow=0))
 RenTransportShare_frgt = data.frame(matrix(ncol=0,nrow=0))
 RenTransportShare_cars = data.frame(matrix(ncol=0,nrow=0))
+RenTransportShare_excl_elec = data.frame(matrix(ncol=0,nrow=0))
 NonFossilTransportShare = data.frame(matrix(ncol=0,nrow=0))
 if (Policy==TRUE) {
 try({
 elec_share_transport_travel <- rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[1])) %>% #walking
-                          rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[2])) %>% #biking
-                          rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[3])) %>% #Bus
-                          rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[4])) %>% #Train
-                          rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[5])) %>% #Car
-                          rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[6])) %>% #High speed train
-                          rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[7])) %>% #Air
-                          rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[8]))     #Total travel
+                               rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[2])) %>% #biking
+                               rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[3])) %>% #Bus
+                               rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[4])) %>% #Train
+                               rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[5])) %>% #Car
+                               rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[6])) %>% #High speed train
+                                rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[7])) %>% #Air
+                               rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[8]))     #Total travel
 elec_share_transport_travel <- mutate(elec_share_transport_travel, type="Travel")
 elec_share_transport_freight <- rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[1])) %>% #inland shipping
-                           rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[2])) %>% #freight train
-                           rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[3])) %>% #medium truck
-                           rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[4])) %>% #heavy truck
-                           rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[5])) %>% #air cargo
-                           rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[6])) %>% #international shipping
-                           rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[7])) %>% #-
-                           rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[8])) #Total freight
+                                rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[2])) %>% #freight train
+                                rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[3])) %>% #medium truck
+                                rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[4])) %>% #heavy truck
+                                rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[5])) %>% #air cargo
+                                rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[6])) %>% #international shipping
+                                rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[7])) %>% #-
+                                rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[8])) #Total freight
 elec_share_transport_freight <- mutate(elec_share_transport_freight, type="Freight")
-elec_share_transport_total <- rbind(mutate(RenElecShare, travel_mode="Total"))
+elec_share_transport_total <- mutate(RenElecShare, travel_mode="Total")
 elec_share_transport_total <- mutate(elec_share_transport_total, type="Total")
 elec_share_transport <- rbind(elec_share_transport_travel, elec_share_transport_freight) %>% rbind(elec_share_transport_total)
 elec_share_transport <- select(elec_share_transport, year, region, travel_mode, type, value)
@@ -1041,6 +1061,17 @@ RenTransportShare_trvl <- filter(RenTransportShare, travel_mode=="Total", type==
 RenTransportShare_frgt <- filter(RenTransportShare,  travel_mode=="Total", type=="Freight") %>% select(-type)
 RenTransportShare_cars <- filter(RenTransportShare, travel_mode=="Car") %>% select(year, region, value, unit)  %>% as.data.frame()
 
+tmp <- filter(Scenario$FinalEnergy, sector=="Transport", energy_carrier%in%c("Electricity", "Secondary", "Total")) %>%
+       spread(key=energy_carrier, value=value) %>%
+       mutate(value=`Total`-`Electricity`-`Secondary`) %>%
+       select(-Electricity, -Secondary, -Total) %>%
+       mutate(energy_carrier="Total")
+FinalEnergy_Transport_excl_scope2 <- filter(Scenario$FinalEnergy, sector=="Transport", !(energy_carrier%in%c("Electricity", "Secondary", "Total")))
+FinalEnergy_Transport_excl_scope2 <- rbind(FinalEnergy_Transport_excl_scope2, tmp)
+RenTransportShare_excl_elec <- filter(FinalEnergy_Transport_excl_scope2, energy_carrier%in%c("Modern biofuels", "Total")) %>% 
+                               spread(key=energy_carrier, value=value) %>% 
+                               mutate(value=100*`Modern biofuels`/`Total`, unit="%") %>% 
+                               select(-`Modern biofuels`, -`Total`)
 # Non-fossil share
 NonFossil_share_transport_travel <- rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_travel[1])) %>% #walking
   rbind(mutate(NonFossilElecShare, travel_mode=travel_mode_travel[2])) %>% #biking
@@ -1083,19 +1114,126 @@ else {RenTransportShare = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_trvl = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_frgt = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_cars = data.frame(matrix(ncol=0,nrow=0))
+      RenTransportShare_excl_elec = data.frame(matrix(ncol=0,nrow=0))
       NonFossilTransportShare = data.frame(matrix(ncol=0,nrow=0))
+}
+
+
+# renewable share in ROAD transport
+RenTransportShare_Road = data.frame(matrix(ncol=0,nrow=0))
+RenTransportShare_Road_trvl = data.frame(matrix(ncol=0,nrow=0))
+RenTransportShare_Road_frgt = data.frame(matrix(ncol=0,nrow=0))
+RenTransportShare_Road_excl_elec = data.frame(matrix(ncol=0,nrow=0))
+if (Policy==TRUE) {
+  try({
+    elec_share_transport_travel <- rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[3])) %>% #Bus
+      rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[5])) #%>% #Car
+    tmp <- group_by(elec_share_transport_travel, year, region, unit) %>%
+           summarise(value=sum(value)) %>%
+           mutate(travel_mode="Total") %>% as.data.frame()
+    elec_share_transport_travel <- rbind(elec_share_transport_travel, tmp) 
+    elec_share_transport_travel <- mutate(elec_share_transport_travel, type="Travel")
+    elec_share_transport_freight <- rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[3])) %>% #medium truck
+      rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[4])) #heavy truck
+    tmp <- group_by(elec_share_transport_freight, year, region, unit) %>%
+           summarise(value=sum(value)) %>%
+           mutate(travel_mode="Total") %>% as.data.frame()
+    elec_share_transport_freight <- rbind(elec_share_transport_freight, tmp) 
+    elec_share_transport_freight <- mutate(elec_share_transport_freight, type="Freight")
+    elec_share_transport_total <- mutate(RenElecShare, travel_mode="Total")
+    elec_share_transport_total <- mutate(elec_share_transport_total, type="Total")
+    elec_share_transport <- rbind(elec_share_transport_travel, elec_share_transport_freight) %>% rbind(elec_share_transport_total)
+    elec_share_transport <- select(elec_share_transport, year, region, travel_mode, type, value)
+    elec_share_transport$travel_mode = factor(elec_share_transport$travel_mode, levels=travel_mode)
+    FuelUse_transport_trvl_tmp <- mutate(Scenario$FuelUseFleet_trvl, type="Travel")
+    FuelUse_transport_frgt_tmp <- mutate(Scenario$FuelUseFleet_frgt, type= "Freight")
+    FuelUse_transport <- rbind(FuelUse_transport_trvl_tmp, FuelUse_transport_frgt_tmp)
+    FuelUse_transport <- as.data.frame(FuelUse_transport)
+    FuelUse_transport_total <- filter(FuelUse_transport, travel_mode=="Total") %>% group_by(year, region, travel_mode, energy_carrier, unit) %>% summarize(value=sum(value))
+    FuelUse_transport_total <- mutate(FuelUse_transport_total, type="Total") %>% select(year, region, travel_mode, energy_carrier, value, unit, type)
+    FuelUse_transport_total <- as.data.frame(FuelUse_transport_total)
+    FuelUse_transport <- rbind(FuelUse_transport, FuelUse_transport_total)
+    fuel_transport_bio <- filter(FuelUse_transport, energy_carrier == "Modern biofuel")
+    fuel_transport_bio <- select(fuel_transport_bio, year, region, travel_mode, type, value)
+    fuel_transport_elec <- filter(FuelUse_transport, energy_carrier == "Electricity")
+    fuel_transport_elec <- select(fuel_transport_elec, year, region, travel_mode, type, value)
+    fuel_transport_total <- filter(FuelUse_transport, energy_carrier == "Total")
+    fuel_transport_total <- select(fuel_transport_total, year, region, travel_mode, type, value)
+    fuel_transport_elec$travel_mode <- factor(fuel_transport_elec$travel_mode, levels=travel_mode)
+    fuel_transport_bio$travel_mode <- factor(fuel_transport_bio$travel_mode, levels=travel_mode)
+    fuel_transport_total$travel_mode <- factor(fuel_transport_total$travel_mode, levels=travel_mode)
+    RenTransportShare_Road <- inner_join(elec_share_transport, fuel_transport_elec, by=c('year', 'region', 'travel_mode', 'type')) %>%
+      inner_join(fuel_transport_bio, by=c('year', 'region', 'travel_mode','type')) %>%
+      inner_join(fuel_transport_total, by=c('year', 'region', 'travel_mode', 'type'))
+    # x=%-REN electricity, y=electricity fuel use, x.x = bio fuel use, y.y = total fuel use
+    RenTransportShare_Road <- RenTransportShare_Road %>% mutate(value=(0.01*value.x*value.y+value.x.x)/value.y.y) %>% select(year, region, value, travel_mode, type)
+    RenTransportShare_Road$value <- 100*RenTransportShare_Road$value
+    RenTransportShare_Road <- mutate(RenTransportShare_Road, unit= "%")
+    RenTransportShare_Road_trvl <- filter(RenTransportShare_Road, travel_mode=="Total", type=="Travel") %>% select(-type, -travel_mode)
+    RenTransportShare_Road_frgt <- filter(RenTransportShare_Road,  travel_mode=="Total", type=="Freight") %>% select(-type, -travel_mode)
+    
+    tmp <- filter(Scenario$FinalEnergy, sector=="Transport", energy_carrier%in%c("Electricity", "Secondary", "Total")) %>%
+      spread(key=energy_carrier, value=value) %>%
+      mutate(value=`Total`-`Electricity`-`Secondary`) %>%
+      select(-Electricity, -Secondary, -Total) %>%
+      mutate(energy_carrier="Total")
+    FinalEnergy_Transport_excl_scope2 <- filter(Scenario$FinalEnergy, sector=="Transport", !(energy_carrier%in%c("Electricity", "Secondary", "Total")))
+    FinalEnergy_Transport_excl_scope2 <- rbind(FinalEnergy_Transport_excl_scope2, tmp)
+    RenTransportShare_Road_excl_elec <- filter(FinalEnergy_Transport_excl_scope2, energy_carrier%in%c("Modern biofuels", "Total")) %>% 
+      spread(key=energy_carrier, value=value) %>% 
+      mutate(value=100*`Modern biofuels`/`Total`, unit="%") %>% 
+      select(-`Modern biofuels`, -`Total`)
+  }) # try
+} # if
+else {RenTransportShare_Road = data.frame(matrix(ncol=0,nrow=0))
+RenTransportShare_Road_trvl = data.frame(matrix(ncol=0,nrow=0))
+RenTransportShare_Road_frgt = data.frame(matrix(ncol=0,nrow=0))
+RenTransportShare_Road_excl_elec = data.frame(matrix(ncol=0,nrow=0))
 }
 
 # Blending share for cars
 BlendingShareBio_cars_energy = data.frame(matrix(ncol=0,nrow=0))
 if (Policy==TRUE) {
-  try({BlendingShareBio_cars_energy <- filter(Scenario$BlendingShareBio_energy, travel_mode=="Car") %>% select(year, region, value, unit)  %>% as.data.frame()
+  try({BlendingShareBio_cars_energy <- filter(Scenario$BlendingShareBio_energy_trvl, travel_mode=="Car") %>% select(year, region, value, unit)  %>% as.data.frame()
 }) # try
 } # if
 else {
   BlendingShareBio_cars_energy = data.frame(matrix(ncol=0,nrow=0))
   }
-  
+
+# Calculate blending share based on fuel use
+# Solid fuel, Liquid fuel, Gaseous fuel, Hydrogen, 	Modern biofuel, Secondary Heat, Tradtional biofuel, Electricity, Total
+fueluse_trvl_road <- filter(Scenario$FuelUseFleet_trvl, travel_mode%in%c('Car', 'Bus')) %>%
+                     group_by(year, region, energy_carrier, unit) %>%
+                     summarise(value=sum(value)) %>%
+                     mutate(travel_mode='Road') %>% as.data.frame()
+fueluse_trvl <- rbind(Scenario$FuelUseFleet_trvl, fueluse_trvl_road)
+BlendingShareBio_energy_trvl_alt <- filter(fueluse_trvl, energy_carrier%in%c('Liquid fuel', 'Modern biofuel')) %>%
+                                    spread(key=energy_carrier, value=value) %>%
+                                    mutate(value=`Modern biofuel`/(`Modern biofuel`+`Liquid fuel`)) %>%
+                                    select(-`Modern biofuel`,-`Liquid fuel`) %>%
+                                    mutate(unit="%") %>% as.data.frame()
+fueluse_frgt_road <- filter(Scenario$FuelUseFleet_frgt, travel_mode%in%c('Medium truck', 'Heavy truck')) %>%
+                     group_by(year, region, energy_carrier, unit) %>%
+                     summarise(value=sum(value)) %>%
+                     mutate(travel_mode='Road') %>% as.data.frame()
+fueluse_frgt <- rbind(Scenario$FuelUseFleet_frgt, fueluse_frgt_road)
+BlendingShareBio_energy_frgt_alt <- filter(fueluse_frgt, energy_carrier%in%c('Liquid fuel', 'Modern biofuel')) %>%
+                                    spread(key=energy_carrier, value=value) %>%
+                                    mutate(value=`Modern biofuel`/(`Modern biofuel`+`Liquid fuel`)) %>%
+                                    select(-`Modern biofuel`,-`Liquid fuel`) %>%
+                                    mutate(unit="%") %>% as.data.frame()
+tmp1 <- filter(fueluse_trvl, travel_mode%in%c('Road', 'Total')) %>% mutate(type="travel")
+tmp2 <- filter(fueluse_frgt, travel_mode%in%c('Road', 'Total')) %>% mutate(type="freight")
+BlendingShareBio_energy_alt <- rbind(tmp1, tmp2) %>% 
+                               group_by(year, region, energy_carrier, travel_mode, unit) %>%
+                               summarise(value=sum(value)) %>%
+                               filter(energy_carrier%in%c('Liquid fuel', 'Modern biofuel')) %>%
+                               spread(key=energy_carrier, value=value) %>%
+                               mutate(value=`Modern biofuel`/(`Modern biofuel`+`Liquid fuel`)) %>%
+                               select(-`Modern biofuel`,-`Liquid fuel`) %>%
+                               mutate(unit="%") %>% as.data.frame()
+
 # Reduction cars relative to 2021 (EU transport target)
 # 1. relative to 2025
 CO2_cars_2021_2025 = filter(CO2_cars, year==2021)
@@ -1132,13 +1270,90 @@ TransportTravelCO2Emissions_inclElec <- NULL
 #TransportTravelCO2Emissions_inclElec = inner_join(TransportTravelCO2Emissions, TransportTravelCO2Emissions_inclElec, by=c('year', 'region', 'travel_mode'))
 #})
 
-# Emissions from road transport
-RoadTransport_CO2 <- filter(Scenario$TransportTravelCO2Emissions, !travel_mode %in% c('air')) %>% 
+# Emissions from road travel_transport
+RoadTravelTransport_CO2 <- filter(Scenario$TransportTravelCO2Emissions, travel_mode %in% c('Bus', 'Car')) %>% 
+                           group_by(year, region, unit) %>%
+                           summarise(value=sum(value)) %>%
+                           select(year, region, value, unit) %>%
+                           as.data.frame
+RoadFreightTransport_CO2 <- filter(Scenario$TransportFreightCO2Emissions, travel_mode %in% c('Medium truck', 'Heavy truck')) %>% 
+                            group_by(year, region, unit) %>%
+                            summarise(value=sum(value)) %>%
+                            select(year, region, value, unit) %>%
+                            as.data.frame
+
+RoadTravelTransport_CO2_tmp <- mutate(RoadTravelTransport_CO2, type="travel")
+RoadFreightTransport_CO2_tmp <- mutate(RoadFreightTransport_CO2, type="freight")
+RoadTransport_CO2 <- rbind(RoadTravelTransport_CO2_tmp, RoadFreightTransport_CO2_tmp) %>%
                      group_by(year, region, unit) %>%
                      summarise(value=sum(value)) %>%
                      select(year, region, value, unit) %>%
                      as.data.frame
-    
+
+# co2 intensity new fleet new cars
+load_cars              = 1.600 # persons
+co2_intensity_gasoline = 2.354 # gCO2/l
+co2_intensity_diesel   = 2.681   #CO2/l
+weight_gasoline	       = 0.43
+load_cars              = 1.600 # persons
+co2_intensity_fuel = 	co2_intensity_gasoline*weight_gasoline + co2_intensity_diesel*(1-weight_gasoline) # gCO2/l
+energy_intensity_fuel  =	34.841 # MJ/l
+
+# assumption: new fleet consists of fossil-fueled cars and electric cars
+# 1. first collect co2 intensities for fuels and electricity
+# 2. combine car efficiency (MJ/pkm) and co2-intensities
+# 3. calculate gCO2/km for the new car fleet
+Eff_fleet_new_cars <- rbind(mutate(Scenario$EfficiencyFleet_new_cars_exclEV, carrier="fuel"), mutate(Scenario$EfficiencyFleet_new_cars_EV, carrier="electricity"))
+# 1. calculate co2 intensity of fossil-fueled and electric cars
+CO2_intensity_elec <- CO2_KWh %>% mutate(carrier="electricity")%>%
+              mutate(value=replace(value, year>=1971, (1/3.6)*value)) %>%
+              mutate(unit=replace(unit, year>=1971, "gCO2/MJ"))
+CO2_intensity_fuel <- CO2_KWh %>% mutate(value=replace(value, year>=1971, value=co2_intensity_fuel)) %>%
+              mutate(carrier="fuel") %>%
+              mutate(unit=replace(unit, year>=1971, "gCO2/l"))
+CO2_intensity_cars_carrier <- rbind(CO2_intensity_elec, CO2_intensity_fuel)
+# combine co2 intensities
+tmp1 <- inner_join(Eff_fleet_new_cars, CO2_intensity_cars_carrier, by=c('year', 'region', 'carrier'))
+tmp2 <- inner_join(tmp1, Share_cars, by=c('year', 'region', 'carrier'))
+# value.x=efficiency (MJ/pkm), value.y=co2 intensity (gCO2/l for fuel, gCO2/MJ for electric), value=share of fuel or electric in total fleet)
+CO2_intensity_fleet_new_cars <- mutate(tmp2, gCO2_km = ifelse(carrier=="fuel", 
+                                                              10^3*value.y*value.x*load_cars/energy_intensity_fuel,
+                                                              value.x*value.y*load_cars))
+# 2. combine to calcualted new fleet CO2 intensity
+tmp1 <- inner_join(Eff_fleet_new_cars, CO2_intensity_cars_carrier, by=c('year', 'region', 'carrier'))
+tmp2 <- inner_join(tmp1, Share_cars, by=c('year', 'region', 'carrier'))
+# value.x=efficiency (MJ/pkm), value.y=co2 intensity (gCO2/l for fuel, gCO2/MJ for electric), value=share of fuel or electric in total fleet)
+# 3. calculate gCO2/km for the new car flee
+CO2_intensity_fleet_new_cars_tmp <- mutate(tmp2, gCO2_km = ifelse(carrier=="fuel", 
+                                                              10^3*value.y*value.x*load_cars/energy_intensity_fuel,
+                                                              value.x*value.y*load_cars),
+                                                              unit="gCO2/km") %>%
+                                    select(-value.x, -value.y, -value, -unit.x, -unit.y) %>%
+                                    spread(key=carrier, value=gCO2_km) %>% 
+                                    rename(gCO2_km_fuel=fuel, gCO2_km_elec=electricity)
+CO2_intensity_fleet_new_cars <- inner_join(Scenario$ElectricShare_new_cars, CO2_intensity_fleet_new_cars_tmp, by=c('year', 'region')) %>%
+                                mutate(value=(1-value)*gCO2_km_fuel+value*gCO2_km_elec) %>%
+                                select(-unit.x) %>% rename(unit=unit.y, total=value, electricity=gCO2_km_elec, fuel=gCO2_km_fuel)
+CO2_intensity_fleet_new_cars <- gather(CO2_intensity_fleet_new_cars, `fuel`, `electricity`, `total`, key=carrier, value=value)
+CO2_intensity_fleet_new_cars_total <- filter(CO2_intensity_fleet_new_cars, carrier=="total") %>% select(-carrier)
+
+# co2 intensity for tailpipe emissions --> emissions electricity are zero
+CO2_intensity_fleet_new_cars_tmp <- mutate(CO2_intensity_fleet_new_cars_tmp, gCO2_km_elec=replace(gCO2_km_elec, year>=1971,0))
+CO2_intensity_fleet_new_cars_tailpipe <- inner_join(Scenario$ElectricShare_new_cars, CO2_intensity_fleet_new_cars_tmp, by=c('year', 'region')) %>%
+                                         mutate(value=(1-value)*gCO2_km_fuel+value*gCO2_km_elec) %>%
+                                         select(-unit.x) %>% rename(unit=unit.y, total=value, electricity=gCO2_km_elec, fuel=gCO2_km_fuel)
+CO2_intensity_fleet_new_cars_tailpipe <- gather(CO2_intensity_fleet_new_cars_tailpipe, `fuel`, `electricity`, `total`, key=carrier, value=value)
+CO2_intensity_fleet_new_cars_tailpipe_total <- filter(CO2_intensity_fleet_new_cars, carrier=="total") %>% select(-carrier)
+
+# co2 intensity new fleet new heavy trucks
+# as the heavy truck fleet in TIMER currently does not show any electric cars, the below calculations are simplified. 
+load_heavy_trucks =	10.88621688 # Tonnes
+MetricTons_Tonnes = 0.90718474
+Eff_fleet_new_HvyT <- Scenario$EfficiencyFleet_new_HvyT
+CO2_intensity_fleet_new_HvyT_tailpipe <- mutate(Eff_fleet_new_HvyT, co2_intens=10^3*co2_intensity_diesel*load_heavy_trucks*value/(MetricTons_Tonnes*energy_intensity_fuel)) #%>%
+                                         #select(-value) %>% rename(value=co2_intens)
+CO2_intensity_fleet_new_HvyT_tailpipe_total <- CO2_intensity_fleet_new_HvyT_tailpipe
+
 # Industry ----------------------------------------------------------------
 cat(sprintf("Industry sector: \n"))
 
@@ -1169,6 +1384,19 @@ Industry_Emis_IVA <- rbind(data.table(Industry_Emis), data.table(Industry_IVA_tm
 Industry_Emis_IVA <- spread(Industry_Emis_IVA, key=v, value=value)
 Industry_Emis_IVA <- mutate(Industry_Emis_IVA, value=emis/IVA) %>% select(year, region, value)
 Industry_Emis_IVA <- mutate(Industry_Emis_IVA, unit="MtCO2/million US$(2005)") %>% as.data.frame()
+
+# Renewable share excl electricity
+tmp <- filter(Scenario$FinalEnergy, sector=="Industry", energy_carrier%in%c("Electricity", "Secondary", "Total")) %>%
+       spread(key=energy_carrier, value=value) %>%
+       mutate(value=`Total`-`Electricity`-`Secondary`) %>%
+       select(-Electricity, -Secondary, -Total) %>%
+       mutate(energy_carrier="Total")
+FinalEnergy_Industry_excl_scope2 <- filter(Scenario$FinalEnergy, sector=="Industry", !(energy_carrier%in%c("Electricity", "Secondary", "Total")))
+FinalEnergy_Industry_excl_scope2 <- rbind(FinalEnergy_Industry_excl_scope2, tmp)
+RenIndustryShare_excl_elec <- filter(FinalEnergy_Industry_excl_scope2, energy_carrier%in%c("Modern biofuels", "Total")) %>% 
+                               spread(key=energy_carrier, value=value) %>% 
+                               mutate(value=100*`Modern biofuels`/`Total`, unit="%") %>% 
+                               select(-`Modern biofuels`, -`Total`)
 
 # IMAGE
 cat(sprintf("AFOLU sector: \n"))
@@ -1208,21 +1436,29 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           CarbonCaptured_total=CarbonCaptured_total,
           PowerSupply_consumption=PowerSupply_consumption,
           # industry
-          FinalEnergy_industry=FinalEnergy_industry,
+          FinalEnergy_industry=FinalEnergy_industry, RenIndustryShare_excl_elec=RenIndustryShare_excl_elec,
           Industry_Efficiency = Industry_Efficiency, FGas_Reduction_index = FGas_Reduction_index, Industry_Energy_IVA=Industry_Energy_IVA,Industry_Emis_IVA=Industry_Emis_IVA,
+          FinalEnergy_Industry_excl_scope2=FinalEnergy_Industry_excl_scope2, 
           # buildings
           Residential_Efficiency_capita=Residential_Efficiency_capita, Residential_FinalEnergy_m2=Residential_FinalEnergy_m2,
           Appliances_FinalEnergy_capita=Appliances_FinalEnergy_capita,Appliances_finalEnergy_m2=Appliances_finalEnergy_m2,
           FinalEnergy_Residential_total=FinalEnergy_Residential_total, FinalEnergy_Residential_appliances=FinalEnergy_Residential_appliances,
-          RenResBuildingsShare=RenResBuildingsShare, NonFossilResBuildingsShare=NonFossilResBuildingsShare,
+          RenResBuildingsShare=RenResBuildingsShare, NonFossilResBuildingsShare=NonFossilResBuildingsShare, RenBuildingsShare_excl_elec=RenBuildingsShare_excl_elec,
           # transport
           CO2_km_cars=CO2_km_cars, CO2_cars=CO2_cars, CO2_MedT=CO2_MedT, CO2_HvyT=CO2_HvyT,
-          FuelUse_pkm_cars=FuelUse_pkm_cars, ElectricCars_share=ElectricCars_share, 
+          FuelUse_pkm_cars=FuelUse_pkm_cars, FuelUse_transport=FuelUse_transport, 
+          ElectricCars_share=ElectricCars_share, 
           RenTransportShare_trvl=RenTransportShare_trvl, RenTransportShare_frgt=RenTransportShare_frgt, RenTransportShare=RenTransportShare, RenTransportShare_cars=RenTransportShare_cars,
-          NonFossilTransportShare=NonFossilTransportShare,
+          NonFossilTransportShare=NonFossilTransportShare, RenTransportShare_excl_elec=RenTransportShare_excl_elec,
+          RenTransportShare_Road_trvl=RenTransportShare_Road_trvl, RenTransportShare_Road_frgt=RenTransportShare_Road_frgt, RenTransportShare_Road=RenTransportShare_Road,
+          RenTransportShare_Road_excl_elec=RenTransportShare_Road_excl_elec,
           BlendingShareBio_cars_energy=BlendingShareBio_cars_energy,
+          BlendingShareBio_energy_trvl_alt=BlendingShareBio_energy_trvl_alt, BlendingShareBio_energy_frgt_alt=BlendingShareBio_energy_frgt_alt, BlendingShareBio_energy_alt=BlendingShareBio_energy_alt,
           CO2_cars_2021_2030_Reduction_index=CO2_cars_2021_2030_Reduction_index, CO2_cars_2021_2025_Reduction_index=CO2_cars_2021_2025_Reduction_index,
-          RoadTransport_CO2=RoadTransport_CO2,
+          RoadTravelTransport_CO2=RoadTravelTransport_CO2,  RoadFreightTransport_CO2=RoadFreightTransport_CO2, RoadTransport_CO2=RoadTransport_CO2,
+          CO2_intensity_fleet_new_cars=CO2_intensity_fleet_new_cars,CO2_intensity_fleet_new_cars_total=CO2_intensity_fleet_new_cars_total,
+          CO2_intensity_fleet_new_cars_tailpipe=CO2_intensity_fleet_new_cars_tailpipe, CO2_intensity_fleet_new_cars_tailpipe_total=CO2_intensity_fleet_new_cars_tailpipe_total,
+          CO2_intensity_fleet_new_HvyT_tailpipe=CO2_intensity_fleet_new_HvyT_tailpipe, CO2_intensity_fleet_new_HvyT_tailpipe_total=CO2_intensity_fleet_new_HvyT_tailpipe_total,
           #TransportCO2Emissions_Elec=TransportCO2Emissions_Elec,
           # SDG
           ElecAccTot=ElecAccTot,

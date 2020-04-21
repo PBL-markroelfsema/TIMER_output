@@ -1,5 +1,16 @@
 
 # Only works if Variable_graph is from Process_TIMER_output.R and has structure: year, region, value, unit
+# Scenario_i1: list from ProcessTimerScenario with structure {year, region, value, unit}
+# Scenario_i2: ProcessTimerScenario
+# Variable_graph
+# Region_graph
+# StartYear
+#
+#
+#
+#
+#
+
 PlotGraph_ScenarioComparison <- function(Scenario_i1, Scenario_i2, Variable_graph, Region_graph, StartYear, EndYear, Rundir, Project, TIMERGeneration)
 { library(tidyverse)
   library(dplyr)
@@ -41,9 +52,9 @@ PlotGraph_ScenarioComparison <- function(Scenario_i1, Scenario_i2, Variable_grap
       ylab(unique(scen_data$unit)[1]) +
       ggtitle(paste0(Variable_graph, " in ", Region_graph)) +
       theme_bw()
-    plot(g) 
+    #plot(g) 
     
-    PlotGraph_ScenarioComparison <- change
+    PlotGraph_ScenarioComparison <- g
   } # if
   else # as.character(Read_CD_LINKS[i,3]) %in% names(NoPolicy))
   {  change <- 0

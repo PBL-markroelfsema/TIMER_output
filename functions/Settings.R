@@ -41,8 +41,14 @@ GWP_SF6 <- 22800
 MtoeToTJ=41868
 GWhToTJ=3.6
 
-MJ_l_gasoline = 34.8 #MJ/l
-Load_car = 1.6 #persons
+MJ_l_gasoline = 34.8           # MJ/l
+Load_car = 1.6                 # persons
+energy_intensity_fuel =	34.841 # MJ/l
+co2_intensity_gasoline =	2.4  # gCO2/l
+co2_intensity_diesel =	2.7    # gCO2/l
+weight_gasoline	= 0.43
+co2_intensity_fuel = 	co2_intensity_gasoline*weight_gasoline + co2_intensity_diesel*(1-weight_gasoline) # gCO2/l
+
 
 # labels for TIMER output tables
 regions28 = c("CAN","USA","MEX","RCAM","BRA","RSAM","NAF","WAF","EAF","SAF","WEU","CEU","TUR","UKR","STAN","RUS","ME","INDIA","KOR","CHN","SEAS","INDO","JAP","OCE","RSAS","RSAF","dummy","World")
@@ -110,7 +116,8 @@ travel_mode_freight = c('Inland shipping', 'Freigth train', 'Medium truck', 'Hea
 travel_mode_freight_excl_total = c('Inland shipping', 'Freigth train', 'Medium truck', 'Heavy truck', 'Air cargo', 'International shipping', '-')
 #travel_mode = c('Walking', 'Biking', 'Bus', 'Train', 'Car', 'High speed train', 'Air', 'Inland shipping', 'Freigth train', 'Medium truck', 'Heavy truck', 'Air cargo', 'International shipping', '-', 'Total')
 travel_mode = c(travel_mode_travel_excl_total, travel_mode_freight)
-car_type = c('ICE2000', 'ICE2010', 'ICEAdvOil', 'ICE Adv H2', 'ICE Turbo Diesel', 'ICE Diesel Oil', 'ICE Diesel Bio', 'ICE HEV Oil', 'ICE HEV Gas', 'ICE HEV H2', 'ICE HEV Oil2', 'ICE EFT50', 'FCV Oil', 'FCV Bio', 'FCV H2', 'Phev 10 oil', 'Phev 30 oil', 'Phev 60 oil', 'Phev 10 Bio', 'Phev 30 Bio', 'Phev 60 Bio', 'BEV', 'BEV range extended', 'BEV 100km', '-')
+car_type = c('ICE2000', 'ICE2010', 'ICEAdvOil', 'ICE Adv H2', 'ICE Turbo Diesel', 'ICE Diesel Oil', 'ICE Diesel Bio', 'ICE HEV Oil', 'ICE HEV Gas', 'ICE HEV H2', 'ICE HEV Oil2', 'ICE EFT50', 'FCV Oil', 'FCV Bio', 'FCV H2', 'Phev 10 oil', 'Phev 30 oil', 'Phev 60 oil', 'Phev 10 Bio', 'Phev 30 Bio', 'Phev 60 Bio', 'BEV range extended', 'BEV', 'BEV 100km', '-')
+car_type_included = c(TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE)
 #car_type = c('ICE2000', 'x1', 'x2', 'ICE Adv H2', 'x3', 'ICE Diesel Oil', 'ICE Diesel Bio', 'ICE HEV Oil', 'ICE HEV Gas', 'x4', 'x5', 'ICE EFT50', 'x6', 'x7', 'FCV H2', 'Phev 10 oil', 'Phev 30 oil', 'x8', 'Phev 10 Bio', 'Phev 30 Bio', 'x9', 'BEV', 'x10', 'BEV 150', '-')
 bus_type =c('Oil', 'Bio', 'Gas', 'ElectricTrolley', 'HybridOil', 'HybridBio', 'ElectricBattery', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x18')
 train_type =c('Oil', 'Bio', 'Electric','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25')
