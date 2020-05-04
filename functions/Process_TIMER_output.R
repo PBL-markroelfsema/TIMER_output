@@ -430,8 +430,8 @@ EMIS_ETS <- EMIS_ETS %>% group_by(year, region,unit) %>% summarise(value=sum(val
 HFC_TOT_tmp <- HFC_TOT %>% filter(main_sector=="Total") %>% select(year, region, value)
 PFC_TOT_tmp <- PFC_TOT %>% filter(main_sector=="Total") %>% select(year, region, value)
 FGases = inner_join(HFC_TOT_tmp, PFC_TOT_tmp, by = c('year', 'region'))
-FGases = mutate(FGases, value=value.x+value.y)
-FGases = select(FGases, year, region, value)
+FGases = mutate(FGases, value=value.x+value.y, unit="MtCO2eq")
+FGases = select(FGases, year, region, value, unit)
 FGases_indicator<-FGases
 FGases_indicator$unit<-"MtCO2eq/yr"
 FGases_2010 = filter(FGases, year==2010)
@@ -441,7 +441,8 @@ FGas_Reduction_index = inner_join(FGases_2010, FGases, by=c('region'))
 FGas_Reduction_index = mutate(FGas_Reduction_index, value=value.y/value.x)
 setnames(FGas_Reduction_index,"year.y","year")
 FGas_Reduction_index <- ungroup(FGas_Reduction_index)
-FGas_Reduction_index = select(FGas_Reduction_index, year, region, value)   %>% as.data.frame()
+FGas_Reduction_index <- mutate(FGas_Reduction_index, unit="%")
+FGas_Reduction_index = select(FGas_Reduction_index, year, region, value, unit)   %>% as.data.frame()
 
 
 # Electricity -------------------------------------------------------------
@@ -1314,21 +1315,14 @@ CO2_intensity_fuel <- CO2_KWh %>% mutate(value=replace(value, year>=1971, value=
 CO2_intensity_cars_carrier <- rbind(CO2_intensity_elec, CO2_intensity_fuel)
 # combine co2 intensities
 tmp1 <- inner_join(Eff_fleet_new_cars, CO2_intensity_cars_carrier, by=c('year', 'region', 'carrier'))
-tmp2 <- inner_join(tmp1, Share_cars, by=c('year', 'region', 'carrier'))
-# value.x=efficiency (MJ/pkm), value.y=co2 intensity (gCO2/l for fuel, gCO2/MJ for electric), value=share of fuel or electric in total fleet)
-CO2_intensity_fleet_new_cars <- mutate(tmp2, gCO2_km = ifelse(carrier=="fuel", 
-                                                              10^3*value.y*value.x*load_cars/energy_intensity_fuel,
-                                                              value.x*value.y*load_cars))
-# 2. combine to calcualted new fleet CO2 intensity
-tmp1 <- inner_join(Eff_fleet_new_cars, CO2_intensity_cars_carrier, by=c('year', 'region', 'carrier'))
-tmp2 <- inner_join(tmp1, Share_cars, by=c('year', 'region', 'carrier'))
+#tmp2 <- inner_join(tmp1, Share_cars, by=c('year', 'region', 'carrier'))
 # value.x=efficiency (MJ/pkm), value.y=co2 intensity (gCO2/l for fuel, gCO2/MJ for electric), value=share of fuel or electric in total fleet)
 # 3. calculate gCO2/km for the new car flee
-CO2_intensity_fleet_new_cars_tmp <- mutate(tmp2, gCO2_km = ifelse(carrier=="fuel", 
+CO2_intensity_fleet_new_cars_tmp <- mutate(tmp1, gCO2_km = ifelse(carrier=="fuel", 
                                                               10^3*value.y*value.x*load_cars/energy_intensity_fuel,
                                                               value.x*value.y*load_cars),
                                                               unit="gCO2/km") %>%
-                                    select(-value.x, -value.y, -value, -unit.x, -unit.y) %>%
+                                    select(-value.x, -value.y, -unit.x, -unit.y) %>%
                                     spread(key=carrier, value=gCO2_km) %>% 
                                     rename(gCO2_km_fuel=fuel, gCO2_km_elec=electricity)
 CO2_intensity_fleet_new_cars <- inner_join(Scenario$ElectricShare_new_cars, CO2_intensity_fleet_new_cars_tmp, by=c('year', 'region')) %>%
@@ -1352,7 +1346,7 @@ MetricTons_Tonnes = 0.90718474
 Eff_fleet_new_HvyT <- Scenario$EfficiencyFleet_new_HvyT
 CO2_intensity_fleet_new_HvyT_tailpipe <- mutate(Eff_fleet_new_HvyT, co2_intens=10^3*co2_intensity_diesel*load_heavy_trucks*value/(MetricTons_Tonnes*energy_intensity_fuel)) #%>%
                                          #select(-value) %>% rename(value=co2_intens)
-CO2_intensity_fleet_new_HvyT_tailpipe_total <- CO2_intensity_fleet_new_HvyT_tailpipe
+CO2_intensity_fleet_new_HvyT_tailpipe_total <- CO2_intensity_fleet_new_HvyT_tailpipe %>% select(-value) %>% mutate(value=co2_intens)
 
 # Industry ----------------------------------------------------------------
 cat(sprintf("Industry sector: \n"))
@@ -1413,7 +1407,7 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           EMIS_demand=EMIS_demand,EMIS_buildings=EMIS_buildings,EMIS_supply=EMIS_supply,EMIS_industry=EMIS_industry,EMIS_transport=EMIS_transport,EMIS_power=EMIS_power,
           EMISCO2EQ_LU=EMISCO2EQ_LU,EMISCO2EQ_WAS=EMISCO2EQ_WAS,LUEMCO2_TOT=LUEMCO2_TOT,EMIS_AFOLU=EMIS_AFOLU,LUEMCH4_TOT=LUEMCH4_TOT, LUEMN2O_TOT=LUEMN2O_TOT,
           EMISCO2EQ_LU_indicator=EMISCO2EQ_LU_indicator,LUEMCO2_TOT_indicator=LUEMCO2_TOT_indicator,EMISCO2EQ_indicator=EMISCO2EQ_indicator,EMISCO2EQexcl_LULUCF_indicator=EMISCO2EQexcl_LULUCF_indicator,
-          EMISCO2EQ_AGRI_indicator=EMISCO2EQ_AGRI_indicator,HFC_TOT_indicator=HFC_TOT_indicator,FGases_indicator=FGases_indicator,EMISCO2_indicator=EMISCO2_indicator,
+          EMISCO2EQ_AGRI_indicator=EMISCO2EQ_AGRI_indicator,HFC_TOT_indicator=HFC_TOT_indicator,FGases=FGases, FGases_indicator=FGases_indicator,EMISCO2_indicator=EMISCO2_indicator,
           # overall energy use
           TPES_total=TPES_total, TPES_CHN_accounting=TPES_CHN_accounting,
           FinalEnergy_total=FinalEnergy_total,
