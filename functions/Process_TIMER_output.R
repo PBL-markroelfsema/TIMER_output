@@ -477,7 +477,8 @@ FGas_Reduction_index = inner_join(FGases_2010, FGases, by=c('region'))
 FGas_Reduction_index = mutate(FGas_Reduction_index, value=value.y/value.x)
 setnames(FGas_Reduction_index,"year.y","year")
 FGas_Reduction_index <- ungroup(FGas_Reduction_index)
-FGas_Reduction_index = select(FGas_Reduction_index, year, region, value)   %>% as.data.frame()
+FGas_Reduction_index <- mutate(FGas_Reduction_index, unit="%")
+FGas_Reduction_index = select(FGas_Reduction_index, year, region, value, unit)   %>% as.data.frame()
 
 
 # Electricity -------------------------------------------------------------
@@ -1500,7 +1501,7 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           EMIS_demand=EMIS_demand,EMIS_buildings=EMIS_buildings,EMIS_supply=EMIS_supply,EMIS_industry=EMIS_industry,EMIS_transport=EMIS_transport,EMIS_power=EMIS_power,
           EMISCO2EQ_LU=EMISCO2EQ_LU,EMISCO2EQ_WAS=EMISCO2EQ_WAS,LUEMCO2_TOT=LUEMCO2_TOT,EMIS_AFOLU=EMIS_AFOLU,LUEMCH4_TOT=LUEMCH4_TOT, LUEMN2O_TOT=LUEMN2O_TOT,
           EMISCO2EQ_LU_indicator=EMISCO2EQ_LU_indicator,LUEMCO2_TOT_indicator=LUEMCO2_TOT_indicator,EMISCO2EQ_indicator=EMISCO2EQ_indicator,EMISCO2EQexcl_LULUCF_indicator=EMISCO2EQexcl_LULUCF_indicator,
-          EMISCO2EQ_AGRI_indicator=EMISCO2EQ_AGRI_indicator,HFC_TOT_indicator=HFC_TOT_indicator,FGases_indicator=FGases_indicator,EMISCO2_indicator=EMISCO2_indicator,
+          EMISCO2EQ_AGRI_indicator=EMISCO2EQ_AGRI_indicator,HFC_TOT_indicator=HFC_TOT_indicator,FGases=FGases, FGases_indicator=FGases_indicator,EMISCO2_indicator=EMISCO2_indicator,
           # overall energy use
           TPES_total=TPES_total, TPES_CHN_accounting=TPES_CHN_accounting,
           FinalEnergy_total=FinalEnergy_total,
