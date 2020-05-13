@@ -103,7 +103,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
     {energy_technology=energy_technology_2015
      energy_technology_28=energy_technology_28_2015
      energy_technology_20=energy_technology_20_2015
-     sector_capture=ssector_capture_2015
+     sector_capture=sector_capture_2015
      energy_carrier_ren_28=energy_carrier_ren_28_2015
      energy_carrier_nf_28=energy_carrier_nf_28_2015
      energy_technology_ren=energy_technology_ren_2015
@@ -480,7 +480,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   # Hydrogen
   # Fuel demand for hydrogen production (only exists in TIMER_2015, not in TIMER_3_2)
   # NOT IN TIMER_3_2
-  if(TIMER_version == 'TIMER_3_2') {data_dir = NA} else{data_dir="/tuss/EPG"} 
+  if(TIMER_version == 'TIMER_3_2') {data_dir = NA} else{data_dir="/tuss/hydrogen"} 
   H2FuelDem <- NULL
   tryCatch({H2FuelDem = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                               filename='FuelDem.out', varname=NULL, 
@@ -520,7 +520,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   
   # Total H2 demand per region
   # NOT IN TIMER_3_2
-  if(TIMER_version == 'TIMER_3_2') {data_dir = NA} else{data_dir="/tuss/EPG"} 
+  if(TIMER_version == 'TIMER_3_2') {data_dir = NA} else{data_dir="/tuss/hydrogen"} 
   tryCatch({H2Prod = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                            filename='H2Dem.out', varname=NULL, 
                            collist=list(regions28,sector_hydrogen), 
@@ -726,6 +726,31 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   FinalEnergy_Residential_energy_carrier <- bind_rows(FinalEnergy_Residential_energy_carrier, FinalEnergy_Residential_energy_carrier_tmp)
   FinalEnergy_Residential_energy_carrier$region = factor(FinalEnergy_Residential_energy_carrier$region,levels=regions28_EU)
   FinalEnergy_Residential_energy_carrier <- mutate(FinalEnergy_Residential_energy_carrier, unit="GJ")
+  
+  #Residential Final Energy per end use function
+  if(TIMER_version == 'TIMER_3_2') {data_dir = "/tuss/endem/residential"} else{data_dir="/tuss"}
+  FinalEnergy_Residential_Appliances = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
+                                            filename='res_applianceEU.out', varname=NULL, 
+                                            collist=list(regions27,population_groups, res_appliances), 
+                                            namecols=c('region','population_group', 'appliance'), novarname = TRUE)
+  FinalEnergy_Residential_Appliances <- subset(FinalEnergy_Residential_Appliances, region != "dummy")
+  EU <- inner_join(filter(FinalEnergy_Residential_Appliances, region=='WEU'), filter(FinalEnergy_Residential_Appliances, region=='CEU'), by=c("year", "population_group", "appliance"))
+  EU$region <- "EU"
+  EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, population_group, appliance, value)
+  EU$region = factor(EU$region, levels=regions28_EU)
+  FinalEnergy_Residential_Appliances <- rbind(FinalEnergy_Residential_Appliances, EU)
+  # add total
+  FinalEnergy_Residential_Appliances$population_group <- as.character(FinalEnergy_Residential_Appliances$population_group)
+  FinalEnergy_Residential_Appliances$appliance <- as.character(FinalEnergy_Residential_Appliances$appliance)
+  FinalEnergy_Residential_Appliances_tmp <- FinalEnergy_Residential_Appliances %>% group_by(year, region, population_group) %>% summarise(value=sum(value))
+  FinalEnergy_Residential_Appliances_tmp <- ungroup(FinalEnergy_Residential_Appliances_tmp)
+  FinalEnergy_Residential_Appliances_tmp <- mutate(FinalEnergy_Residential_Appliances_tmp, appliance="Total")
+  FinalEnergy_Residential_Appliances_tmp <- select(FinalEnergy_Residential_Appliances_tmp, year, region, population_group, appliance, value)
+  FinalEnergy_Residential_Appliances <- bind_rows(FinalEnergy_Residential_Appliances, FinalEnergy_Residential_Appliances_tmp)
+  FinalEnergy_Residential_Appliances$region = factor(FinalEnergy_Residential_Appliances$region,levels=regions28_EU)
+  FinalEnergy_Residential_Appliances <- mutate(FinalEnergy_Residential_Appliances, unit="GJ")
+  
+  
   
   # TRANSPORT
   # CO2 emissions travel
@@ -1886,6 +1911,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
             # buildings
             FloorSpace=FloorSpace,
             FinalEnergy_Residential=FinalEnergy_Residential, FinalEnergy_Residential_energy_carrier=FinalEnergy_Residential_energy_carrier,
+            FinalEnergy_Residential_Appliances=FinalEnergy_Residential_Appliances,
             # transport
             TransportTravelCO2Emissions=TransportTravelCO2Emissions, TransportFreightCO2Emissions=TransportFreightCO2Emissions,
             FinalEnergy_Transport=FinalEnergy_Transport, FinalEnergy_trvl_Transport=FinalEnergy_trvl_Transport, FinalEnergy_frgt_Transport=FinalEnergy_frgt_Transport, FinalEnergy_carrier_trvl_Transport=FinalEnergy_carrier_trvl_Transport,

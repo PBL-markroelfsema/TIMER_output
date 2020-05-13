@@ -1,4 +1,3 @@
-
 # Only works if Variable_graph is from Process_TIMER_output.R and has structure: year, region, value, unit
 # Scenario_i1: list from ProcessTimerScenario with structure {year, region, value, unit}
 # Scenario_i2: ProcessTimerScenario

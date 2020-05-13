@@ -121,6 +121,7 @@ land_use_source_N2O = c('deforestation/biomass burning', 'traditional biomass/fu
 population_groups = c('Total', 'Urban', 'Rural', 'U_1', 'U_2', 'U_3', 'U_4', 'U_5', 'R_1', 'R_2', 'R_3', 'R_4', 'R_5')
 population_groups3 = c('Total', 'Urban', 'Rural')
 res_enduse_functions = c('HouseholdAppliances', 'Lighting', 'Cooking', 'WaterHeating', 'SpaceHeating', 'SpaceCooling')
+res_appliances = c('Fan', 'Air cooler', 'Air conditioner', 'Refrigerator', 'Microwave', 'Washing machine', 'Clothes dryer', 'Dish washer', 'TV', 'VCR/DVD', 'PC/other', 'Other')
 transport_modus = c('Passenger travel' , ' Freight' , 'Total')
 travel_mode_travel = c('Walking', 'Biking', 'Bus', 'Train', 'Car', 'High speed train', 'Air', 'Total')
 travel_mode_travel_excl_total = c('Walking', 'Biking', 'Bus', 'Train', 'Car', 'High speed train', 'Air')

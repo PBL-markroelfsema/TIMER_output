@@ -55,7 +55,7 @@ source(paste(Rundir, Project, RDir, 'TIMER_output/functions', 'General Functions
   {energy_technology=energy_technology_2015
   energy_technology_28=energy_technology_28_2015
   energy_technology_20=energy_technology_20_2015
-  sector_capture=ssector_capture_2015
+  sector_capture=sector_capture_2015
   energy_carrier_ren_28=energy_carrier_ren_28_2015
   energy_carrier_nf_28=energy_carrier_nf_28_2015
   energy_technology_ren=energy_technology_ren_2015
@@ -1197,14 +1197,14 @@ RenTransportShare_Road_excl_elec = data.frame(matrix(ncol=0,nrow=0))
 if (Policy==TRUE) {
   tryCatch({
     elec_share_transport_travel <- rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[3])) %>% #Bus
-      rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[5])) #%>% #Car
+                                   rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[5])) #%>% #Car
     tmp <- group_by(elec_share_transport_travel, year, region, unit) %>%
            summarise(value=sum(value)) %>%
            mutate(travel_mode="Total") %>% as.data.frame()
     elec_share_transport_travel <- rbind(elec_share_transport_travel, tmp) 
     elec_share_transport_travel <- mutate(elec_share_transport_travel, type="Travel")
     elec_share_transport_freight <- rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[3])) %>% #medium truck
-      rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[4])) #heavy truck
+                                    rbind(mutate(RenElecShare, travel_mode=travel_mode_freight[4])) #heavy truck
     tmp <- group_by(elec_share_transport_freight, year, region, unit) %>%
            summarise(value=sum(value)) %>%
            mutate(travel_mode="Total") %>% as.data.frame()
