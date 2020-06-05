@@ -77,6 +77,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   
   IMAGE_2015_folder = try({paste(Rundir, Project, "3_IMAGE/Scenario_lib/scen", sep="/")})
   IMAGE_3_2_folder = try({paste(Rundir, Project, "3_IMAGE_land/Scenario_lib/scen", sep="/")})
+  
   IMAGE_folder = IMAGE_2015_folder
   if(!dir.exists(paste(IMAGE_2015_folder, IMAGE_scenario, sep="/")))
   { IMAGE_folder = IMAGE_3_2_folder
@@ -889,8 +890,9 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   PersonKilometersNewCars = data.frame(matrix(ncol=0,nrow=0))
   if (Policy==TRUE) {
   tryCatch({
+  f='trp_trvl_cars_VehNewCapTot.dat'
   ShareNewCars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
-                                     filename='trp_trvl_cars_VehNewCapTot.dat', varname=NULL, 
+                                     filename=f, varname=NULL, 
                                      collist=list(regions26), 
                                      namecols=c('region'), novarname = TRUE)
   ShareNewCars <- subset(ShareNewCars, region != "dummy")
@@ -902,7 +904,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   PersonKilometersNewCars <- select(PersonKilometersNewCars, region, value, unit)
   },
   error=function(error_handler)
-  { cat(paste0("File ", filename, " not found"))
+  { cat(paste0("File ", f, " not found"))
   }) # tryCath
   } # if
   else {

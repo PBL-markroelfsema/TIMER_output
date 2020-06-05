@@ -193,12 +193,12 @@ LUEMCO2_TOT = select(LUEMCO2_TOT, year, region, main_sector, value) %>%
 LUEMCO2_TOT_indicator=LUEMCO2_TOT 
 LUEMCO2_TOT_indicator$unit<-"MtCO2eq"
 LUEMCO2_TOT_indicator<-filter(LUEMCO2_TOT_indicator,main_sector=="LULUCF") %>% select(year,region,unit,value) %>% as.data.frame()
-#tmp <- select(LUEMCO2_TOT, year, region, main_sector, value) %>%
-#  group_by(year, region) %>%
-#  summarise(value=sum(value, na.rm=TRUE))
-#tmp <- mutate(tmp, main_sector="Total")
-#tmp$main_sector = factor(tmp$main_sector,levels=main_sector)
-#LUEMCO2_TOT <- rbind(LUEMCO2_TOT, tmp)
+tmp <- select(LUEMCO2_TOT, year, region, main_sector, value) %>%
+  group_by(year, region) %>%
+  summarise(value=sum(value, na.rm=TRUE))
+tmp <- mutate(tmp, main_sector="Total")
+tmp$main_sector = factor(tmp$main_sector,levels=main_sector)
+LUEMCO2_TOT <- rbind(LUEMCO2_TOT, tmp)
 LUEMCO2_TOT = select(LUEMCO2_TOT, year, region, main_sector, value)
 LUEMCO2_TOT <- mutate(LUEMCO2_TOT, GHG_Category="LUEMCO2")
 LUEMCO2_TOT <- mutate(LUEMCO2_TOT, unit="MtCO2eq")   %>% as.data.frame()
@@ -712,7 +712,9 @@ if (Policy==TRUE)  {
   InnovativeHydrogenShare$value <- 100*InnovativeHydrogenShare$value
   },
   error = function(error_condition) 
-  { cat("The file FuelDem.out does not exist in TIMER_3_2")
+  {  RenHydrogenShare <- NULL
+     InnovativeHydrogenShare <- NULL
+     cat("The file FuelDem.out does not exist in TIMER_3_2\n")
   }) #try
 }
 else {RenHydrogenShare <- NULL
@@ -1259,19 +1261,21 @@ if (Policy==TRUE) {
   }) # try
 } # if
 else {RenTransportShare_Road = data.frame(matrix(ncol=0,nrow=0))
-RenTransportShare_Road_trvl = data.frame(matrix(ncol=0,nrow=0))
-RenTransportShare_Road_frgt = data.frame(matrix(ncol=0,nrow=0))
-RenTransportShare_Road_excl_elec = data.frame(matrix(ncol=0,nrow=0))
+      RenTransportShare_Road_trvl = data.frame(matrix(ncol=0,nrow=0))
+      RenTransportShare_Road_frgt = data.frame(matrix(ncol=0,nrow=0))
+      RenTransportShare_Road_excl_elec = data.frame(matrix(ncol=0,nrow=0))
 }
 
 # Blending share for cars
 BlendingShareBio_cars_energy = data.frame(matrix(ncol=0,nrow=0))
 if (Policy==TRUE) {
-  tryCatch({BlendingShareBio_cars_energy <- filter(Scenario$BlendingShareBio_energy_trvl, travel_mode=="Car") %>% select(year, region, value, unit)  %>% as.data.frame()
-     },
+  if (length(Scenario$BlendingShareBio_energy_trvl>0))
+  { tryCatch({BlendingShareBio_cars_energy <- filter(Scenario$BlendingShareBio_energy_trvl, travel_mode=="Car") %>% select(year, region, value, unit)  %>% as.data.frame()
+             },
      error = function(error_condition) 
      { cat("The file FuelDem.out does not exist in TIMER_3_2")
      }) # try
+  } # if
 } # if
 else {
   BlendingShareBio_cars_energy = data.frame(matrix(ncol=0,nrow=0))
@@ -1279,6 +1283,10 @@ else {
 
 # Calculate blending share based on fuel use
 # Solid fuel, Liquid fuel, Gaseous fuel, Hydrogen, 	Modern biofuel, Secondary Heat, Tradtional biofuel, Electricity, Total
+BlendingShareBio_energy_trvl_alt <- NULL
+BlendingShareBio_energy_alt <- NULL
+BlendingShareBio_energy_frgt_alt <- NULL
+tryCatch({
 fueluse_trvl_road <- filter(Scenario$FuelUseFleet_trvl, travel_mode%in%c('Car', 'Bus')) %>%
                      group_by(year, region, energy_carrier, unit) %>%
                      summarise(value=sum(value)) %>%
@@ -1309,6 +1317,13 @@ BlendingShareBio_energy_alt <- rbind(tmp1, tmp2) %>%
                                mutate(value=`Modern biofuel`/(`Modern biofuel`+`Liquid fuel`)) %>%
                                select(-`Modern biofuel`,-`Liquid fuel`) %>%
                                mutate(unit="%") %>% as.data.frame()
+}, #try
+error=function(error_point)
+{ cat("Could not calculate variable BlendingShareBio_energy_alt\n")
+  BlendingShareBio_energy_trvl_alt <- NULL
+  BlendingShareBio_energy_alt <- NULL
+  BlendingShareBio_energy_frgt_alt <- NULL
+}) # error try
 
 # Reduction cars relative to 2021 (EU transport target)
 # 1. relative to 2025
@@ -1395,6 +1410,13 @@ energy_intensity_fuel  =	34.841 # MJ/l
 # 2. combine car efficiency (MJ/pkm) and co2-intensities
 # 3. calculate gCO2/km for the new car fleet
 
+
+CO2_intensity_fleet_new_cars <- NULL
+CO2_intensity_fleet_new_cars_total <- NULL
+CO2_intensity_fleet_new_cars_tailpipe <- NULL
+CO2_intensity_fleet_new_cars_tailpipe_total <- NULL
+
+tryCatch({
 eff1_tmp <- mutate(Scenario$EfficiencyFleet_new_cars_exclEV, carrier="fuel")
 eff2_tmp <- mutate(Scenario$EfficiencyFleet_new_cars_EV, carrier="electricity")
 Eff_fleet_new_cars <- rbind(eff1_tmp, eff2_tmp)
@@ -1432,18 +1454,39 @@ CO2_intensity_fleet_new_cars_tailpipe <- inner_join(Scenario$ElectricShare_new_c
                                          select(-unit.x) %>% rename(unit=unit.y, total=value, electricity=gCO2_km_elec, fuel=gCO2_km_fuel)
 CO2_intensity_fleet_new_cars_tailpipe <- gather(CO2_intensity_fleet_new_cars_tailpipe, `fuel`, `electricity`, `total`, key=carrier, value=value)
 CO2_intensity_fleet_new_cars_tailpipe_total <- filter(CO2_intensity_fleet_new_cars, carrier=="total") %>% select(-carrier)
+}, # try
+warning = function(warning_condition)
+{ cat("\n")
+},
+error = function(error_condition) 
+{ CO2_intensity_fleet_new_cars <- NULL
+  CO2_intensity_fleet_new_cars_total <- NULL
+  CO2_intensity_fleet_new_cars_tailpipe <- NULL
+  CO2_intensity_fleet_new_cars_tailpipe_total <- NULL
+  cat("EfficiencyFleet_new_cars_exclEV and/or EfficiencyFleet_new_cars_EV do not exist\n")
+}) # trycatch
 
 # co2 intensity new fleet new heavy trucks
 # as the heavy truck fleet in TIMER currently does not show any electric cars, the below calculations are simplified. 
 load_heavy_trucks =	10.88621688 # Tonnes
 MetricTons_Tonnes = 0.90718474
+
+CO2_intensity_fleet_new_HvyT_tailpipe <- NULL
+CO2_intensity_fleet_new_HvyT_tailpipe_total <- NULL
+tryCatch({
 Eff_fleet_new_HvyT <- Scenario$EfficiencyFleet_new_HvyT
 CO2_intensity_fleet_new_HvyT_tailpipe <- mutate(Eff_fleet_new_HvyT, co2_intens=10^3*co2_intensity_diesel*load_heavy_trucks*value/(MetricTons_Tonnes*energy_intensity_fuel)) #%>%
                                          #select(-value) %>% rename(value=co2_intens)
 CO2_intensity_fleet_new_HvyT_tailpipe_total <- CO2_intensity_fleet_new_HvyT_tailpipe %>% select(-value) %>% mutate(value=co2_intens)
-
-# Industry ----------------------------------------------------------------
-cat(sprintf("Industry sector: \n"))
+}, #try
+warning = function(warning_condition)
+{ cat("\n")
+},
+error = function(error_condition) 
+{ CO2_intensity_fleet_new_HvyT_tailpipe <- NULL
+  CO2_intensity_fleet_new_HvyT_tailpipe_total <- NULL
+  cat("EfficiencyFleet_new_HvyT does not exist\n")
+}) # trycatch
 
 # Energy intensity of industry sector (Kwh/US$2005)
 Industry_FinalEnergy <- filter(Scenario$FinalEnergy, sector=="Industry", energy_carrier=="Total")
