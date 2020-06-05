@@ -642,6 +642,45 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   CarbonCaptured$region = factor(CarbonCaptured$region,levels=regions28_EU)
   CarbonCaptured <- mutate(CarbonCaptured, unit="kgC")
   
+  # HEAT
+  HeatProduction <- NULL
+  if(TIMER_version == 'TIMER_3_2') {data_dir = "/tuss/calib"} #else{} 
+  tryCatch({HeatProduction = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
+                                   filename='CalHeatProd.out', varname=NULL, 
+                                   collist=list(regions28, heat_calibration, energy_carrier_heat), 
+                                   namecols=c('region','source', 'energy_carrier'), novarname = TRUE)
+  HeatProduction <- subset(HeatProduction, region != "dummy")
+  EU <- inner_join(filter(HeatProduction, region=='WEU'), filter(HeatProduction, region=='CEU'), by=c("year", "source", "energy_carrier"))
+  EU$region <- "EU"
+  EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, source, energy_carrier, value)
+  EU$region = factor(EU$region, levels=regions28_EU)
+  HeatProduction <- rbind(HeatProduction, EU)
+  HeatProduction$region = factor(HeatProduction$region,levels=regions28_EU)
+  HeatProduction <- mutate(HeatProduction, unit="GJ")
+  },
+  error = function(error_condition) 
+  { cat("The file policy/CalHeatProd.out does not exist\n")
+  }) # try
+  
+  HeatDemand <- NULL
+  if(TIMER_version == 'TIMER_3_2') {data_dir = "/tuss/calib"} else{data_dir="/T2RT"} 
+  tryCatch({HeatDemand = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
+                                   filename='CalHeatDem.out', varname=NULL, 
+                                   collist=list(regions28, heat_calibration), 
+                                   namecols=c('region','source'), novarname = TRUE)
+  HeatDemand <- subset(HeatDemand, region != "dummy")
+  EU <- inner_join(filter(HeatDemand, region=='WEU'), filter(HeatDemand, region=='CEU'), by=c("year", "source"))
+  EU$region <- "EU"
+  EU <- EU %>% mutate(value=value.x+value.y) %>% select(year, region, source, value)
+  EU$region = factor(EU$region, levels=regions28_EU)
+  HeatDemand <- rbind(HeatDemand, EU)
+  HeatDemand$region = factor(HeatDemand$region,levels=regions28_EU)
+  HeatDemand <- mutate(HeatDemand, unit="GJ")
+  },
+  error = function(error_condition) 
+  { cat("The file policy/CalHeatDem.out does not exist\n")
+  }) # try
+
   # SDGs
   
   # Electricity access
@@ -1935,6 +1974,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
             CarbonCaptured=CarbonCaptured,
             EnergyTax_HvyT=EnergyTax_HvyT, EnergyTax_cars=EnergyTax_cars,
             Factor_HvyT=Factor_HvyT, Factor_cars=Factor_cars,
+            HeatProduction=HeatProduction, HeatDemand=HeatDemand,
             # SDG
             ElecAcc=ElecAcc,
             # drivers
