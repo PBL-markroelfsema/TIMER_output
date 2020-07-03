@@ -1080,6 +1080,7 @@ RenTransportShare_frgt = data.frame(matrix(ncol=0,nrow=0))
 RenTransportShare_cars = data.frame(matrix(ncol=0,nrow=0))
 RenTransportShare_excl_elec = data.frame(matrix(ncol=0,nrow=0))
 NonFossilTransportShare = data.frame(matrix(ncol=0,nrow=0))
+FuelUse_transport  = data.frame(matrix(ncol=0,nrow=0))
 if (Policy==TRUE) {
 try({
 elec_share_transport_travel <- rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[1])) %>% #walking
@@ -1188,6 +1189,7 @@ else {RenTransportShare = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_cars = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_excl_elec = data.frame(matrix(ncol=0,nrow=0))
       NonFossilTransportShare = data.frame(matrix(ncol=0,nrow=0))
+      FuelUse_transport  = data.frame(matrix(ncol=0,nrow=0))
 }
 
 
@@ -1196,6 +1198,7 @@ RenTransportShare_Road = data.frame(matrix(ncol=0,nrow=0))
 RenTransportShare_Road_trvl = data.frame(matrix(ncol=0,nrow=0))
 RenTransportShare_Road_frgt = data.frame(matrix(ncol=0,nrow=0))
 RenTransportShare_Road_excl_elec = data.frame(matrix(ncol=0,nrow=0))
+FuelUse_transport  = data.frame(matrix(ncol=0,nrow=0))
 if (Policy==TRUE) {
   tryCatch({
     elec_share_transport_travel <- rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[3])) %>% #Bus
@@ -1264,6 +1267,7 @@ else {RenTransportShare_Road = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_Road_trvl = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_Road_frgt = data.frame(matrix(ncol=0,nrow=0))
       RenTransportShare_Road_excl_elec = data.frame(matrix(ncol=0,nrow=0))
+      FuelUse_transport  = data.frame(matrix(ncol=0,nrow=0))
 }
 
 # Blending share for cars
