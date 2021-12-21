@@ -26,6 +26,7 @@ MainSector <- function(sector)
          #LUEMCO2
           'biomass burning'='LULUCF',
           'burning of traditional biomass'='LULUCF',
+          'crops  on peatland'='LULUCF', # Is this correct?
           'timber pool (short lifetime)'='LULUCF',
           'timber pool (long lifetime)'='LULUCF',
           'carbon release by regrowing vegetation'='LULUCF',
@@ -39,6 +40,7 @@ MainSector <- function(sector)
           'wetland rice'='Agriculture',
           'animals'='Agriculture',
           'animal waste'='Agriculture',
+          'degraded peatlands'='LULUCF', # is this correct?
         #LUEMN2O
          'deforestation/biomass burning'='LULUCF',
          'traditional biomass/fuelwood burning'='LULUCF',
@@ -52,7 +54,11 @@ MainSector <- function(sector)
          'fertilizers indirect'='Agriculture',
          'domestic sewage'='Waste',
          'from residues'='LULUCF',
-         'biological N-fixation'='LULUCF',
+          #'crop residues'='LULUCF',
+          #'biological N-fixation'='LULUCF',
+          'crop residues'='Agriculture',
+          'biological N-fixation'='Agriculture',
+          'degraded peatlands'='LULUCF',
         #HFC
          'HFC23'='Industry',
          'HFC32'='Industry',
