@@ -141,3 +141,5 @@ bus_type =c('Oil', 'Bio', 'Gas', 'ElectricTrolley', 'HybridOil', 'HybridBio', 'E
 train_type =c('Oil', 'Bio', 'Electric','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25')
 aircraft_type=c('Air conv', 'Air conv 1980', 'Air conv 2000', 'conv, bio', 'eff.oil', 'eff.bio', 'BWB oil', 'BWB bio', 'BWB eff. oil', 'BWB eff bio', 'Cryoplane','12','13','14','15','16','17','18','19','20','21','22','23','24','25')
 forest_type=c('Mature forest', 'Regrowth (Abandond land)', 'Regrowth (Timber)', 'Carbon plantations', 'Total')
+deforest_type = c('Food','Food+timber','Additional deforestation','Total')
+landcover_type = c('total','Cropland', 'Pasture','Forest','Other Land','Forest|Managed','Cropland|Energy Crops','Other Arable Land','Forest Area Harvested for wood','Forest Area never forest management','Afforestation Deforestation','builtup','cropland irrigated','energie crops irrigated','Other Natural Land')
