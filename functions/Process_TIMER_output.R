@@ -19,7 +19,8 @@
 # Energy_intensity_TPES_GDP - DONE, ok?
 
 library(tidyverse)
-ProcessTimerScenario <- function(Scenario, TIMER_version = 'TIMER_2015', Rundir, Project, RDir, InterPolateIMAGE=FALSE, TIMERFunctionsDir="Check_targets", Policy = FALSE)
+ProcessTimerScenario <- function(Scenario, TIMER_version = 'TIMER_2015', Rundir, 
+                                 Project, RDir, InterPolateIMAGE=FALSE, TIMERFunctionsDir="Check_targets", Policy = FALSE)
 { s <- deparse(substitute(Scenario)) # get object name as string
   if(!exists(s))
   { print(paste("Scenario ", s, " is not imported yet. First execute ImportTimerFile", sep=""))
@@ -116,7 +117,7 @@ INDEMISCH4_TOT = data.table(Scenario$INDEMISCH4)[industrial_process == "total" &
 INDEMISCH4_TOT$value = INDEMISCH4_TOT$value*GWP_CH4
 INDEMISCH4_TOT = mutate(INDEMISCH4_TOT, main_sector=mapply(function(x) MainSector(x), industrial_process))
 INDEMISCH4_TOT$main_sector = factor(INDEMISCH4_TOT$main_sector,levels=main_sector)
-# tmp <- INDEMISCH4_TOT %>% mutate(main_sector="Industry")
+tmp <- INDEMISCH4_TOT %>% mutate(main_sector="Industry")
 INDEMISCH4_TOT <- rbind(INDEMISCH4_TOT, tmp)
 INDEMISCH4_TOT = select(INDEMISCH4_TOT, year, region, main_sector, value) %>%
   group_by(year, region, main_sector) %>%
@@ -947,8 +948,8 @@ RSEtot <- subset(Scenario$FinalEnergy, energy_carrier=="Total")
 RSEtot <- subset(RSEtot, sector=="Total")
 RENfinalenergyshare <- inner_join(RENfinalenergy, RSEtot, by=c("year", "region"))%>% group_by(year, region) %>% summarise(value=100*(value.x/value.y))
 RENfinalenergyshare <- data.frame(RENfinalenergyshare)
-c <- mutate(RENfinalenergyshare, unit="%")  %>% as.data.frame()
-})
+RENfinalenergyshare <- mutate(RENfinalenergyshare, unit="%")  %>% as.data.frame()
+}) 
 
 # coal consumption
 Coal_consumption <- filter(Scenario$TPES, energy_carrier=="Coal") 
@@ -1655,11 +1656,11 @@ Forest_area_total <- NULL
 Forest_area_regrowth <- NULL
 Additional_deforestation <- NULL
   tryCatch({Forest_area_total <- filter(Scenario$ForestArea, forest_type=="Total")
-         # Reforestation (in km2)
-         Forest_area_total <- filter(Scenario$ForestArea, forest_type=="Total")
-         Forest_area_regrowth <- filter(Scenario$ForestArea, forest_type=="Regrowth (Abandond land)")
-         Additional_deforestation<- filter(Scenario$AddDeforestation, deforest_type=="Additional deforestation")
-         }, #try
+           # Reforestation (in km2)
+           Forest_area_total <- filter(Scenario$ForestArea, forest_type=="Total")
+           Forest_area_regrowth <- filter(Scenario$ForestArea, forest_type=="Regrowth (Abandond land)")
+           Additional_deforestation<- filter(Scenario$AddDeforestation, deforest_type=="Additional deforestation")
+           }, #try
          error = function(error_condition) 
          { Forest_area_total <- NULL
            cat("Forest_area_total does not exist\n")
@@ -1674,11 +1675,15 @@ Landcover_forest_share <- NULL
                           mutate(value=`Forest`/`total`*100)%>%
                           select(-Forest, -total) %>%
                           mutate(landcover_type="Forestshare", unit="%") %>% as.data.frame()
+          }, # try
+          error = function(error_condition) 
+          { Forest_area_total <- NULL
+          cat("LandCover does not exist\n")
           }) # trycatch
 
 # EU_ElecAcc
-ElecAccTot <- filter(Scenario$ElecAcc, population_group=="Total"
-                        )
+ElecAccTot <- filter(Scenario$ElecAcc, population_group=="Total")
+
 # Compile list ------------------------------------------------------------
 cat(sprintf("Process list: \n"))
 l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, EMISCO2EQ=EMISCO2EQ,EMIS_ETS=EMIS_ETS,

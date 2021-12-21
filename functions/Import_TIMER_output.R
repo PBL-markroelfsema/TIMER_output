@@ -1958,7 +1958,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   EU$region = factor(EU$region, levels=regions28_EU)
   ForestArea <- rbind(ForestArea, EU)
   ForestArea$region = factor(ForestArea$region,levels=regions28_EU)  
-  ForestArea <- mutate(ForestArea, unit="km2")
+  ForestArea <- mutate(ForestArea, unit="1000 km2")
   ForestArea=data.table(ForestArea)
   yy=seq(1970,2100)
   ForestArea = ForestArea[,list(approx(x=year,y=value,xout=yy)$y,approx(x=year,y=value,xout=yy)$x),by=c('forest_type','region','unit')]
