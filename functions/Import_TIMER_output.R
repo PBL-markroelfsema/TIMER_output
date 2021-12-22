@@ -529,7 +529,9 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   
   # Total H2 demand per region
   # NOT IN TIMER_3_11
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = NA} else{data_dir="/tuss/hydrogen"} 
+  H2Prod <- NULL
+  if(TIMER_version %in% c('TIMER_2015')) {
+  data_dir="/tuss/hydrogen"} 
   tryCatch({H2Prod = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                            filename='H2Dem.out', varname=NULL, 
                            collist=list(regions28,sector_hydrogen), 
@@ -551,7 +553,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   
   # Total H2 production per carrier
   H2Prod <- NULL
-  if (Policy==TRUE)  {
+  if (Policy==TRUE & TIMER_version=="TIMER_2015")  {
   tryCatch({
   H2Prod = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
                               filename='HProdAll.out', varname=NULL, 
@@ -1266,26 +1268,30 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   BlendingShareBio_energy_trvl = data.frame(matrix(ncol=0,nrow=0))
   if (Policy==TRUE) {
   tryCatch({
-  BlendingShareBio_energy_trvl = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
-                                              filename='trp_trvl_Blending_share_bio_energy_trvl.dat', varname=NULL, 
-                                              collist=list(regions26, travel_mode_travel_excl_total), 
-                                              namecols=c('region', 'travel_mode'), novarname = TRUE)
-  BlendingShareBio_energy_trvl <- subset(BlendingShareBio_energy_trvl, region != "dummy")
-  EU_bio <- inner_join(filter(BlendingShareBio_energy_trvl, region=='WEU'), filter(BlendingShareBio_energy_trvl, region=='CEU'), by=c("year", "travel_mode"))
-  FuelUseFleet_total <- filter(FuelUseFleet_trvl, energy_carrier == 'Total') %>%
-                          group_by(year, region, travel_mode) %>%
-                          summarise(value=sum(value, na.rm=TRUE))
-  EU_energy <- inner_join(filter(FuelUseFleet_total, region=='WEU'), filter(FuelUseFleet_total, region=='CEU'), by=c("year", "travel_mode"))
-  EU <- inner_join(EU_bio, EU_energy, by=c('year', 'travel_mode'))
-  EU$region <- "EU"
-  EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value, travel_mode)
-  EU$region = factor(EU$region, levels=regions28_EU)
-  BlendingShareBio_energy_trvl <- rbind(BlendingShareBio_energy_trvl, EU)
-  BlendingShareBio_energy_trvl$region = factor(BlendingShareBio_energy_trvl$region,levels=regions28_EU)
-  BlendingShareBio_energy_trvl <- mutate(BlendingShareBio_energy_trvl, unit="%")
-  },
-  error = function(error_condition) 
-  { cat("The file policy/trp_trvl_Blending_share_bio_energy_trvl.dat does not exist\n")
+    BlendingShareBio_energy_trvl <- filter(FuelUseFleet_trvl, energy_carrier %in% c('Modern biofuel', 'Liquid fuel')) %>%
+                                    spread(key=energy_carrier, value=value) %>%
+                                    mutate(value=ifelse(`Liquid fuel`>0,(`Modern biofuel`/(`Modern biofuel`+`Liquid fuel`)),0)) %>%
+                                    select(-`Modern biofuel`,-`Liquid fuel`)            
+  #BlendingShareBio_energy_trvl = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+  #                                            filename='trp_trvl_Blending_share_bio_energy_trvl.dat', varname=NULL, 
+  #                                            collist=list(regions26, travel_mode_travel_excl_total), 
+  #                                            namecols=c('region', 'travel_mode'), novarname = TRUE)
+  #BlendingShareBio_energy_trvl <- subset(BlendingShareBio_energy_trvl, region != "dummy")
+  #EU_bio <- inner_join(filter(BlendingShareBio_energy_trvl, region=='WEU'), filter(BlendingShareBio_energy_trvl, region=='CEU'), by=c("year", "travel_mode"))
+  #FuelUseFleet_total <- filter(FuelUseFleet_trvl, energy_carrier == 'Total') %>%
+  #                        group_by(year, region, travel_mode) %>%
+  #                        summarise(value=sum(value, na.rm=TRUE))
+  #EU_energy <- inner_join(filter(FuelUseFleet_total, region=='WEU'), filter(FuelUseFleet_total, region=='CEU'), by=c("year", "travel_mode"))
+  #EU <- inner_join(EU_bio, EU_energy, by=c('year', 'travel_mode'))
+  #EU$region <- "EU"
+  #EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value, travel_mode)
+  #EU$region = factor(EU$region, levels=regions28_EU)
+  #BlendingShareBio_energy_trvl <- rbind(BlendingShareBio_energy_trvl, EU)
+  #BlendingShareBio_energy_trvl$region = factor(BlendingShareBio_energy_trvl$region,levels=regions28_EU)
+  #BlendingShareBio_energy_trvl <- mutate(BlendingShareBio_energy_trvl, unit="%")
+  #},
+  #error = function(error_condition) 
+  #{ cat("The file policy/trp_trvl_Blending_share_bio_energy_trvl.dat does not exist\n")
   }) # try
   } # if
   else {
@@ -1416,64 +1422,6 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   else{
     ElectricShare_new_HvyT = data.frame(matrix(ncol=0,nrow=0))
   }
-  
-  # Efficiency travel
-  EfficiencyTravel = data.frame(matrix(ncol=0,nrow=0))
-  if (Policy==TRUE) {
-    tryCatch({
-      EfficiencyTravel = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
-                                             filename='trp_trvl_eff_base.dat', varname=NULL, 
-                                             collist=list(regions26, travel_mode_travel_excl_total, car_type), 
-                                             namecols=c('region', 'mode', 'travel_type'), novarname = TRUE)
-      EfficiencyTravel <- subset(EfficiencyTravel, region != "dummy")
-      #EU_fleet <- inner_join(filter(EfficiencyTravel, region=='WEU'), filter(EfficiencyTravel, region=='CEU'), by=c("year"))
-      #PersonKilometers_cars <- filter(PersonKilometers, travel_mode=='Car') %>% select(year, region, value)
-      ## weight factor should be New person kilometers, but as the share of new cars is constant and the same for each region, also PersonKilometers can be used
-      #EU_pkm <- inner_join(filter(PersonKilometers_cars, region=='WEU'), filter(PersonKilometers_cars, region=='CEU'), by=c("year"))
-      #EU <- inner_join(EU_fleet, EU_pkm, by=c('year'))
-      #EU$region <- "EU"
-      #EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value)
-      #U$region = factor(EU$region, levels=regions28_EU)
-      #EfficiencyTravel <- rbind(EfficiencyTravel, EU)
-      EfficiencyTravel$region = factor(EfficiencyTravel$region,levels=regions28_EU)
-      EfficiencyTravel <- mutate(EfficiencyTravel, unit="MJ/pkm")
-    },
-    error = function(error_condition) 
-    { cat("The file policy/trp_trvl_eff_base.dat does not exist\n")
-    }) # try
-  } # if
-  else {
-    EfficiencyTravel = data.frame(matrix(ncol=0,nrow=0))
-  }
- 
-  # Efficiency freight
-  EfficiencyFreight = data.frame(matrix(ncol=0,nrow=0))
-  if (Policy==TRUE) {
-    tryCatch({
-      EfficiencyFreight = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
-                                         filename='trp_frgt_eff_base.dat', varname=NULL, 
-                                         collist=list(regions26, travel_mode_freight_excl_total, car_type), 
-                                         namecols=c('region', 'mode', 'travel_type'), novarname = TRUE)
-      EfficiencyFreight <- subset(EfficiencyFreight, region != "dummy")
-      #EU_fleet <- inner_join(filter(EfficiencyTravel, region=='WEU'), filter(EfficiencyTravel, region=='CEU'), by=c("year"))
-      #PersonKilometers_cars <- filter(PersonKilometers, travel_mode=='Car') %>% select(year, region, value)
-      ## weight factor should be New person kilometers, but as the share of new cars is constant and the same for each region, also PersonKilometers can be used
-      #EU_pkm <- inner_join(filter(PersonKilometers_cars, region=='WEU'), filter(PersonKilometers_cars, region=='CEU'), by=c("year"))
-      #EU <- inner_join(EU_fleet, EU_pkm, by=c('year'))
-      #EU$region <- "EU"
-      #EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value)
-      #U$region = factor(EU$region, levels=regions28_EU)
-      #EfficiencyTravel <- rbind(EfficiencyTravel, EU)
-      EfficiencyFreight$region = factor(EfficiencyFreight$region,levels=regions28_EU)
-      EfficiencyFreight <- mutate(EfficiencyFreight, unit="MJ/pkm")
-    },
-    error = function(error_condition) 
-    { cat("The file policy/trp_frgt_eff_base.dat does not exist\n")
-    }) # try
-  } # if
-  else {
-    EfficiencyFreight = data.frame(matrix(ncol=0,nrow=0))
-  } 
   
   # Efficiency total fleet for  cars
   EfficiencyFleet_cars = data.frame(matrix(ncol=0,nrow=0))
@@ -2048,7 +1996,6 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
             BlendingShareBio_energy_trvl=BlendingShareBio_energy_trvl, BlendingShareBio_energy_frgt=BlendingShareBio_energy_frgt, 
             ElectricShare_new_cars=ElectricShare_new_cars, ElectricShare_cars=ElectricShare_cars,
             ElectricShare_new_HvyT=ElectricShare_new_HvyT, ElectricShare_HvyT=ElectricShare_HvyT,
-            EfficiencyTravel=EfficiencyTravel, EfficiencyFreight=EfficiencyFreight,
             EfficiencyFleet_new_cars=EfficiencyFleet_new_cars, EfficiencyFleet_new_cars_exclEV=EfficiencyFleet_new_cars_exclEV, EfficiencyFleet_new_cars_EV=EfficiencyFleet_new_cars_EV,
             EfficiencyFleet_cars=EfficiencyFleet_cars, 
             EfficiencyFleet_new_MedT=EfficiencyFleet_new_MedT, 
