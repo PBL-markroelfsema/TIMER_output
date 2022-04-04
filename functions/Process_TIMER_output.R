@@ -949,7 +949,7 @@ NF_inclTradBio_TPESShare <- data.frame(NF_inclTradBio_TPESShare)
 NF_inclTradBio_TPESShare <- mutate(NF_inclTradBio_TPESShare, unit="%")  %>% as.data.frame()
 
 #including nuclear + Chinese accounting method
-# 1. Chinese accounting
+# 1. Chines accounting
 TPES_CHN_accounting <- Scenario$TPES
 TPES_CHN_accounting <- inner_join(TPES_CHN_accounting, ElecEffCoalPct, by=c("year", "region"))
 TPES_CHN_accounting$value.y <- ifelse(!(TPES_CHN_accounting$energy_carrier %in% c('Solar/wind', 'Hydro-electricity','Nuclear')),1, TPES_CHN_accounting$value.y )
@@ -966,9 +966,9 @@ tmp1 <- subset(tmp1, Renewable==TRUE)
 tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
 tmp2 <- subset(TPES_CHN_accounting, energy_carrier=="Total")
 tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
-RenTPESShare_CHN_acccounting <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
-RenTPESShare_CHN_acccounting <- data.frame(RenTPESShare_CHN_acccounting)
-RenTPESShare_CHN_acccounting <- mutate(RenTPESShare_CHN_acccounting, unit="%")  %>% as.data.frame()
+RenTPESShare_CHN_accounting <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
+RenTPESShare_CHN_accounting <- data.frame(RenTPESShare_CHN_accounting)
+RenTPESShare_CHN_accounting <- mutate(RenTPESShare_CHN_accounting, unit="%")  %>% as.data.frame()
 
 # 3. determine Non-fossil TPES share
 NF <- ifelse(TPES_CHN_accounting$energy_carrier %in% c('Modern biofuels','Solar/wind', 'Nuclear', 'Hydro-electricity','Nuclear'), TRUE, FALSE)
@@ -977,9 +977,9 @@ tmp1 <- subset(tmp1, NF==TRUE)
 tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
 tmp2 <- subset(TPES_CHN_accounting, energy_carrier=="Total")
 tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
-NF_TPESShare_CHN_acccounting <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
-NF_TPESShare_CHN_acccounting <- data.frame(NF_TPESShare_CHN_acccounting)
-NF_TPESShare_CHN_acccounting <- mutate(NF_TPESShare_CHN_acccounting, unit="%")  %>% as.data.frame()
+NF_TPESShare_CHN_accounting <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
+NF_TPESShare_CHN_accounting <- data.frame(NF_TPESShare_CHN_accounting)
+NF_TPESShare_CHN_accounting <- mutate(NF_TPESShare_CHN_accounting, unit="%")  %>% as.data.frame()
 
 # Gas share in TPES
 NatGasTPES <- data.table(Scenario$TPES)[energy_carrier %in%c("Total","Natural gas") & year >= StartYear]
@@ -1785,7 +1785,7 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, NonFossilElecShare=NonFossilElecShare,
           RenElecShare_detailed=RenElecShare_detailed, NonFossilElecShare_detailed=NonFossilElecShare_detailed, InnovativeElecShare_detailed=InnovativeElecShare_detailed,
           RenHydrogenShare=RenHydrogenShare, InnovativeHydrogenShare=InnovativeHydrogenShare,
-          RenTPESShare=RenTPESShare,RenTPESShare_CHN_acccounting=RenTPESShare_CHN_acccounting,NF_TPESShare_CHN_accounting=NF_TPESShare_CHN_acccounting,NF_inclTradBio_TPESShare=NF_inclTradBio_TPESShare,NF_TPESShare=NF_TPESShare,
+          RenTPESShare=RenTPESShare,RenTPESShare_CHN_accounting=RenTPESShare_CHN_accounting,NF_TPESShare_CHN_accounting=NF_TPESShare_CHN_accounting,NF_inclTradBio_TPESShare=NF_inclTradBio_TPESShare,NF_TPESShare=NF_TPESShare,
           RENfinalenergyshare=RENfinalenergyshare,
           RenTPESElecShare=RenTPESElecShare, NF_TPESElecShare=NF_TPESElecShare,
           NatGasTPESshare=NatGasTPESshare,Coal_consumption=Coal_consumption, EnergyConsumption_industry_powersupply=EnergyConsumption_industry_powersupply,
