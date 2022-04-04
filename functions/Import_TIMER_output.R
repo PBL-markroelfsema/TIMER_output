@@ -1635,6 +1635,33 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   else {
     EfficiencyFleet_new_MedT = data.frame(matrix(ncol=0,nrow=0))
   }
+  # Efficiency total fleet for  medium trucks
+  EfficiencyFleet_MedT = data.frame(matrix(ncol=0,nrow=0))
+  if (Policy==TRUE) {
+    tryCatch({  
+      EfficiencyFleet_MedT = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""),   
+                                             filename='trp_frgt_MedT_Eff.dat', varname=NULL, 
+                                             collist=list(regions27), 
+                                             namecols=c('region'), novarname = TRUE)
+      EfficiencyFleet_MedT <- subset(EfficiencyFleet_MedT, region != "dummy")
+      EU_fleet <- inner_join(filter(EfficiencyFleet_MedT, region=='WEU'), filter(EfficiencyFleet_MedT, region=='CEU'), by=c("year"))
+      TonneKilometers_MedT <- filter(TonneKilometers, travel_mode=='Medium truck') %>% select(year, region, value)
+      EU_tkm <- inner_join(filter(TonneKilometers_MedT, region=='WEU'), filter(TonneKilometers_MedT, region=='CEU'), by=c("year"))
+      EU <- inner_join(EU_fleet, EU_tkm, by=c('year'))
+      EU$region <- "EU"
+      EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, value)
+      EU$region = factor(EU$region, levels=regions28_EU)
+      EfficiencyFleet_MedT <- rbind(EfficiencyFleet_MedT, EU)
+      EfficiencyFleet_MedT$region = factor(EfficiencyFleet_MedT$region,levels=regions28_EU)
+      EfficiencyFleet_MedT <- mutate(EfficiencyFleet_MedT, unit="MJ/tkm") 
+    },
+    error = function(error_condition) 
+    { cat("The file policy/trp_frgt_MedT_Eff.dat does not exist\n")
+    }) # try
+  } # if
+  else {
+    EfficiencyFleet_MedT = data.frame(matrix(ncol=0,nrow=0))
+  }
   
   # Efficiency total fleet for  heavy trucks
   EfficiencyFleet_HvyT = data.frame(matrix(ncol=0,nrow=0))
@@ -1989,7 +2016,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
             # transport
             TransportTravelCO2Emissions=TransportTravelCO2Emissions, TransportFreightCO2Emissions=TransportFreightCO2Emissions,
             FinalEnergy_Transport=FinalEnergy_Transport, FinalEnergy_trvl_Transport=FinalEnergy_trvl_Transport, FinalEnergy_frgt_Transport=FinalEnergy_frgt_Transport, FinalEnergy_carrier_trvl_Transport=FinalEnergy_carrier_trvl_Transport,
-            PersonKilometers=PersonKilometers, 
+            PersonKilometers=PersonKilometers, TonneKilometers=TonneKilometers,
             VehicleShare_cars=VehicleShare_cars, VehicleShare_busses=VehicleShare_busses, VehicleShare_trains=VehicleShare_trains, VehicleShare_aircrafts=VehicleShare_aircrafts,
             BiofuelShare_new_cars=BiofuelShare_new_cars, BiofuelShare_existing_cars=BiofuelShare_existing_cars,
             BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, BlendingShareBio_new_cars_pkm=BlendingShareBio_new_cars_pkm, FuelUseFleet_trvl=FuelUseFleet_trvl, FuelUseFleet_frgt=FuelUseFleet_frgt,
@@ -1998,7 +2025,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
             ElectricShare_new_HvyT=ElectricShare_new_HvyT, ElectricShare_HvyT=ElectricShare_HvyT,
             EfficiencyFleet_new_cars=EfficiencyFleet_new_cars, EfficiencyFleet_new_cars_exclEV=EfficiencyFleet_new_cars_exclEV, EfficiencyFleet_new_cars_EV=EfficiencyFleet_new_cars_EV,
             EfficiencyFleet_cars=EfficiencyFleet_cars, 
-            EfficiencyFleet_new_MedT=EfficiencyFleet_new_MedT, 
+            EfficiencyFleet_new_MedT=EfficiencyFleet_new_MedT, EfficiencyFleet_MedT=EfficiencyFleet_MedT, 
             EfficiencyFleet_new_HvyT=EfficiencyFleet_new_HvyT, EfficiencyFleet_HvyT=EfficiencyFleet_HvyT, 
             EfficiencyFleet_new_busses=EfficiencyFleet_new_busses, 
             CostPerKm_cars=CostPerKm_cars,

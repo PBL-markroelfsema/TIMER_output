@@ -1184,6 +1184,7 @@ RenTransportShare_cars = data.frame(matrix(ncol=0,nrow=0))
 RenTransportShare_excl_elec = data.frame(matrix(ncol=0,nrow=0))
 NonFossilTransportShare = data.frame(matrix(ncol=0,nrow=0))
 FuelUse_transport  = data.frame(matrix(ncol=0,nrow=0))
+RenTransportShare_total = data.frame(matrix(ncol=0,nrow=0))
 if (Policy==TRUE) {
 try({
 elec_share_transport_travel <- rbind(mutate(RenElecShare, travel_mode=travel_mode_travel[1])) %>% #walking
