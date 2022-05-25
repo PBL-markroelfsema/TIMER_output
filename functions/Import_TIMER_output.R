@@ -940,29 +940,39 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
 
   # Person Kilometers Travelled for new cars(Tera km)
   # First get share of new cars
-  PersonKilometersNewCars = data.frame(matrix(ncol=0,nrow=0))
+  ShareNewCars = data.frame(matrix(ncol=0,nrow=0))
+  ShareExistingCars = data.frame(matrix(ncol=0,nrow=0))
   if (Policy==TRUE) {
   tryCatch({
-  f='trp_trvl_cars_VehNewCapTot.dat'
   ShareNewCars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
-                                     filename=f, varname=NULL, 
+                                     filename='trp_trvl_cars_VehNewCapTot.dat', varname=NULL, 
                                      collist=list(regions26), 
                                      namecols=c('region'), novarname = TRUE)
   ShareNewCars <- subset(ShareNewCars, region != "dummy")
-  PersonKilometersCars <- filter(PersonKilometers, travel_mode=="Car")
-  PersonKilometersCars <- subset(PersonKilometersCars, region != "World")
-  
-  PersonKilometersNewCars <- inner_join(ShareNewCars, PersonKilometersCars, by=c("year", "region"))
-  PersonKilometersNewCars <- mutate(PersonKilometersNewCars, value=value.x*value.y)
-  PersonKilometersNewCars <- select(PersonKilometersNewCars, region, value, unit)
+  ShareExistingCars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+                                 filename='trp_trvl_cars_VehTotCapTot.dat', varname=NULL, 
+                                 collist=list(regions26), 
+                                 namecols=c('region'), novarname = TRUE)
+  ShareExistingCars <- subset(ShareNewCars, region != "dummy")
   },
   error=function(error_handler)
-  { cat(paste0("File ", f, " not found"))
+  { cat(paste0("File trp_trvl_cars_VehNewCapTot.dat or File trp_trvl_cars_VehTotCapTot.dat, not found"))
   }) # tryCath
   } # if
-  else {
-    PersonKilometersNewCars = data.frame(matrix(ncol=0,nrow=0))
-  }
+
+  PersonKilometersNewCars = data.frame(matrix(ncol=0,nrow=0))
+  if (Policy==TRUE) {
+    tryCatch({
+      PersonKilometersCars <- filter(PersonKilometers, travel_mode=="Car")
+      PersonKilometersCars <- subset(PersonKilometersCars, region != "World")
+      #PersonKilometersNewCars <- inner_join(ShareNewCars, PersonKilometersCars, by=c("year", "region"))
+      #PersonKilometersNewCars <- mutate(PersonKilometersNewCars, value=value.x*value.y)
+      #PersonKilometersNewCars <- select(PersonKilometersNewCars, region, value, unit)
+    },
+    error=function(error_handler)
+    { cat(paste0("File ", f, " not found"))
+    }) # tryCath
+  } # if
   
   # Person Kilometers Travelled (Tera km)
   if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
@@ -1006,6 +1016,16 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
                                       filename='trp_trvl_cars_V_share_new.dat', varname=NULL, 
                                       collist=list(regions27,car_type), 
                                       namecols=c('region','car_type'), novarname = TRUE)
+    EU_share <- inner_join(filter(VehicleShare_new_cars, region=='WEU'), filter(VehicleShare_new_cars, region=='CEU'), by=c("year", "car_type"))
+    PersonKilometers_cars <- filter(PersonKilometers, travel_mode=='Car') %>% select(year, region, value)
+    EU_pkm <- inner_join(filter(PersonKilometers_cars, region=='WEU'), filter(PersonKilometers_cars, region=='CEU'), by=c("year"))
+    EU <- inner_join(EU_share, EU_pkm, by=c('year'))
+    EU$region <- "EU"
+    EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, car_type, value)
+    EU$region = factor(EU$region, levels=regions28_EU)
+    VehicleShare_new_cars <- rbind(VehicleShare_new_cars, EU)
+    VehicleShare_new_cars$region = factor(VehicleShare_new_cars$region,levels=regions28_EU)
+    VehicleShare_new_cars <- mutate(VehicleShare_new_cars, unit="%")
   },
   error = function(error_condition) 
   { cat("The file policy/trp_trvl_cars_V_share_new.dat does not exist\n")
@@ -1095,6 +1115,127 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
     error = function(error_condition) 
   { cat("The file policy/trp_trvl_Vshare_air.out does not exist\n")
   }) # try
+  
+  
+  
+  #-------------------------------------
+  
+  
+  
+  
+  # Total new vehicles for cars (in %-share)
+  
+  # Vehicle share NEW MedT
+  VehicleShare_new_MedT <- NULL
+  if (Policy==TRUE) {
+    tryCatch({
+      VehicleShare_new_MedT = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+                                              filename='trp_frgt_MedT_V_share_new.dat', varname=NULL, 
+                                              collist=list(regions27,car_type), 
+                                              namecols=c('region','vehicle_type'), novarname = TRUE)
+      EU_share <- inner_join(filter(VehicleShare_new_MedT, region=='WEU'), filter(VehicleShare_new_MedT, region=='CEU'), by=c("year", "vehicle_type"))
+      TonneKilometers_MedT <- filter(TonneKilometers, travel_mode=='Medium truck') %>% select(year, region, value)
+      EU_pkm <- inner_join(filter(TonneKilometers_MedT, region=='WEU'), filter(TonneKilometers_MedT, region=='CEU'), by=c("year"))
+      EU <- inner_join(EU_share, EU_pkm, by=c('year'))
+      EU$region <- "EU"
+      EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, vehicle_type, value)
+      EU$region = factor(EU$region, levels=regions28_EU)
+      VehicleShare_new_MedT <- rbind(VehicleShare_new_MedT, EU)
+      VehicleShare_new_MedT$region = factor(VehicleShare_new_MedT$region,levels=regions28_EU)
+      VehicleShare_new_MedT <- mutate(VehicleShare_new_MedT, unit="MJ/Tkm")
+    },
+    error = function(error_condition) 
+    { cat("The file policy/trp_frgt_MedT_V_share_new.dat does not exist\n")
+    }) # try
+  } # if
+  else {
+    VehicleShare_new_MedT = data.frame(matrix(ncol=0,nrow=0))
+  }
+  
+  # Vehicle share MedT
+  VehicleShare_MedT <- NULL
+  if (Policy==TRUE) {
+    tryCatch({
+      VehicleShare_MedT = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+                                              filename='trp_frgt_MedT_V_share.dat', varname=NULL, 
+                                              collist=list(regions26,car_type), 
+                                              namecols=c('region','vehicle_type'), novarname = TRUE)
+      EU_share <- inner_join(filter(VehicleShare_MedT, region=='WEU'), filter(VehicleShare_MedT, region=='CEU'), by=c("year", "vehicle_type"))
+      TonneKilometers_MedT <- filter(TonneKilometers, travel_mode=='Medium truck') %>% select(year, region, value)
+      EU_pkm <- inner_join(filter(TonneKilometers_MedT, region=='WEU'), filter(TonneKilometers_MedT, region=='CEU'), by=c("year"))
+      EU <- inner_join(EU_share, EU_pkm, by=c('year'))
+      EU$region <- "EU"
+      EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, vehicle_type, value)
+      EU$region = factor(EU$region, levels=regions28_EU)
+      VehicleShare_MedT <- rbind(VehicleShare_MedT, EU)
+      VehicleShare_MedT$region = factor(VehicleShare_MedT$region,levels=regions28_EU)
+      VehicleShare_MedT <- mutate(VehicleShare_MedT, unit="MJ/Tkm")
+    },
+    error = function(error_condition) 
+    { cat("The file policy/trp_frgt_MedT_V_share.dat does not exist\n")
+    }) # try
+  } # if
+  else {
+    VehicleShare_MedT = data.frame(matrix(ncol=0,nrow=0))
+  }
+  
+  # Vehicle share NEW MedT
+  VehicleShare_new_HvyT <- NULL
+  if (Policy==TRUE) {
+    tryCatch({
+      VehicleShare_new_HvyT = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+                                              filename='trp_frgt_HvyT_V_share_new.dat', varname=NULL, 
+                                              collist=list(regions27,car_type), 
+                                              namecols=c('region','vehicle_type'), novarname = TRUE)
+      EU_share <- inner_join(filter(VehicleShare_new_HvyT, region=='WEU'), filter(VehicleShare_new_HvyT, region=='CEU'), by=c("year", "vehicle_type"))
+      TonneKilometers_HvyT <- filter(TonneKilometers, travel_mode=='Heavy truck') %>% select(year, region, value)
+      EU_pkm <- inner_join(filter(TonneKilometers_HvyT, region=='WEU'), filter(TonneKilometers_HvyT, region=='CEU'), by=c("year"))
+      EU <- inner_join(EU_share, EU_pkm, by=c('year'))
+      EU$region <- "EU"
+      EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, vehicle_type, value)
+      EU$region = factor(EU$region, levels=regions28_EU)
+      VehicleShare_new_HvyT <- rbind(VehicleShare_new_HvyT, EU)
+      VehicleShare_new_HvyT$region = factor(VehicleShare_new_HvyT$region,levels=regions28_EU)
+      VehicleShare_new_HvyT <- mutate(VehicleShare_new_HvyT, unit="MJ/Tkm")
+    },
+    error = function(error_condition) 
+    { cat("The file policy/trp_frgt_HvyT_V_share_new.dat does not exist\n")
+    }) # try
+  } # if
+  else {
+    VehicleShare_new_HvyT = data.frame(matrix(ncol=0,nrow=0))
+  }
+  
+  # Vehicle share HvyT
+  VehicleShare_HvyT <- NULL
+  if (Policy==TRUE) {
+    tryCatch({
+      VehicleShare_HvyT = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, "/policy", sep=""), 
+                                          filename='trp_frgt_HvyT_V_share.dat', varname=NULL, 
+                                          collist=list(regions26,car_type), 
+                                          namecols=c('region','vehicle_type'), novarname = TRUE)
+      EU_share <- inner_join(filter(VehicleShare_HvyT, region=='WEU'), filter(VehicleShare_HvyT, region=='CEU'), by=c("year", "vehicle_type"))
+      TonneKilometers_HvyT <- filter(TonneKilometers, travel_mode=='Heavy truck') %>% select(year, region, value)
+      EU_pkm <- inner_join(filter(TonneKilometers_HvyT, region=='WEU'), filter(TonneKilometers_HvyT, region=='CEU'), by=c("year"))
+      EU <- inner_join(EU_share, EU_pkm, by=c('year'))
+      EU$region <- "EU"
+      EU <- EU %>% mutate(value=(value.x.x*value.x.y+value.y.x*value.y.y)/(value.x.y+value.y.y)) %>% select(year, region, vehicle_type, value)
+      EU$region = factor(EU$region, levels=regions28_EU)
+      VehicleShare_HvyT <- rbind(VehicleShare_HvyT, EU)
+      VehicleShare_HvyT$region = factor(VehicleShare_HvyT$region,levels=regions28_EU)
+      VehicleShare_HvyT <- mutate(VehicleShare_HvyT, unit="MJ/Tkm")
+    },
+    error = function(error_condition) 
+    { cat("The file policy/trp_frgt_HvyT_V_share.dat does not exist\n")
+    }) # try
+  } # if
+  else {
+    VehicleShare_HvyT = data.frame(matrix(ncol=0,nrow=0))
+  }  
+  #-------------------------------------
+  
+  
+  
   
   # biofuels share for cars in existing fleet (in terms of personkilometers)
   BiofuelShare_existing_cars = data.frame(matrix(ncol=0,nrow=0))
@@ -2017,7 +2158,8 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
             TransportTravelCO2Emissions=TransportTravelCO2Emissions, TransportFreightCO2Emissions=TransportFreightCO2Emissions,
             FinalEnergy_Transport=FinalEnergy_Transport, FinalEnergy_trvl_Transport=FinalEnergy_trvl_Transport, FinalEnergy_frgt_Transport=FinalEnergy_frgt_Transport, FinalEnergy_carrier_trvl_Transport=FinalEnergy_carrier_trvl_Transport,
             PersonKilometers=PersonKilometers, TonneKilometers=TonneKilometers,
-            VehicleShare_cars=VehicleShare_cars, VehicleShare_busses=VehicleShare_busses, VehicleShare_trains=VehicleShare_trains, VehicleShare_aircrafts=VehicleShare_aircrafts,
+            VehicleShare_cars=VehicleShare_cars, VehicleShare_new_cars=VehicleShare_new_cars, VehicleShare_busses=VehicleShare_busses, VehicleShare_trains=VehicleShare_trains, VehicleShare_aircrafts=VehicleShare_aircrafts,
+            VehicleShare_new_MedT=VehicleShare_new_MedT, VehicleShare_new_HvyT=VehicleShare_new_HvyT,  VehicleShare_MedT=VehicleShare_MedT, VehicleShare_HvyT=VehicleShare_HvyT, 
             BiofuelShare_new_cars=BiofuelShare_new_cars, BiofuelShare_existing_cars=BiofuelShare_existing_cars,
             BlendingShareBio_cars_pkm=BlendingShareBio_cars_pkm, BlendingShareBio_new_cars_pkm=BlendingShareBio_new_cars_pkm, FuelUseFleet_trvl=FuelUseFleet_trvl, FuelUseFleet_frgt=FuelUseFleet_frgt,
             BlendingShareBio_energy_trvl=BlendingShareBio_energy_trvl, BlendingShareBio_energy_frgt=BlendingShareBio_energy_frgt, 

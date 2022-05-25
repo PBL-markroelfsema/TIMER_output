@@ -1253,6 +1253,19 @@ else
   CO2_HvyT <- NULL
 }
 
+TonneKilometers_MedT <- filter(Scenario$TonneKilometers, travel_mode=='Medium truck') %>% select(-travel_mode)
+TonneKilometers_HvyT <- filter(Scenario$TonneKilometers, travel_mode=='Heavy truck') %>% select(-travel_mode)
+tmp_Share_new_MedT <- inner_join(Scenario$VehicleShare_new_MedT, TonneKilometers_MedT, by=c('region', 'year'))
+tmp_Share_new_HvyT <- inner_join(Scenario$VehicleShare_new_HvyT, TonneKilometers_HvyT, by=c('region', 'year'))
+tmp_Share_MedT <- inner_join(Scenario$VehicleShare_MedT, TonneKilometers_MedT, by=c('region', 'year'))
+tmp_Share_HvyT <- inner_join(Scenario$VehicleShare_HvyT, TonneKilometers_HvyT, by=c('region', 'year'))
+VehicleShare_new_Trucks <- inner_join(tmp_Share_new_MedT, tmp_Share_new_HvyT, by=c('region', 'year', 'vehicle_type')) %>%
+                           mutate(value=value.x.x*value.y.x/(value.y.x+value.y.y)+value.x.y*value.y.y/(value.y.x+value.y.y), unit="MJ/tkm") %>%
+                           select(-value.x.x, -unit.x.x, -value.y.x, -unit.y.x, -value.x.y, -unit.x.y, -value.y.y, -unit.y.y)
+VehicleShare_Trucks <- inner_join(tmp_Share_MedT, tmp_Share_HvyT, by=c('region', 'year', 'vehicle_type')) %>%
+                       mutate(value=value.x.x*value.y.x/(value.y.x+value.y.y)+value.x.y*value.y.y/(value.y.x+value.y.y), unit="MJ/tkm") %>%
+                       select(-value.x.x, -unit.x.x, -value.y.x, -unit.y.x, -value.x.y, -unit.x.y, -value.y.y, -unit.y.y)
+
 # Share of Electric cars
 ElectricCars_share <- filter(Scenario$VehicleShare_cars, car_type=="BEV" | car_type=="BEV 100km")
 ElectricCars_share <- ElectricCars_share %>% group_by(year, region) %>% summarise(value=sum(value))
@@ -1817,7 +1830,7 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           # transport
           CO2_km_cars=CO2_km_cars, CO2_cars=CO2_cars, CO2_MedT=CO2_MedT, CO2_HvyT=CO2_HvyT,
           FuelUse_pkm_cars=FuelUse_pkm_cars, FuelUse_transport=FuelUse_transport, 
-          ElectricCars_share=ElectricCars_share, 
+          VehicleShare_new_Trucks=VehicleShare_new_Trucks, VehicleShare_Trucks=VehicleShare_Trucks, ElectricCars_share=ElectricCars_share, 
           RenTransportShare_trvl=RenTransportShare_trvl, RenTransportShare_frgt=RenTransportShare_frgt, RenTransportShare=RenTransportShare_total, RenTransportShare_cars=RenTransportShare_cars,
           NonFossilTransportShare=NonFossilTransportShare, RenTransportShare_excl_elec=RenTransportShare_excl_elec,
           RenTransportShare_Road_trvl=RenTransportShare_Road_trvl, RenTransportShare_Road_frgt=RenTransportShare_Road_frgt, RenTransportShare_Road=RenTransportShare_Road,
