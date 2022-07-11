@@ -444,10 +444,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   CO2EPG$unit <- "gCO2/kWhe"
   }, # try
   warning = function(warning_condition)
-  { cat("The file FuelDem.out does not exist in TIMER_3_11\n")
+  { cat("The file FuelDem.out does not exist in TIMER_3_2\n")
   },
   error = function(error_condition) 
-  { cat("The file FuelDem.out does not exist in TIMER_3_11\n")
+  { cat("The file FuelDem.out does not exist in TIMER_3_2\n")
   }) # trycatch
 
   # Add total CO2-intensity per region
@@ -533,14 +533,14 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   H2FuelDem <- mutate(H2FuelDem, unit="GJ")
   }, # try
   warning = function(warning_condition)
-  { cat("The file FuelDem.out does not exist in TIMER_3_11\n")
+  { cat("The file FuelDem.out does not exist in TIMER_3_2\n")
   },
   error = function(error_condition) 
-  { cat("The file FuelDem.out does not exist in TIMER_3_11\n")
+  { cat("The file FuelDem.out does not exist in TIMER_3_2\n")
   }) # trycatch
   
   # Total H2 demand per region
-  # NOT IN TIMER_3_11
+  # NOT IN TIMER_3_2
   H2Prod <- NULL
   if(TIMER_version %in% c('TIMER_2015')) {
   data_dir="/tuss/hydrogen"} 
@@ -557,10 +557,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   H2Prod$region = factor(H2Prod$region,levels=regions28_EU)
   }, # try
   warning = function(warning_condition)
-  { cat("The file H2Dem.out does not exist in TIMER_3_11\n")
+  { cat("The file H2Dem.out does not exist in TIMER_3_2\n")
   },
   error = function(error_condition) 
-  { cat("The file H2Dem.out does not exist in TIMER_3_11\n")
+  { cat("The file H2Dem.out does not exist in TIMER_3_2\n")
   }) # trycatch
   
   # Total H2 production per carrier
@@ -837,10 +837,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   TransportTravelCO2Emissions$unit <- "MtCO2"
   }, # try
   warning = function(warning_condition)
-  { cat("The file trp_trvl_CO2.out does not exist in TIMER_3_11\n")
+  { cat("The file trp_trvl_CO2.out does not exist in TIMER_3_2\n")
   },
   error = function(error_condition) 
-  { cat("The file trp_trvl_CO2.out does not exist in TIMER_3_11\n")
+  { cat("The file trp_trvl_CO2.out does not exist in TIMER_3_2\n")
   }) # trycatch
  
   # CO2 emissions freight 
@@ -861,10 +861,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   TransportFreightCO2Emissions <- mutate(TransportFreightCO2Emissions, unit="MtCO2")
   }, # try
   warning = function(warning_condition)
-  { cat("The file trp_frgt_CO2.out does not exist in TIMER_3_11\n")
+  { cat("The file trp_frgt_CO2.out does not exist in TIMER_3_2\n")
   },
   error = function(error_condition) 
-  { cat("The file trp_frgt_CO2.out does not exist in TIMER_3_11\n")
+  { cat("The file trp_frgt_CO2.out does not exist in TIMER_3_2\n")
   }) # trycatch
   
   # Energy use travel fuels per mode
