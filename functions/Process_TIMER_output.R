@@ -588,6 +588,45 @@ NonFossilElecShare <- data.frame(NonFossilElecShare)
 NonFossilElecShare <- mutate(NonFossilElecShare, unit="%")  %>% as.data.frame()
 })
 
+NuclearElecShare <- NULL
+try({
+  Nuclear <- ifelse(Scenario$ElecProd$energy_carrier %in% c('Nuclear'), TRUE, FALSE)
+  tmp1 <- cbind(Scenario$ElecProd,Nuclear)
+  tmp1 <- subset(tmp1, Nuclear==TRUE)
+  tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
+  tmp2 <- subset(Scenario$ElecProd, energy_carrier=="Total")
+  tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
+  NuclearElecShare <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
+  NuclearElecShare <- data.frame(NuclearElecShare)
+  NuclearElecShare <- mutate(NuclearElecShare, unit="%")  %>% as.data.frame()
+})
+
+CoalElecShare <- NULL
+try({
+  Coal <- ifelse(Scenario$ElecProd$energy_carrier %in% c('Coal'), TRUE, FALSE)
+  tmp1 <- cbind(Scenario$ElecProd,Coal)
+  tmp1 <- subset(tmp1, Coal==TRUE)
+  tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
+  tmp2 <- subset(Scenario$ElecProd, energy_carrier=="Total")
+  tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
+  CoalElecShare <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
+  CoalElecShare <- data.frame(CoalElecShare)
+  CoalElecShare <- mutate(CoalElecShare, unit="%")  %>% as.data.frame()
+})
+
+NaturalGasElecShare <- NULL
+try({
+  NaturalGas <- ifelse(Scenario$ElecProd$energy_carrier %in% c('Natural gas'), TRUE, FALSE)
+  tmp1 <- cbind(Scenario$ElecProd,NaturalGas)
+  tmp1 <- subset(tmp1, NaturalGas==TRUE)
+  tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
+  tmp2 <- subset(Scenario$ElecProd, energy_carrier=="Total")
+  tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
+  NaturalGasElecShare <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
+  NaturalGasElecShare <- data.frame(NaturalGasElecShare)
+  NaturalGasElecShare <- mutate(NaturalGasElecShare, unit="%")  %>% as.data.frame()
+})
+
 NonFossil_detailed <- ifelse(Scenario$ElecProdSpec$energy_carrier %in% energy_carrier_nf_detailed, TRUE, FALSE)
 tmp1 <- cbind(Scenario$ElecProdSpec,NonFossil_detailed)
 tmp1 <- subset(tmp1, NonFossil_detailed==TRUE)
@@ -934,9 +973,9 @@ tmp1 <- subset(tmp1, NF==TRUE)
 tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
 tmp2 <- subset(Scenario$TPES, energy_carrier=="Total")
 tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
-NF_TPESShare <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
-NF_TPESShare <- data.frame(NF_TPESShare)
-NF_TPESShare <- mutate(NF_TPESShare, unit="%")  %>% as.data.frame()
+NonFossilTPESShare <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
+NonFossilTPESShare <- data.frame(NonFossilTPESShare)
+NonFossilTPESShare <- mutate(NonFossilTPESShare, unit="%")  %>% as.data.frame()
 
 NF_inclTradBio <- ifelse(Scenario$TPES$energy_carrier %in% c('Modern biofuels', 'Traditional biofuels', 'Solar/wind', 'Hydro-electricity','Nuclear'), TRUE, FALSE)
 tmp1 <- cbind(Scenario$TPES,NF_inclTradBio)
@@ -977,9 +1016,9 @@ tmp1 <- subset(tmp1, NF==TRUE)
 tmp1 <- tmp1 %>% group_by(year, region) %>% summarise(value=sum(value))
 tmp2 <- subset(TPES_CHN_accounting, energy_carrier=="Total")
 tmp3 <- inner_join(tmp1, tmp2, by=c("year", "region"))
-NF_TPESShare_CHN_accounting <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
-NF_TPESShare_CHN_accounting <- data.frame(NF_TPESShare_CHN_accounting)
-NF_TPESShare_CHN_accounting <- mutate(NF_TPESShare_CHN_accounting, unit="%")  %>% as.data.frame()
+NonFossilTPESShare_CHN_accounting <- tmp3 %>% group_by(year, region) %>% summarise(value=100*value.x/value.y)
+NonFossilTPESShare_CHN_accounting <- data.frame(NonFossilTPESShare_CHN_accounting)
+NonFossilTPESShare_CHN_accounting <- mutate(NonFossilTPESShare_CHN_accounting, unit="%")  %>% as.data.frame()
 
 # Gas share in TPES
 NatGasTPES <- data.table(Scenario$TPES)[energy_carrier %in%c("Total","Natural gas") & year >= StartYear]
@@ -1797,9 +1836,10 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           FinalEnergy_total=FinalEnergy_total,
           # energy supply
           RenElecShare=RenElecShare, RenElecShare_excl_hydro=RenElecShare_excl_hydro, NonFossilElecShare=NonFossilElecShare,
+          NuclearElecShare=NuclearElecShare, CoalElecShare=CoalElecShare, NaturalGasElecShare=NaturalGasElecShare,
           RenElecShare_detailed=RenElecShare_detailed, NonFossilElecShare_detailed=NonFossilElecShare_detailed, InnovativeElecShare_detailed=InnovativeElecShare_detailed,
           RenHydrogenShare=RenHydrogenShare, InnovativeHydrogenShare=InnovativeHydrogenShare,
-          RenTPESShare=RenTPESShare,RenTPESShare_CHN_accounting=RenTPESShare_CHN_accounting,NF_TPESShare_CHN_accounting=NF_TPESShare_CHN_accounting,NF_inclTradBio_TPESShare=NF_inclTradBio_TPESShare,NF_TPESShare=NF_TPESShare,
+          RenTPESShare=RenTPESShare,RenTPESShare_CHN_accounting=RenTPESShare_CHN_accounting,NonFossilTPESShare_CHN_accounting=NonFossilTPESShare_CHN_accounting,NF_inclTradBio_TPESShare=NF_inclTradBio_TPESShare,NonFossilTPESShare=NonFossilTPESShare,
           RENfinalenergyshare=RENfinalenergyshare,
           RenTPESElecShare=RenTPESElecShare, NF_TPESElecShare=NF_TPESElecShare,
           NatGasTPESshare=NatGasTPESshare,Coal_consumption=Coal_consumption, EnergyConsumption_industry_powersupply=EnergyConsumption_industry_powersupply,

@@ -424,6 +424,8 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   CO2EPG_new$unit <- "gCO2/kWhe"
   
   # CO2 standard existing power plants
+  CO2EPG <- NULL
+  tryCatch({
   if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"} 
   CO2EPG = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                            filename='CO2EPGSpecAvg.out', varname=NULL, 
@@ -437,7 +439,14 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   CO2EPG <- rbind(CO2EPG, EU)
   CO2EPG$region = factor(CO2EPG$region,levels=regions28_EU)
   CO2EPG$unit <- "gCO2/kWhe"
-  
+  }, # try
+  warning = function(warning_condition)
+  { cat("The file FuelDem.out does not exist in TIMER_3_11\n")
+  },
+  error = function(error_condition) 
+  { cat("The file FuelDem.out does not exist in TIMER_3_11\n")
+  }) # trycatch
+
   # Add total CO2-intensity per region
   if (Policy==TRUE)
   { CO2_tmp <- filter(ElecHeatCO2, energy_supply_sector=="Electricity", energy_technology=="Total") %>%
