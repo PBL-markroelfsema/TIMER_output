@@ -982,6 +982,9 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
     { cat(paste0("File ", f, " not found"))
     }) # tryCath
   } # if
+  else {
+    PersonKilometersNewCars = data.frame(matrix(ncol=0,nrow=0))
+  }
   
   # Person Kilometers Travelled (Tera km)
   if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
