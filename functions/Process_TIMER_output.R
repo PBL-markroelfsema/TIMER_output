@@ -19,6 +19,9 @@
 # Energy_intensity_TPES_GDP - DONE, ok?
 
 library(tidyverse)
+
+options(dplyr.summarise.inform = FALSE)
+
 ProcessTimerScenario <- function(Scenario, TIMER_version = 'TIMER_2015', Rundir, 
                                  Project, RDir, InterPolateIMAGE=FALSE, TIMERFunctionsDir="Check_targets", Policy = FALSE)
 { s <- deparse(substitute(Scenario)) # get object name as string

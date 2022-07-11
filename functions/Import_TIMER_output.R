@@ -64,6 +64,9 @@
 
 library(data.table)
 library(tidyverse)
+
+options(dplyr.summarise.inform = FALSE)
+
 ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_2015', IMAGE_scenario = 'SSP2', Rundir, 
                                 Project, TIMERGeneration, RDir, Projectoutputlib, TIMERFunctionsDir="Check_targets", Policy = FALSE)
 { source(paste(Rundir, Project, RDir, TIMERFunctionsDir, '/functions', 'mym2r.R', sep='/'))
