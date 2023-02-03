@@ -20,7 +20,7 @@
 # DRIVERS
 # VA_share, ecstructure.out, indicatoren (fraction) (value added share)
 # SVA, sva_pc.scn, tuss (US$) (service value added)
-# PRIVC, pcons_pc.scn, tuss (US$) (private consumption)
+# PRIVC, pcons_pc.scn, tuss (US$) (priv/ate consumption)
 # FINAL ENERGY
 # UEpc, uepc.out, tuss (GJ/capita) (useful energy per capita)
 # IntensTot, Intens.out, tuss, (GJ/$) (useful energy intensity)
@@ -92,27 +92,52 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
     }
   }
   print(IMAGE_folder)
+
+  # HACK FOR SENTINE
+  if (Project=="SENTINEL") {TIMER_version = "TIMER_3_3"}
   
   # Initiliaze parameters
-  if (TIMER_version %in% c('TIMER_3_11','TIMER_3_2'))
-  { energy_technology=energy_technology_3_2
-    energy_technology_28=energy_technology_30_3_2
-    energy_technology_20=energy_technology_22_3_2
+  if (TIMER_version %in% c('TIMER_3_3'))
+  { energy_technology=energy_technology_34_3_3
+    energy_technology_incl_total=energy_technology_incl_total_34_3_3
+    energy_technology_elecprod=energy_technology_34_3_3
+    energy_technology_CO2=energy_technology_24_3_3
     sector_capture=sector_capture_3_2
-    energy_carrier_ren_28=energy_carrier_ren_30_3_2
-    energy_carrier_nf_28=energy_carrier_nf_30_3_2
+    energy_carrier_ren=energy_carrier_ren_30_3_2
+    energy_carrier_nf=energy_carrier_nf_30_3_2
     energy_technology_ren=energy_technology_ren_3_2
     energy_technology_solar=energy_technology_solar_3_2
+    energy_carrier_energy=energy_carrier_energy_3_3
+    energy_carrier_energy_incl_total=energy_carrier_energy_incl_total_2015
+    energy_technology_fuel=energy_technology_15_3_3
+  }
+  else if (TIMER_version %in% c('TIMER_3_11','TIMER_3_2'))
+  { energy_technology=energy_technology_30_3_2
+    energy_technology_incl_total=energy_technology_3_2
+    energy_technology_elecprod=energy_technology_30_3_2
+    energy_technology_CO2=energy_technology_22_3_2
+    sector_capture=sector_capture_3_2
+    energy_carrier_ren=energy_carrier_ren_30_3_2
+    energy_carrier_nf=energy_carrier_nf_30_3_2
+    energy_technology_ren=energy_technology_ren_3_2
+    energy_technology_solar=energy_technology_solar_3_2
+    energy_carrier_energy=energy_carrier_energy_2015
+    energy_carrier_energy_incl_total=energy_carrier_energy_incl_total_2015
+    energy_technology_fuel=energy_technology_14_2015
   }
   else
-    {energy_technology=energy_technology_2015
-     energy_technology_28=energy_technology_28_2015
-     energy_technology_20=energy_technology_20_2015
+    {energy_technology=energy_technology_28_2015
+     energy_technology_incl_total=energy_technology_2015
+     energy_technology_elecprod=energy_technology_28_2015
+     energy_technology_CO2=energy_technology_20_2015
      sector_capture=sector_capture_2015
-     energy_carrier_ren_28=energy_carrier_ren_28_2015
-     energy_carrier_nf_28=energy_carrier_nf_28_2015
+     energy_carrier_ren=energy_carrier_ren_28_2015
+     energy_carrier_nf=energy_carrier_nf_28_2015
      energy_technology_ren=energy_technology_ren_2015
      energy_technology_solar=energy_technology_solar_2015
+     energy_carrier_energy=energy_carrier_energy_2015
+     energy_carrier_energy_incl_total=energy_carrier_energyy_incl_total_2015
+     energy_technology_fuel=energy_technology_14_2015
     }
   
   #1.
@@ -120,7 +145,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   # GHG EMISSIONS
   #2, 3.
   # prepare correct labels for mym file dimensions
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/emis"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/emis"} else{data_dir="/tuss"}
   CO2Spec = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                             filename='CO2Spec.out', varname=NULL, 
                             collist=list(regions28,sector2), 
@@ -133,7 +158,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   CO2Spec$region = factor(CO2Spec$region,levels=regions28_EU)
   CO2Spec <- mutate(CO2Spec, unit="kg C")
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
   ENEMISCO2 = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                               filename='ENEMISCO2.out', varname=NULL, 
                               collist=list(regions28,sector3,energy_carrier_emis), 
@@ -147,7 +172,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   ENEMISCO2$region = factor(ENEMISCO2$region,levels=regions28_EU)
   ENEMISCO2 <- mutate(ENEMISCO2, unit="Gt C")
 
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}  
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}  
   ENEMISCH4 = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                               filename='ENEMISCH4.out', varname=NULL, 
                               collist=list(regions28,sector3,energy_carrier_emis), 
@@ -161,7 +186,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   ENEMISCH4$region = factor(ENEMISCH4$region,levels=regions28_EU)
   ENEMISCH4 <- mutate(ENEMISCH4, unit="Mt")
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
   ENEMISN2O = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                               filename='ENEMISN2O.out', varname=NULL, 
                               collist=list(regions28,sector3,energy_carrier_emis), 
@@ -175,7 +200,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   ENEMISN2O$region = factor(ENEMISN2O$region,levels=regions28_EU)
   ENEMISN2O <- mutate(ENEMISN2O, unit="Mt N")
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
   INDEMISCO2 = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                filename='INDEMISCO2.out', varname=NULL, 
                                collist=list(regions28,industrial_process_CO2), 
@@ -189,7 +214,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   INDEMISCO2$region = factor(INDEMISCO2$region,levels=regions28_EU)
   INDEMISCO2 <- mutate(INDEMISCO2, unit="Gt C")
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
   INDEMISCH4 = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                filename='INDEMISCH4.out', varname=NULL, 
                                collist=list(regions28,industrial_process_CH4), 
@@ -203,7 +228,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   INDEMISCH4$region = factor(INDEMISCH4$region,levels=regions28_EU)
   INDEMISCH4 <- mutate(INDEMISCH4, unit="Mt")
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
   INDEMISN2O = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                filename='INDEMISN2O.out', varname=NULL, 
                                collist=list(regions28,industrial_process_N2O), 
@@ -217,7 +242,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   INDEMISN2O$region = factor(INDEMISN2O$region,levels=regions28_EU)
   INDEMISN2O <- mutate(INDEMISN2O, unit="Mt N")
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
   HFC_reg = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                             filename='EMISHFC_reg.out', varname=NULL, 
                             collist=list(regions27,HFC), 
@@ -231,7 +256,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   HFC_reg$region = factor(HFC_reg$region,levels=regions28_EU)
   HFC_reg <- mutate(HFC_reg, unit="kt")
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/emis"} else{data_dir="/indicatoren"}
   PFC_reg = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                             filename='EMISPFC_reg.out', varname=NULL, 
                             collist=list(regions27,PFC), 
@@ -245,7 +270,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   PFC_reg$region = factor(PFC_reg$region,levels=regions28_EU)
   PFC_reg <- mutate(PFC_reg, unit="kt")
   
-  if(TIMER_version == 'TIMER_3_2') {dir="I2RT";luemco2_source=land_use_source_CO2_3_2} else{dir="output/emissions";luemco2_source=land_use_source_CO2} 
+  if(TIMER_version %in%c('TIMER_3_2', 'TIMER_3_3')) {dir="I2RT";luemco2_source=land_use_source_CO2_3_2} else{dir="output/emissions";luemco2_source=land_use_source_CO2} 
   LUEMCO2 = read.mym2r.nice(mym.folder=IMAGE_folder, scen.econ=paste(IMAGE_scenario, "/", dir, sep=""), 
                             filename='LUEMCO2.out', varname=NULL, 
                             collist=list(luemco2_source, regions27), 
@@ -258,7 +283,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   LUEMCO2$region = factor(LUEMCO2$region,levels=regions28_EU)
   LUEMCO2 <- mutate(LUEMCO2, unit="Gt C")
   
-  if(TIMER_version == 'TIMER_3_2') {dir="I2RT";luemch4_source=land_use_source_CH4_3_2} else{dir="output/emissions";luemch4_source=land_use_source_CH4} 
+  if(TIMER_version %in%c('TIMER_3_2', 'TIMER_3_3')) {dir="I2RT";luemch4_source=land_use_source_CH4_3_2} else{dir="output/emissions";luemch4_source=land_use_source_CH4} 
   if(TIMER_scenario%in%c("SSP2_SPA0_19I_D", "SSP2_SPA0_26I_D")) {luemch4_source=land_use_source_CH4}
   LUEMCH4 = read.mym2r.nice(mym.folder=IMAGE_folder, scen.econ=paste(IMAGE_scenario, "/", dir, sep=""), 
                             filename='LUEMCH4.out', varname=NULL, 
@@ -272,7 +297,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   LUEMCH4$region = factor(LUEMCH4$region,levels=regions28_EU)
   LUEMCH4 <- mutate(LUEMCH4, unit="Mt")
 
-  if(TIMER_version == 'TIMER_3_2') {dir="I2RT";luemn20_source=land_use_source_N2O_3_2} else{dir="output/emissions";luemn20_source=land_use_source_N2O} 
+  if(TIMER_version %in%c('TIMER_3_2', 'TIMER_3_3')) {dir="I2RT";luemn20_source=land_use_source_N2O_3_2} else{dir="output/emissions";luemn20_source=land_use_source_N2O} 
   if(TIMER_scenario%in%c("SSP2_SPA0_19I_D", "SSP2_SPA0_26I_D")) {luemn20_source=land_use_source_N2O}
   LUEMN2O = read.mym2r.nice(mym.folder=IMAGE_folder, scen.econ=paste(IMAGE_scenario, "/", dir, sep=""), 
                             filename='LUEMN2O.out', varname=NULL, 
@@ -286,10 +311,46 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   LUEMN2O$region = factor(LUEMN2O$region,levels=regions28_EU)
   LUEMN2O <- mutate(LUEMN2O, unit="Mt N")
   
+  
+  # INDUSTRY emissions
+  data_dir="/tuss/endem/hi"
+  SteelCO2Emissions =  read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
+                                                filename='steel_Emissions.out', varname=NULL, 
+                                                collist=list(regions28), 
+                                                namecols=c('region'), novarname = TRUE)
+  SteelCO2Emissions$value <- 10^-6*SteelCO2Emissions$value
+  SteelCO2Emissions <- mutate(SteelCO2Emissions, unit="Gt C")
+  CementCO2Emissions =  read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
+                              filename='cement_Emissions.out', varname=NULL, 
+                              collist=list(regions28), 
+                              namecols=c('region'), novarname = TRUE)
+  CementCO2Emissions$value <- 10^-6*CementCO2Emissions$value
+  CementCO2Emissions <- mutate(CementCO2Emissions, unit="Gt C")
+  FoodCO2Emissions =  read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
+                              filename='food_Emissions.out', varname=NULL, 
+                              collist=list(regions28), 
+                              namecols=c('region'), novarname = TRUE)
+  FoodCO2Emissions$value <- 10^-6*FoodCO2Emissions$value
+  FoodCO2Emissions <- mutate(FoodCO2Emissions, unit="Gt C")
+  PaperCO2Emissions =  read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
+                              filename='paper_Emissions.out', varname=NULL, 
+                              collist=list(regions28), 
+                              namecols=c('region'), novarname = TRUE)
+  PaperCO2Emissions$value <- 10^-6*PaperCO2Emissions$value
+  PaperCO2Emissions <- mutate(PaperCO2Emissions, unit="Gt C")
+
+  # in kg CO2
+  ChemicalsCO2Emissions =  read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
+                                       filename='nonen_TotNonEnEmisCO2.out', varname=NULL, 
+                                       collist=list(regions27), 
+                                       namecols=c('region'), novarname = TRUE)
+  ChemicalsCO2Emissions$value <- 10^-9*(12/44)*ChemicalsCO2Emissions$value
+  ChemicalsCO2Emissions <- mutate(ChemicalsCO2Emissions, unit="Gt C")
+  
   # ENERGY SUPPLY
   # Electricity
   # CO2 emissions from electricity and heat production
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
   ElecHeatCO2 = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                             filename='ElecHeatCO2.out', varname=NULL, 
                             collist=list(regions28,sector_energy_supply,energy_technology_energy_supply), 
@@ -304,7 +365,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   ElecHeatCO2$unit <- "Gt C"
   
   #TODO use newer ElecProd file from new TIMER version, adjust dimensions etc. accordingly
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/policy"} else{data_dir="/indicatoren"}  
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/policy"} else{data_dir="/indicatoren"}  
   ElecProd <- NULL
   try({ElecProd = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                              filename='ElecProd.out', varname=NULL, 
@@ -336,10 +397,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   ElecProd <- mutate(ElecProd, unit="PJ")
   })
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
   ElecProdSpec = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                              filename='ElecProdSpec.out', varname=NULL, 
-                             collist=list(regions28,energy_technology_28), 
+                             collist=list(regions28,energy_technology_elecprod), 
                              namecols=c('region','energy_carrier'), novarname = TRUE)
   ElecProdSpec <- subset(ElecProdSpec, region != "dummy")
   EU <- inner_join(filter(ElecProdSpec, region=='WEU'), filter(ElecProdSpec, region=='CEU'), by=c("year", "energy_carrier"))
@@ -367,10 +428,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   ElecProdSpec <- mutate(ElecProdSpec, unit="GJ")
   
   # New Electricity capacity
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
   ElecCap_new = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                 filename='GCapNew.out', varname=NULL, 
-                                collist=list(regions28,energy_technology_28), 
+                                collist=list(regions28,energy_technology_elecprod), 
                                 namecols=c('region','energy_technology'), novarname = TRUE)
   ElecCap_new <- subset(ElecCap_new, region != "dummy")
   EU <- inner_join(filter(ElecCap_new, region=='WEU'), filter(ElecCap_new, region=='CEU'), by=c("year", "energy_technology"))
@@ -381,11 +442,11 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   ElecCap_new$region = factor(ElecCap_new$region,levels=regions28_EU)
   ElecCap_new$unit <- "MW"
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
   # Electricity capacity
   ElecCap = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                              filename='GCap.out', varname=NULL, 
-                             collist=list(regions28,energy_technology), 
+                             collist=list(regions28,energy_technology_incl_total), 
                              namecols=c('region','energy_technology'), novarname = TRUE)
   ElecCap <- subset(ElecCap, region != "dummy")
   EU <- inner_join(filter(ElecCap, region=='WEU'), filter(ElecCap, region=='CEU'), by=c("year", "energy_technology"))
@@ -397,10 +458,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   ElecCap$unit <- "MW"
   
   # Primary energy electricity production
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
   ElecFuelUseTot = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                             filename='ElecFuelUseTot.out', varname=NULL, 
-                            collist=list(regions28,energy_technology_14), 
+                            collist=list(regions28,energy_technology_fuel), 
                             namecols=c('region','energy_technology'), novarname = TRUE)
   ElecFuelUseTot <- subset(ElecFuelUseTot, region != "dummy")
   EU <- inner_join(filter(ElecFuelUseTot, region=='WEU'), filter(ElecFuelUseTot, region=='CEU'), by=c("year", "energy_technology"))
@@ -412,10 +473,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   ElecFuelUseTot$unit <- "GJ"
 
   # CO2 standard new power plants
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"} 
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"} 
   CO2EPG_new = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                             filename='CO2EPGSpecNew.out', varname=NULL, 
-                            collist=list(regions26,energy_technology_20), 
+                            collist=list(regions26,energy_technology_CO2), 
                             namecols=c('region','energy_technology'), novarname = TRUE)
   CO2EPG_new <- subset(CO2EPG_new, region != "dummy")
   EU <- inner_join(filter(CO2EPG_new, region=='WEU'), filter(CO2EPG_new, region=='CEU'), by=c("year", "energy_technology"))
@@ -429,10 +490,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   # CO2 standard existing power plants
   CO2EPG <- NULL
   tryCatch({
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"} 
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"} 
   CO2EPG = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                            filename='CO2EPGSpecAvg.out', varname=NULL, 
-                           collist=list(regions26,energy_technology_20), 
+                           collist=list(regions26,energy_technology_CO2), 
                            namecols=c('region','energy_technology'), novarname = TRUE)
   CO2EPG <- subset(CO2EPG, region != "dummy")
   EU <- inner_join(filter(CO2EPG, region=='WEU'), filter(CO2EPG, region=='CEU'), by=c("year", "energy_technology"))
@@ -468,10 +529,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   }
   
   # Efficiency new power plants
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
   ElecEffPct_new = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                             filename='ElecEffNew.out', varname=NULL, 
-                            collist=list(regions27,energy_technology_28), 
+                            collist=list(regions27,energy_technology_elecprod), 
                             namecols=c('region','energy_technology'), novarname = TRUE)
   ElecEffPct_new <- subset(ElecEffPct_new, region != "dummy")
   # TO DO: for EU weighting needs to be applied with new capacity
@@ -484,10 +545,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   ElecEffPct_new$unit <- "%"
  
   # Efficiency power plants
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/enepg"} else{data_dir="/tuss/EPG"}  
   ElecEffPct = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                filename='ElecEffAvg.out', varname=NULL, 
-                               collist=list(regions26,energy_technology_28), 
+                               collist=list(regions26,energy_technology_elecprod), 
                                namecols=c('region','energy_technology'), novarname = TRUE)
   ElecEffPct <- subset(ElecEffPct, region != "dummy")
   EU <- inner_join(filter(ElecEffPct, region=='WEU'), filter(ElecEffPct, region=='CEU'), by=c("year", "energy_technology"))
@@ -501,7 +562,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   # Hydrogen
   # Fuel demand for hydrogen production (only exists in TIMER_2015, not in TIMER_3_11)
   # NOT IN TIMER_3_11
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = NA} else{data_dir="/tuss/hydrogen"} 
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = NA} else{data_dir="/tuss/hydrogen"} 
   H2FuelDem <- NULL
   tryCatch({H2FuelDem = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                               filename='FuelDem.out', varname=NULL, 
@@ -605,10 +666,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   }
   
   # TPES (Primary energy)
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss"} else{data_dir="/indicatoren"} 
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss"} else{data_dir="/indicatoren"} 
   TPES = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                          filename='tpes.out', varname=NULL, 
-                         collist=list(regions28,energy_carrier_energy2), 
+                         collist=list(regions28,energy_carrier_energy_incl_total), 
                          namecols=c('region','energy_carrier'), novarname = TRUE)
   TPES <- subset(TPES, region != "dummy")
   EU <- inner_join(filter(TPES, region=='WEU'), filter(TPES, region=='CEU'), by=c("year", "energy_carrier"))
@@ -620,7 +681,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   TPES <- mutate(TPES, unit="PJ")
   
   # Trade
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss"} else{data_dir="/indicatoren"} 
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss"} else{data_dir="/indicatoren"} 
   NetTrade = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                          filename='nettrade.out', varname=NULL, 
                          collist=list(regions28,energy_carrier_trade), 
@@ -635,10 +696,10 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   NetTrade <- mutate(NetTrade, unit="PJ")
   
   #Eprod
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss"} else{data_dir="/indicatoren"} 
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss"} else{data_dir="/indicatoren"} 
   EnergyProd = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                filename='eprod.out', varname=NULL, 
-                               collist=list(regions28,energy_carrier_energy2), 
+                               collist=list(regions28,energy_carrier_energy_incl_total), 
                                namecols=c('region','energy_carrier'), novarname = TRUE)
   EnergyProd <- subset(EnergyProd, region != "dummy")
   EU <- inner_join(filter(EnergyProd, region=='WEU'), filter(EnergyProd, region=='CEU'), by=c("year", "energy_carrier"))
@@ -650,7 +711,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   EnergyProd <- mutate(EnergyProd, unit="PJ")
   
   # Captured CO2
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/emis";sec_cap=sector_capture_3_2} else{data_dir="/T2RT";sec_cap=sector_capture_2015} 
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/emis";sec_cap=sector_capture_3_2} else{data_dir="/T2RT";sec_cap=sector_capture_2015} 
   CarbonCaptured = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                filename='CarbonCapturedSpec2.out', varname=NULL, 
                                collist=list(regions28, sec_cap, energy_carrier_capture), 
@@ -666,7 +727,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   
   # HEAT
   HeatProduction <- NULL
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/calib"} #else{} 
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/calib"} #else{} 
   tryCatch({HeatProduction = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                    filename='CalHeatProd.out', varname=NULL, 
                                    collist=list(regions28, heat_calibration, energy_carrier_heat), 
@@ -685,7 +746,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   }) # try
   
   HeatDemand <- NULL
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/calib"} else{data_dir="/T2RT"} 
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/calib"} else{data_dir="/T2RT"} 
   tryCatch({HeatDemand = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                    filename='CalHeatDem.out', varname=NULL, 
                                    collist=list(regions28, heat_calibration), 
@@ -707,6 +768,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   
   # Electricity access
   if(TIMER_version == 'TIMER_3_2') {data_dir = "/tuss/endem/residential"} else{data_dir="/tuss"}
+  ElecAcc <- NULL
   tryCatch({ElecAcc = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                             filename='res_Elec_access.out', varname=NULL, 
                             collist=list(regions28,population_groups3), 
@@ -731,7 +793,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   }) # try
   
   #RSE
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem"} else{data_dir="/indicatoren"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem"} else{data_dir="/indicatoren"}
   FinalEnergy = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                 filename='rse.out', varname=NULL, 
                                 collist=list(regions28,sector,energy_carrier_demand), 
@@ -748,7 +810,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   # RESIDENTIAL
   
   #Residential Final Energy per end use function
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/residential"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/residential"} else{data_dir="/tuss"}
   FinalEnergy_Residential = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                             filename='res_EU.out', varname=NULL, 
                                             collist=list(regions28,population_groups, res_enduse_functions), 
@@ -771,7 +833,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   FinalEnergy_Residential <- mutate(FinalEnergy_Residential, unit="GJ")
   
   #Residential Final Energy per energy carrier
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/residential"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/residential"} else{data_dir="/tuss"}
   FinalEnergy_Residential_energy_carrier = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                                     filename='res_EnergyUse.out', varname=NULL, 
                                                     collist=list(regions28,population_groups, energy_carrier_residential), 
@@ -794,7 +856,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   FinalEnergy_Residential_energy_carrier <- mutate(FinalEnergy_Residential_energy_carrier, unit="GJ")
   
   #Residential Final Energy per end use function
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/residential"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/residential"} else{data_dir="/tuss"}
   FinalEnergy_Residential_Appliances = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                             filename='res_applianceEU.out', varname=NULL, 
                                             collist=list(regions27,population_groups, res_appliances), 
@@ -822,7 +884,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   # CO2 emissions travel
   # TODO: Re-add CO2 emissions in travel/freight modules
   TransportTravelCO2Emissions <- NULL
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = ""} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = ""} else{data_dir="/tuss"}
   tryCatch({TransportTravelCO2Emissions = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                            filename='trp_trvl_CO2.out', varname=NULL, 
                                            collist=list(regions28,travel_mode_travel), 
@@ -846,7 +908,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   # CO2 emissions freight 
   # TODO: Re-add CO2 emissions in travel/freight modules
   TransportFreightCO2Emissions <- NULL
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = ""} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = ""} else{data_dir="/tuss"}
   tryCatch({TransportFreightCO2Emissions = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                            filename='trp_frgt_CO2.out', varname=NULL, 
                                            collist=list(regions28,travel_mode_freight), 
@@ -868,7 +930,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   }) # trycatch
   
   # Energy use travel fuels per mode
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
   FinalEnergy_trvl_Transport = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                           filename='trp_trvl_Energy.out', varname=NULL, 
                                           collist=list(regions28,travel_mode_travel), 
@@ -906,7 +968,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   } # if
   
   # Energy use freight fuels per mode
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
   FinalEnergy_frgt_Transport = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                                filename='trp_frgt_Energy.out', varname=NULL, 
                                                collist=list(regions28,travel_mode_freight), 
@@ -921,7 +983,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   FinalEnergy_frgt_Transport <- mutate(FinalEnergy_frgt_Transport, unit="XJ")
   
   # Energy use transport per energy carries for travel and freight
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
   FinalEnergy_Transport = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                                filename='trp_SE.out', varname=NULL, 
                                                collist=list(regions28,energy_carrier_sec_fuel,transport_modus), 
@@ -936,7 +998,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   FinalEnergy_Transport <- mutate(FinalEnergy_Transport, unit="XJ")  
   
   # Person Kilometers Travelled (Tera km)
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
   PersonKilometers = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                      filename='trp_trvl_pkm.out', varname=NULL, 
                                      collist=list(regions28,travel_mode_travel), 
@@ -990,7 +1052,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   }
   
   # Person Kilometers Travelled (Tera km)
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
   TonneKilometers = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                      filename='trp_frgt_tkm.out', varname=NULL, 
                                      collist=list(regions28,travel_mode_freight), 
@@ -1051,7 +1113,8 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   }
 
   # Vehicle share cars
-  if(TIMER_version == 'TIMER_3_2') {data_dir = "/tuss/endem/transport";reg=regions26} else{data_dir="/tuss"; reg=regions27}
+  if(TIMER_version %in%c('TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/transport";reg=regions26} else{data_dir="/tuss"; reg=regions27}
+  VehicleShare_cars = data.frame(matrix(ncol=0,nrow=0))
   tryCatch({
     VehicleShare_cars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                       filename='trp_trvl_Vshare_car.out', varname=NULL, 
@@ -1075,7 +1138,8 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   
   # TO DO: for EU, the shares must be added using 'pkm' as weighting factor
   # Vehicle share busses
-  if(TIMER_version == 'TIMER_3_2') {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  if(TIMER_version %in%c('TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  VehicleShare_busses = data.frame(matrix(ncol=0,nrow=0))
   tryCatch({
     VehicleShare_busses = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                       filename='trp_trvl_Vshare_bus.out', varname=NULL, 
@@ -1094,7 +1158,8 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   }) # try
   
   # Vehicle share train
-  if(TIMER_version == 'TIMER_3_2') {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  if(TIMER_version %in%c('TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  VehicleShare_trains = data.frame(matrix(ncol=0,nrow=0))
   tryCatch({
     VehicleShare_trains = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                       filename='trp_trvl_Vshare_train.out', varname=NULL, 
@@ -1113,7 +1178,8 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   }) # try
   
   # Vehicle share aircrafts
-  if(TIMER_version == 'TIMER_3_2') {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  if(TIMER_version %in%c('TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  VehicleShare_aircrafts = data.frame(matrix(ncol=0,nrow=0))
   tryCatch({
     VehicleShare_aircrafts = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                            filename='trp_trvl_Vshare_air.out', varname=NULL, 
@@ -1877,7 +1943,9 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   
   # Cost per km for cars
   # CostPerPkm_car
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/transport"} else{data_dir="/tuss"}
+  CostPerKm_cars = data.frame(matrix(ncol=0,nrow=0))
+  tryCatch({
   CostPerKm_cars = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""),   
                                                  filename='trp_trvl_CostPerPkm_car.out', varname=NULL, 
                                                  collist=list(regions26, car_type), 
@@ -1893,7 +1961,12 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   #CostPerKm_cars <- rbind(CostPerKm_cars, EU)
   CostPerKm_cars$region = factor(CostPerKm_cars$region,levels=regions28_EU)
   CostPerKm_cars <- mutate(CostPerKm_cars, unit="MJ/pkm")
-  
+  EfficiencyFleet_new_HvyT <- mutate(EfficiencyFleet_new_HvyT, unit="MJ/tkm") 
+  },
+  error = function(error_condition) 
+  { cat("The file trp_trvl_CostPerPkm_car.out does not exist\n")
+  }) # try
+
   # energy tax cars
   EnergyTax_cars = data.frame(matrix(ncol=0,nrow=0))
   if (Policy==TRUE) {
@@ -1980,7 +2053,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
  
   #POP
   # Unit: million people
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/global";reg=regions27} else{data_dir="/tuss";reg=regions28}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/global";reg=regions27} else{data_dir="/tuss";reg=regions28}
   POP = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                         filename='pop.scn', varname=NULL, 
                         collist=list(reg), 
@@ -1997,7 +2070,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
 
   #GDP
   # Unit: milliln US(2005) dollar
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/global"} else{data_dir="/indicatoren"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/global"} else{data_dir="/indicatoren"}
   GDP_MER = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                             filename='gdptot.out', varname=NULL, 
                             collist=list(regions28), 
@@ -2011,7 +2084,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   GDP_MER$region = factor(GDP_MER$region,labels=regions28_EU)
   GDP_MER <- mutate(GDP_MER, unit="million. US$(2005)")
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/global";reg=regions27;f='GDP_ppp.scn'} else{data_dir="/indicatoren";reg=regions28;f='gpdppp.out'}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/global";reg=regions27;f='GDP_ppp.scn'} else{data_dir="/indicatoren";reg=regions28;f='gpdppp.out'}
   GDP_PPPpc = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                               filename=f, varname=NULL, 
                               collist=list(regions28), 
@@ -2032,7 +2105,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
 
   #IVA
   # Unit: million US(2005) dollar
-  if(TIMER_version == 'TIMER_3_2') {data_dir = "/tuss/global";reg=regions28} else{data_dir="/indicatoren";reg=regions28}
+  if(TIMER_version %in% c('TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/global";reg=regions28} else{data_dir="/indicatoren";reg=regions28}
   IVA = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                         filename='iva_pc.scn', varname=NULL, 
                         collist=list(reg), 
@@ -2049,7 +2122,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   IVA$region = factor(IVA$region,labels=regions28_EU)
   IVA <- mutate(IVA, unit="thousand US$(2005)")
   
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/tuss/endem/residential"} else{data_dir="/tuss"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/tuss/endem/residential"} else{data_dir="/tuss"}
   FloorSpace = read.mym2r.nice(mym.folder=TIMER_folder, scen.econ=paste(TIMER_scenario, data_dir, sep=""), 
                                filename='res_FloorSpace.out', varname=NULL, 
                                collist=list(regions27,population_groups), 
@@ -2076,7 +2149,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   
   # IMAGE
   ForestArea = NULL
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/output/land_use"} else{data_dir="/output"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/output/land_use"} else{data_dir="/output"}
   tryCatch({
   ForestArea = read.mym2r.nice(mym.folder=IMAGE_folder, scen.econ=paste(IMAGE_scenario, data_dir, sep=""), 
                                filename='FORAREA.OUT', varname=NULL, 
@@ -2103,7 +2176,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   
   AddDeforestation <- NULL
   tryCatch({
-    if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/output/forestry_wood"} else{data_dir="/output"}
+    if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/output/forestry_wood"} else{data_dir="/output"}
     AddDeforestation = read.mym2r.nice(mym.folder=IMAGE_folder, scen.econ=paste(IMAGE_scenario, data_dir, sep=""), 
                                  filename='TOTADDDEFORAREA.OUT', varname=NULL, 
                                  collist=list(deforest_type, regions27), 
@@ -2128,7 +2201,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   }) # try
 
   LandCover <- NULL
-  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2')) {data_dir = "/output/land_use"} else{data_dir="/output"}
+  if(TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3')) {data_dir = "/output/land_use"} else{data_dir="/output"}
   tryCatch({
     LandCover = read.mym2r.nice(mym.folder=IMAGE_folder, scen.econ=paste(IMAGE_scenario, data_dir, sep=""), 
                                        filename='LANDCOV.OUT', varname=NULL, 
@@ -2157,6 +2230,7 @@ ImportTimerScenario <- function(TIMER_scenario = 'SSP2', TIMER_version = 'TIMER_
   l <- list(CO2Spec=CO2Spec,ENEMISCO2=ENEMISCO2,ENEMISCH4=ENEMISCH4,ENEMISN2O=ENEMISN2O,INDEMISCO2=INDEMISCO2,
             INDEMISCH4=INDEMISCH4,INDEMISN2O=INDEMISN2O,HFC_reg=HFC_reg,PFC_reg=PFC_reg,
             LUEMCO2=LUEMCO2,LUEMCH4=LUEMCH4,LUEMN2O=LUEMN2O,
+            SteelCO2Emissions=SteelCO2Emissions, CementCO2Emissions=CementCO2Emissions, FoodCO2Emissions=FoodCO2Emissions, PaperCO2Emissions=PaperCO2Emissions,ChemicalsCO2Emissions=ChemicalsCO2Emissions,
             # energy supply
             ElecFuelUseTot=ElecFuelUseTot, ElecProd=ElecProd, ElecCap=ElecCap, ElecCap_new=ElecCap_new,
             ElecProdSpec=ElecProdSpec, EnergyProd=EnergyProd, FinalEnergy=FinalEnergy, 

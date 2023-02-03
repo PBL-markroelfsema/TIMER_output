@@ -33,6 +33,7 @@ ProcessTimerScenario <- function(Scenario, TIMER_version = 'TIMER_2015', Rundir,
 source(paste(Rundir, Project, RDir, TIMERFunctionsDir, 'functions', 'Settings.R', sep='/'))
 source(paste(Rundir, Project, RDir, TIMERFunctionsDir, 'functions', 'General Functions.R', sep='/'))
 
+if (Project=="SENTINEL") {TIMER_version = "TIMER_3_3"}
   # Initiliaze parameters
   # These parameters did not change in the transition from 2015 to 3_2
   # - energy_carrier_ren
@@ -42,7 +43,7 @@ source(paste(Rundir, Project, RDir, TIMERFunctionsDir, 'functions', 'General Fun
   # - energy_carrier_hydrogen2_ren  
   # - energy_carrier_hydrogen2_innovative
   # - energy_carrier_demand_ren
-  if (TIMER_version %in% c('TIMER_3_11','TIMER_3_2'))
+  if (TIMER_version %in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3'))
   { energy_technology=energy_technology_3_2
     energy_technology_detailed=energy_technology_30_3_2
     energy_technology_20=energy_technology_22_3_2
@@ -445,6 +446,24 @@ EMIS_transport <- mutate(EMIS_transport, unit="MtCO2eq")   %>% as.data.frame()
 EMIS_industry <- subset(EMIS,main_sector%in%c("Industry"))
 EMIS_industry <- EMIS_industry %>% group_by(year, region) %>% summarise(value=sum(value))
 EMIS_industry <- mutate(EMIS_industry, unit="MtCO2eq")   %>% as.data.frame()
+#divide industry into ligth/heavy
+EMIS_SteelCO2 <- mutate(Scenario$SteelCO2Emissions, sub_industry="Steel", value=(44/12)*value, unit="MtCO2eq") %>% filter(year>=StartYear)
+EMIS_CementCO2 <- mutate(Scenario$CementCO2Emissions, sub_industry="Cement", value=(44/12)*value, unit="MtCO2eq") %>% filter(year>=StartYear)
+EMIS_Chemicals <- mutate(Scenario$ChemicalsCO2Emissions, sub_industry="Chemicals", value=(44/12)*value, unit="MtCO2eq") %>% filter(year>=StartYear)
+EMIS_heavy_industry_energy <- rbind(EMIS_SteelCO2,EMIS_CementCO2) %>% rbind(EMIS_Chemicals)
+EMIS_heavy_industry_energy <- group_by(EMIS_heavy_industry_energy, year, region) %>%
+                              summarise(value=sum(value)) %>%
+                              mutate(type="energy")
+tmp1<-filter(INDEMISCO2_TOT, main_sector=="Total")
+tmp2<-filter(INDEMISCH4_TOT, main_sector=="Total")
+tmp3<-filter(INDEMISN2O_TOT, main_sector=="Total")
+EMIS_heavy_industry_process <- rbind(tmp1, tmp2) %>% rbind(tmp3)
+EMIS_heavy_industry_process <- group_by(EMIS_heavy_industry_process, year, region) %>%
+                               summarise(value=sum(value)) %>%
+                               mutate(type="process")
+EMIS_heavy_industry <- rbind(EMIS_heavy_industry_energy, EMIS_heavy_industry_process)
+EMIS_heavy_industry <- group_by(EMIS_heavy_industry, year, region) %>% 
+                       summarise(value=sum(value))
 
 EMIS_AFOLU <- bind_rows(EMISCO2EQ_AGRI, EMISCO2EQ_LU)
 EMIS_AFOLU <- EMIS_AFOLU %>% group_by(year, region) %>% summarise(value=sum(value))
@@ -654,21 +673,34 @@ InnovativeElecShare_detailed <- mutate(InnovativeElecShare_detailed, unit="%")
 #7. Electricity capacity
 # List electricity capacity per technology
 ElecCap=data.table(Scenario$ElecCap)
-ElecCapGeo <- ElecCap[energy_technology=="Other Renewable"]
-ElecCapWindOff <- ElecCap[energy_technology=="Wind Offshore"]
-ElecCapWindOn<- ElecCap[energy_technology=="Wind Onshore"]
-ElecCapSolarPV<- ElecCap[energy_technology%in%c("PV large-scale", "PV residential")]
-ElecCapSolarCSP<- ElecCap[energy_technology=="CSP"]
-ElecCapHydro<- ElecCap[energy_technology=="Hydro"]
-ElecCapWaste<- ElecCap[energy_technology=="Waste"]
-ElecCapNuclear<- ElecCap[energy_technology=="Nuclear"]
-ElecCapCoalCCS<- ElecCap[energy_technology=="Coal + CS"]
-ElecCapCoalTrad<- ElecCap[energy_technology=="Conv. Coal"]
+ElecCapOther <- ElecCap[energy_technology%in%c("Other Renewable", "Wave power", "Other renewables (tidal)", "Geothermal power")]
+ElecCapWindOff <- ElecCap[energy_technology%in%c("Wind Offshore", "Offshore wind power")]
+ElecCapWindOn<- ElecCap[energy_technology%in%c("Wind Onshore", "Onshore wind power")]
+ElecCapSolarPV<- ElecCap[energy_technology%in%c("PV large-scale", "PV residential", "Solar PV power (central)", "Solar PV power (decentral/residential)")]
+ElecCapSolarCSP<- ElecCap[energy_technology%in%c("CSP", "Concentrated solar power")]
+ElecCapHydro<- ElecCap[energy_technology%in%c("Hydro", "Hydro power")]
+ElecCapWaste<- ElecCap[energy_technology%in%c("Waste")]
+ElecCapNuclear<- ElecCap[energy_technology%in%c("Nuclear")]
+ElecCapCoalCCS<- ElecCap[energy_technology%in%c("Coal + CS")]
+ElecCapCoalTrad<- ElecCap[energy_technology%in%c("Conv. Coal")]
+ElecWaveTot <- ElecCapTot[energy_technology%in%c("Wave", "Wave power")]
 
 #Calculate some technologies as sum of others
-if (TIMER_version%in%c('TIMER_3_11','TIMER_3_2'))
-{
-  ElecCapTot<- spread(ElecCap,energy_technology,value) %>% mutate(Solar = `PV large-scale` + `PV residential` + CSP, 
+if (TIMER_version%in%c('TIMER_3_3'))
+{  ElecCapTot<- spread(ElecCap,energy_technology,value) %>% mutate(Solar = `Solar PV power (decentral/residential)`, `Solar PV power (central)`, `Solar PV power (decentral/residential)` + `Concentrated solar power`, 
+                                                                   SolarPV = `Solar PV power (decentral/residential)`, `Solar PV power (central)`, `Solar PV power (decentral/residential)`,
+                                                                   Wind = `Offshore wind power` + `Onshore wind power`, 
+                                                                   Coal = `Coal steam turbine`+`Coal carbon capture and storage`+`Coal combined heat and power`+`Coal combined heat and power carbon capture and storage`,
+                                                                   Biomass = `Biomass steam turbine`+`Biomass combined cycle`+`Biomass carbon capture and storage`+`Biomass combined heat and power`+`Biomass combined heat and power carbon capture and storage`,
+                                                                   WindSolar=Solar+Wind,
+                                                                   OtherRenewable=`Wave power`+`Other renewables (tidal)`+`Geothermal power`+`Hydrogen to power`+`Free spot`,
+                                                                   Renewable= Solar+Wind+`Hydro power`+Biomass+OtherRenewable+Nuclear) 
+ElecCapTot <- data.table(gather(ElecCapTot,energy_technology,value,c(`Solar PV power (decentral/residential)` :Renewable)))
+
+
+}
+else if (TIMER_version%in%c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3'))
+{  ElecCapTot<- spread(ElecCap,energy_technology,value) %>% mutate(Solar = `PV large-scale` + `PV residential` + CSP, 
                                                                   SolarPV = `PV large-scale` + `PV residential`,
                                                                   Wind = `Wind Offshore` + `Wind Onshore`, 
                                                                   Coal = `Conv. Coal`+`Coal + CS`+`CHP coal`+`CHP coal + CS`,
@@ -1252,7 +1284,7 @@ cat(sprintf("Transport sector: \n"))
 
 # Car final energy use per kilometer
 # THis is not available anymore in TIMER_3_2
-if (!TIMER_version%in% c('TIMER_3_11','TIMER_3_2'))
+if (!TIMER_version%in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3'))
 { FuelUse_cars <- filter(Scenario$FinalEnergy_trvl_Transport, travel_mode=="Car")
   FuelUse_cars <- select(FuelUse_cars, year, region, value)
   PKm_cars <- filter(Scenario$PersonKilometers, travel_mode=="Car")
@@ -1271,7 +1303,7 @@ else
 
 # Car CO2 per km
 # THis is not available anymore in TIMER_3_2
-if (!TIMER_version%in% c('TIMER_3_11','TIMER_3_2'))
+if (TIMER_version%in% c('TIMER_2015'))
 { CO2_cars <- filter(Scenario$TransportTravelCO2Emissions, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v="CO2")
   CO2_km_cars <- filter(Scenario$TransportTravelCO2Emissions, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v="CO2")
   Pkm_cars <- filter(Scenario$PersonKilometers, travel_mode=='Car') %>% select(year, region, value) %>% mutate(v='pkm')
@@ -1295,6 +1327,8 @@ else
   CO2_HvyT <- NULL
 }
 
+if (Policy==TRUE)
+{
 TonneKilometers_MedT <- filter(Scenario$TonneKilometers, travel_mode=='Medium truck') %>% select(-travel_mode)
 TonneKilometers_HvyT <- filter(Scenario$TonneKilometers, travel_mode=='Heavy truck') %>% select(-travel_mode)
 tmp_Share_new_MedT <- inner_join(Scenario$VehicleShare_new_MedT, TonneKilometers_MedT, by=c('region', 'year'))
@@ -1307,6 +1341,11 @@ VehicleShare_new_Trucks <- inner_join(tmp_Share_new_MedT, tmp_Share_new_HvyT, by
 VehicleShare_Trucks <- inner_join(tmp_Share_MedT, tmp_Share_HvyT, by=c('region', 'year', 'vehicle_type')) %>%
                        mutate(value=value.x.x*value.y.x/(value.y.x+value.y.y)+value.x.y*value.y.y/(value.y.x+value.y.y), unit="MJ/tkm") %>%
                        select(-value.x.x, -unit.x.x, -value.y.x, -unit.y.x, -value.x.y, -unit.x.y, -value.y.y, -unit.y.y)
+}
+else
+{ VehicleShare_new_Trucks <- NULL
+  VehicleShare_Trucks <- NULL
+}
 
 # Share of Electric cars
 ElectricCars_share <- filter(Scenario$VehicleShare_cars, car_type=="BEV" | car_type=="BEV 100km")
@@ -1580,7 +1619,7 @@ error=function(error_point)
 
 # Reduction cars relative to 2021 (EU transport target)
 # 1. relative to 2025
-if (!TIMER_version%in% c('TIMER_3_11','TIMER_3_2'))
+if (!TIMER_version%in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3'))
 {
   CO2_cars_2021_2025 = filter(CO2_cars, year==2021)
   CO2_cars_2021_2025 = select(CO2_cars_2021_2025, year, region, value)
@@ -1622,7 +1661,7 @@ TransportTravelCO2Emissions_inclElec <- NULL
 #})
 
 # Emissions from road travel_transport
-if (!TIMER_version%in% c('TIMER_3_11','TIMER_3_2'))
+if (!TIMER_version%in% c('TIMER_3_11','TIMER_3_2', 'TIMER_3_3'))
 {
   RoadTravelTransport_CO2 <- filter(Scenario$TransportTravelCO2Emissions, travel_mode %in% c('Bus', 'Car')) %>% 
                              group_by(year, region, unit) %>%
@@ -1822,7 +1861,15 @@ Landcover_forest_share <- NULL
           }) # trycatch
 
 # EU_ElecAcc
-ElecAccTot <- filter(Scenario$ElecAcc, population_group=="Total")
+ElecAccTot <- NULL
+tryCatch({
+  ElecAccTot <- filter(Scenario$ElecAcc, population_group=="Total")
+}, #try
+error = function(error_condition) 
+{ Forest_area_total <- NULL
+cat("ElecAccTot does not exist\n")
+}) # trycatch
+
 
 # Compile list ------------------------------------------------------------
 cat(sprintf("Process list: \n"))
@@ -1846,7 +1893,7 @@ l <- list(EMISCO2EQexcl=EMISCO2EQexcl,EMISCO2EQpc=EMISCO2EQpc, EMISCO2=EMISCO2, 
           RENfinalenergyshare=RENfinalenergyshare,
           RenTPESElecShare=RenTPESElecShare, NF_TPESElecShare=NF_TPESElecShare,
           NatGasTPESshare=NatGasTPESshare,Coal_consumption=Coal_consumption, EnergyConsumption_industry_powersupply=EnergyConsumption_industry_powersupply,
-          ElecCapGeo=ElecCapGeo, ElecCapWindOff=ElecCapWindOff, ElecCapWindOn=ElecCapWindOn, ElecCapSolarPV=ElecCapSolarPVTot, ElecCapSolarCSP=ElecCapSolarCSP, ElecCapHydro=ElecCapHydro, 
+          ElecCapOther=ElecCapOther, ElecCapWindOff=ElecCapWindOff, ElecCapWindOn=ElecCapWindOn, ElecCapSolarPV=ElecCapSolarPVTot, ElecCapSolarCSP=ElecCapSolarCSP, ElecCapHydro=ElecCapHydro, 
           ElecCapWaste=ElecCapWaste, ElecCapNuclear=ElecCapNuclear, ElecCapCoalCCS=ElecCapCoalCCS, ElecCapCoalTrad=ElecCapCoalTrad,
           ElecCapCoalTot=ElecCapCoalTot, ElecCapBioTot=ElecCapBioTot, ElecCapSolarTot=ElecCapSolarTot, ElecCapWindTot=ElecCapWindTot, ElecCapRenTot=ElecCapRenTot, ElecCapWSTot=ElecCapWSTot, 
           ElecCapNFshare=ElecCapNFshare,
